@@ -98,6 +98,7 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	OrientLaserSight();
+	WeaponSway(DeltaSeconds);
 	//Aim Offset replication code
 	if (HasAuthority())
 	{
@@ -223,7 +224,7 @@ void ABSc3bCharacter::Move(const FInputActionValue& Value)
 void ABSc3bCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	LookAxisVector = Value.Get<FVector2D>();
 	if (Controller != nullptr)
 	{
 		// add yaw and pitch input to controller
@@ -313,6 +314,20 @@ void ABSc3bCharacter::SetPlayerPitchForOffset()
 	FRotator InterpRot = UKismetMathLibrary::RInterpTo(PlayerRotation, Difference, UGameplayStatics::GetWorldDeltaSeconds(GetWorld()), 10);
 	//Clamp the value otherwise we get values of 360
 	PlayerPitch = UKismetMathLibrary::ClampAngle(InterpRot.Pitch, -90, 90);
+}
+
+void ABSc3bCharacter::WeaponSway(float DeltaTime)
+{
+	FRotator FinalRot, InitRot;
+	const float MaxSwayDegree = 5;
+	FinalRot = FRotator(LookAxisVector.Y * -0.1 * MaxSwayDegree, LookAxisVector.X * -0.1 * MaxSwayDegree, LookAxisVector.X * -0.1 * MaxSwayDegree);
+	FRotator t = UKismetMathLibrary::MakeRotator(InitRot.Roll + FinalRot.Roll, InitRot.Pitch - FinalRot.Pitch, InitRot.Yaw + FinalRot.Yaw);
+	FRotator temp = UKismetMathLibrary::RInterpTo(Weapon1->GetRelativeRotation(), t, DeltaTime, 2.5);
+	//Temp variables to hold the break rotator function call
+	float Roll, Pitch, Yaw;
+	UKismetMathLibrary::BreakRotator(temp, Roll, Pitch, Yaw);
+	temp = UKismetMathLibrary::MakeRotator(UKismetMathLibrary::FClamp(Roll, MaxSwayDegree * -1, MaxSwayDegree), UKismetMathLibrary::FClamp(Pitch, MaxSwayDegree * -1, MaxSwayDegree), UKismetMathLibrary::FClamp(Yaw, MaxSwayDegree * -1, MaxSwayDegree));
+	Weapon1->SetRelativeRotation(temp);
 }
 
 void ABSc3bCharacter::Server_SetPlayerPitchForOffset_Implementation()

@@ -98,6 +98,9 @@ protected:
 	UFUNCTION()
 	void SetPlayerPitchForOffset();
 
+	UFUNCTION()
+	void WeaponSway(float DeltaTime);
+
 	//RPC for setting the player pitch to work with aim offset animation
 	//Set it unreliable as we dont need the animation changes instantly
 	UFUNCTION(Server, Unreliable)
@@ -124,6 +127,9 @@ protected:
 	//Function to call whenever I would change the health function. Can check health value for example
 	UFUNCTION()
 	void OnRep_Health();
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	FVector2D LookAxisVector;
 
 
 public:
