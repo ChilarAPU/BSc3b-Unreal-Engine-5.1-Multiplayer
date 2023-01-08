@@ -318,16 +318,25 @@ void ABSc3bCharacter::SetPlayerPitchForOffset()
 
 void ABSc3bCharacter::WeaponSway(float DeltaTime)
 {
+	//Values the gun will be interpolating between
 	FRotator FinalRot, InitRot;
-	const float MaxSwayDegree = 5;
-	FinalRot = FRotator(LookAxisVector.Y * -0.1 * MaxSwayDegree, LookAxisVector.X * -0.1 * MaxSwayDegree, LookAxisVector.X * -0.1 * MaxSwayDegree);
-	FRotator t = UKismetMathLibrary::MakeRotator(InitRot.Roll + FinalRot.Roll, InitRot.Pitch - FinalRot.Pitch, InitRot.Yaw + FinalRot.Yaw);
-	FRotator temp = UKismetMathLibrary::RInterpTo(Weapon1->GetRelativeRotation(), t, DeltaTime, 2.5);
-	//Temp variables to hold the break rotator function call
+	//Maximum value the gun can sway
+	const float MaxSwayDegree = 2.5;
+	//Speed at which the gun reaches the final rotation value
+	const float InterpSpeed = 2.5;
+	//Multiplying each lookaxis vector value by -1 flips the incoming direction
+	//LookAxisVector relates to the speed of our mouse movement
+	FinalRot = FRotator(LookAxisVector.Y * -1 * MaxSwayDegree, LookAxisVector.X * -1 * MaxSwayDegree, LookAxisVector.X * -1 * MaxSwayDegree);
+	FRotator RotationDifference = UKismetMathLibrary::MakeRotator(InitRot.Roll + FinalRot.Roll, InitRot.Pitch - FinalRot.Pitch, InitRot.Yaw + FinalRot.Yaw);
+	//Do all our interping in relative space as this keeps our values to normal amounts
+	FRotator InterpDifference = UKismetMathLibrary::RInterpTo(Weapon1->GetRelativeRotation(), RotationDifference, DeltaTime, InterpSpeed);
+	//Variables to hold the break rotator function call
 	float Roll, Pitch, Yaw;
-	UKismetMathLibrary::BreakRotator(temp, Roll, Pitch, Yaw);
-	temp = UKismetMathLibrary::MakeRotator(UKismetMathLibrary::FClamp(Roll, MaxSwayDegree * -1, MaxSwayDegree), UKismetMathLibrary::FClamp(Pitch, MaxSwayDegree * -1, MaxSwayDegree), UKismetMathLibrary::FClamp(Yaw, MaxSwayDegree * -1, MaxSwayDegree));
-	Weapon1->SetRelativeRotation(temp);
+	UKismetMathLibrary::BreakRotator(InterpDifference, Roll, Pitch, Yaw);
+	//Clamp all values between MaxSwayDegree and MaxSwayDegree * -1 otherwise our gun would not stop swaying
+	InterpDifference = UKismetMathLibrary::MakeRotator(UKismetMathLibrary::FClamp(Roll, MaxSwayDegree * -1, MaxSwayDegree),
+		UKismetMathLibrary::FClamp(Pitch, MaxSwayDegree * -1, MaxSwayDegree), UKismetMathLibrary::FClamp(Yaw, MaxSwayDegree * -1, MaxSwayDegree));
+	Weapon1->SetRelativeRotation(InterpDifference);
 }
 
 void ABSc3bCharacter::Server_SetPlayerPitchForOffset_Implementation()
