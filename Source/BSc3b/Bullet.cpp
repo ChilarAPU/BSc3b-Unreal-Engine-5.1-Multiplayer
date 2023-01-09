@@ -57,7 +57,6 @@ void ABullet::PlayerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 		if (HitPlayer->IsLocallyControlled())
 		{
 			HitPlayer->Server_Health();
-			UE_LOG(LogTemp, Warning, TEXT("HIT"));
 		}
 		//temporary setting to stop bullets from dealing damage 
 		//BulletMesh->SetGenerateOverlapEvents(false);
@@ -69,7 +68,7 @@ void ABullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrim
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	//We have hit a solid object, stop overlap events to avoid accidental overlap events
-	UE_LOG(LogTemp, Warning, TEXT("HITtt"));
+	UE_LOG(LogTemp, Warning, TEXT("Bullet Hit Event"));
 	BulletMesh->SetGenerateOverlapEvents(false);
 	//Stop hit events from being constantly outputted as we have no more need for them
 	BulletMesh->SetNotifyRigidBodyCollision(false);
