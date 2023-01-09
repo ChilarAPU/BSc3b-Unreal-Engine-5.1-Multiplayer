@@ -240,7 +240,7 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 		
 		if (GetOwner()->GetLocalRole() == ROLE_Authority) //Only server has the role of authority
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, FString::Printf(TEXT("%s: Shoot"), *GetOwner()->GetRolePropertyName().ToString()));
+			//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, FString::Printf(TEXT("%s: Shoot"), *GetOwner()->GetRolePropertyName().ToString()));
 		} 
 		/*if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy) //Client With Human based movement has this role
 			{
@@ -264,17 +264,17 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 		if (GetOwner()->GetLocalRole() == ROLE_Authority)
 		{
 			//subtract health on server
-			Health -= 1;
+			//Health -= 1;
 			//OnRep_Health();
 		}
 		else
 		{
 			//call server function to subtract health
-			Server_Health();
+			//Server_Health();
 		}
 		
 		//Log specific client / server
-		if (GetWorld()->GetNetMode() == NM_Client)
+		/*if (GetWorld()->GetNetMode() == NM_Client)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Client %d Health: %f"), GPlayInEditorID - 1, Health);
 		}
@@ -282,7 +282,7 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Server Health: %f"), Health);
 		}
-		
+		*/
 	}
 	
 }

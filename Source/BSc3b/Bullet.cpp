@@ -22,6 +22,9 @@ ABullet::ABullet()
 	BulletMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	BulletMesh->SetRelativeRotation(FRotator(0.0, -90, 0.0));
 	BulletMesh->SetIsReplicated(true);
+	BulletMesh->SetNotifyRigidBodyCollision(true);
+
+	BulletMesh->OnComponentBeginOverlap.AddDynamic(this, &ABullet::PlayerOverlap);
 
 	BulletSpeed = 1000;
 	bReplicates = true;
@@ -44,23 +47,55 @@ void ABullet::AddImpulseToBullet(FVector Direction)
 	
 }
 
+void ABullet::PlayerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	ABSc3bCharacter* HitPlayer = Cast<ABSc3bCharacter>(OtherActor);
+	if (HitPlayer)
+	{
+		//Without this, clients would not be able to call their server RPCs
+		if (HitPlayer->IsLocallyControlled())
+		{
+			HitPlayer->Server_Health();
+			UE_LOG(LogTemp, Warning, TEXT("HIT"));
+		}
+		//temporary setting to stop bullets from dealing damage 
+		//BulletMesh->SetGenerateOverlapEvents(false);
+	}
+	
+}
+
+void ABullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	//We have hit a solid object, stop overlap events to avoid accidental overlap events
+	UE_LOG(LogTemp, Warning, TEXT("HITtt"));
+	BulletMesh->SetGenerateOverlapEvents(false);
+	//Stop hit events from being constantly outputted as we have no more need for them
+	BulletMesh->SetNotifyRigidBodyCollision(false);
+}
+
 // Called when the game starts or when spawned
 void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
 	SetReplicateMovement(true);
+	//have to set this in begin play as the constructor does not work
+	BulletMesh->OnComponentHit.AddDynamic(this, &ABullet::OnHit);
+	
 	Player = Cast<ABSc3bCharacter>(GetInstigator());
 	if (IsValid(Player))
 	{
 		if (!HasAuthority())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("CLIENT"));
+			//UE_LOG(LogTemp, Warning, TEXT("CLIENT"));
 		} else //meaning we are currently on the server
 			{
-			UE_LOG(LogTemp, Warning, TEXT("SERVER"));
+			//UE_LOG(LogTemp, Warning, TEXT("SERVER"));
 			}
 	}
 	//AddImpulseToBullet();
+	
 }
 
 // Called every frame
