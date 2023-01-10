@@ -73,6 +73,10 @@ public:
 	bool Server_Health_Validate();
 	void Server_Health_Implementation();
 
+	UFUNCTION(Client, Reliable)
+	void Client_Respawn();
+	void Client_Respawn_Implementation();
+
 	UFUNCTION()
 	void SpawnBullet(FVector Location, FRotator Rotation);
 

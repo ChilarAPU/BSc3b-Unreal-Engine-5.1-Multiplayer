@@ -181,9 +181,23 @@ void ABSc3bCharacter::Server_Health_Implementation()
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		Health -= 1;
+		
+		//temporary way to spawn in new player character
+		const FVector t = GetActorLocation();
+		const FRotator r = GetActorRotation();
+		ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
+		GetController()->Possess(NewPlayer);
+		//Call client function on new player actor. This sets the laser sight up so that other clients cannot see it
+		NewPlayer->Client_Respawn();
 	}
 
 	//OnRep_Health();
+}
+
+void ABSc3bCharacter::Client_Respawn_Implementation()
+{
+	LaserSight->SetVisibility(true);
+	LaserImpact->SetVisibility(true);
 }
 
 void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
