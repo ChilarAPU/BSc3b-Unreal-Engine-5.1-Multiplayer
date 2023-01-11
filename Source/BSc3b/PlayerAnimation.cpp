@@ -4,6 +4,7 @@
 #include "PlayerAnimation.h"
 
 #include "BSc3bCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UPlayerAnimation::UPlayerAnimation()
 {
@@ -19,8 +20,11 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 	if (IsValid(OwningPawn))
 	{
 		ABSc3bCharacter* OwningPlayer = Cast<ABSc3bCharacter>(OwningPawn);
-		//Animation usable value for Pitch
+		
+		//Setting animation values for state machine poses
 		Pitch = OwningPlayer->PlayerPitch;
+		PlayerSpeed = OwningPlayer->GetVelocity().Length();
+		
 		FTransform PlayerWeapon = OwningPlayer->GetWeaponTransform(TEXT("LeftHandSocket"), RTS_World);
 		//Values set in Transformation function
 		FVector OutPos;

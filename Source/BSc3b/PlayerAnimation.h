@@ -20,6 +20,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Pitch;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float PlayerSpeed;
+
 	//1 for attach, 0 for detach
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float LeftHand_FABRIK_Alpha;
