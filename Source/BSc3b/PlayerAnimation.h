@@ -25,7 +25,7 @@ public:
 	float LeftHand_FABRIK_Alpha;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FTransform LeftHand_Location;
+	FTransform LeftHand_Transform;
 
 	UFUNCTION(BlueprintCallable)
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;

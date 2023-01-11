@@ -25,7 +25,8 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		//Values set in Transformation function
 		FVector OutPos;
 		FRotator OutRot;
-		OwningPlayer->GetMesh()->TransformToBoneSpace(TEXT("hand_r"), PlayerWeapon.GetLocation(), FRotator(0.0, 0.0, 0.0), OutPos, OutRot);
-		LeftHand_Location.SetLocation(OutPos);
+		OwningPlayer->GetMesh()->TransformToBoneSpace(TEXT("hand_r"), PlayerWeapon.GetLocation(), PlayerWeapon.GetRotation().Rotator(), OutPos, OutRot);
+		LeftHand_Transform.SetLocation(OutPos);
+		LeftHand_Transform.SetRotation(OutRot.Quaternion());
 	}
 }
