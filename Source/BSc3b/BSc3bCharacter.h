@@ -42,9 +42,6 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* MoveAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* MoveForward;
-
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
@@ -68,11 +65,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LaserDistance;
 
+	/* Called by shoot() to make sure any health changes are always
+	 * done on the server. This is to prevent clients from being able to
+	 * change their health client side
+	 */
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_Health();
 	bool Server_Health_Validate();
 	void Server_Health_Implementation();
 
+	/* Called when a player is respawned. Currently only
+	 * resets the laser sight to be visible. Without this, server Client
+	 * does not show its laser sight on respawn
+	 */
 	UFUNCTION(Client, Reliable)
 	void Client_Respawn();
 	void Client_Respawn_Implementation();
@@ -96,17 +101,29 @@ protected:
 	UFUNCTION()
 	void Shoot(const FInputActionValue& Value);
 
+	/*Create line trace for laser sight which acts as the collider. Spawn in
+	 * impact particle if laser is obstructed before reaching its end, otherwise
+	 * continue on until end
+	 */
 	UFUNCTION()
 	void OrientLaserSight();
 
+	/*Transfer players pitch from a float to a usable degree value, which is then clamped
+	 * and used inside the animation state machine to run the aim offset
+	 */
 	UFUNCTION()
 	void SetPlayerPitchForOffset();
 
+	/*Procedurally interpolate the weapon rotation when the player moves the camera
+	 * to give the effect of the weapon swaying around. ALl rotation is done in
+	 * object space so at to avoid any unaccounted negative values. 
+	 */
 	UFUNCTION()
 	void WeaponSway(float DeltaTime);
 
-	//RPC for setting the player pitch to work with aim offset animation
-	//Set it unreliable as we dont need the animation changes instantly
+	/*Server RPC for calling SetPlayerPitchForOffset().
+	* Set it unreliable as we dont need the animation changes instantly
+	*/
 	UFUNCTION(Server, Unreliable)
 	void Server_SetPlayerPitchForOffset();
 	void Server_SetPlayerPitchForOffset_Implementation();
@@ -132,6 +149,7 @@ protected:
 	UFUNCTION()
 	void OnRep_Health();
 
+	//Make the look axis value global as it needs to be accessed from other functions
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	FVector2D LookAxisVector;
 

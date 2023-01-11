@@ -88,6 +88,7 @@ void ABSc3bCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+		//set the visibility of the laser sight to true only for the client
 		LaserSight->SetVisibility(true);
 		LaserImpact->SetVisibility(true);
 	}
@@ -159,7 +160,6 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 
 		//Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABSc3bCharacter::Move);
-		//EnhancedInputComponent->BindAction(MoveForward, ETriggerEvent::Triggered, this, &ABSc3bCharacter::Move);
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABSc3bCharacter::Look);
@@ -313,6 +313,7 @@ void ABSc3bCharacter::OrientLaserSight()
 	UKismetSystemLibrary::LineTraceSingle(GetWorld(), Start, End, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, OutHit, true);
 	//Set end of laser to the first hit object or maximum length
 	FName LaserEnd = TEXT("Beam End");
+	//Set end of mesh variable inside Niagara system
 	LaserSight->SetVectorParameter(LaserEnd, UKismetMathLibrary::SelectVector(OutHit.Location, OutHit.TraceEnd, OutHit.bBlockingHit));
 	//Set impact system only when we are hitting an actor
 	LaserImpact->SetWorldLocation(OutHit.Location);

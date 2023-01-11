@@ -35,16 +35,7 @@ ABullet::ABullet()
 
 void ABullet::AddImpulseToBullet(FVector Direction)
 {
-	//if using same mesh as before, this is required as the mesh is orientated weirdly
-	/*if (IsValid(Player))
-	{
-		const FVector BForward = Player->GetWeaponForwardVector();
-    	BulletMesh->AddImpulse(BForward * BulletSpeed, NAME_None);	
-	}
-	*/
-	const FVector BulletForward = BulletMesh->GetRightVector();
 	BulletMesh->AddImpulse(Direction * BulletSpeed, NAME_None);	
-	
 }
 
 void ABullet::PlayerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -58,8 +49,6 @@ void ABullet::PlayerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 		{
 			HitPlayer->Server_Health();
 		}
-		//temporary setting to stop bullets from dealing damage 
-		//BulletMesh->SetGenerateOverlapEvents(false);
 	}
 	
 }
@@ -83,17 +72,6 @@ void ABullet::BeginPlay()
 	BulletMesh->OnComponentHit.AddDynamic(this, &ABullet::OnHit);
 	
 	Player = Cast<ABSc3bCharacter>(GetInstigator());
-	if (IsValid(Player))
-	{
-		if (!HasAuthority())
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("CLIENT"));
-		} else //meaning we are currently on the server
-			{
-			//UE_LOG(LogTemp, Warning, TEXT("SERVER"));
-			}
-	}
-	//AddImpulseToBullet();
 	
 }
 
