@@ -200,6 +200,21 @@ void ABSc3bCharacter::Client_Respawn_Implementation()
 	LaserImpact->SetVisibility(true);
 }
 
+void ABSc3bCharacter::Server_PlayFootstep_Implementation(FVector Location)
+{
+	Multi_PlayFootstep(Location);
+}
+
+void ABSc3bCharacter::Multi_PlayFootstep_Implementation(FVector Location)
+{
+	//Error check just in case variables have not been set
+	if (IsValid(Footstep) && IsValid(FootstepAttenuation))
+	{
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Footstep, Location, FRotator::ZeroRotator, 1, 1, 0, FootstepAttenuation);	
+	}
+
+}
+
 void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 {
 	AActor* T = GetWorld()->SpawnActor<AActor>(SpawnObject, Location, Rotation);

@@ -65,6 +65,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LaserDistance;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	class USoundBase* Footstep;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	class USoundAttenuation* FootstepAttenuation;
+
 	/* Called by shoot() to make sure any health changes are always
 	 * done on the server. This is to prevent clients from being able to
 	 * change their health client side
@@ -81,6 +87,18 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_Respawn();
 	void Client_Respawn_Implementation();
+
+	/* The only logic of this function is to move ourselves to the
+	 * server so we can then successfully call a multicast RPC. Location
+	 * gets passed through the animation notify event
+	 */
+	UFUNCTION(Server, Unreliable)
+	void Server_PlayFootstep(FVector Location);
+	void Server_PlayFootstep_Implementation(FVector Location);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multi_PlayFootstep(FVector Location);
+	void Multi_PlayFootstep_Implementation(FVector Location);
 
 	UFUNCTION()
 	void SpawnBullet(FVector Location, FRotator Rotation);

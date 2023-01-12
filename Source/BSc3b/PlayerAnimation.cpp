@@ -13,13 +13,18 @@ UPlayerAnimation::UPlayerAnimation()
 	LeftHand_FABRIK_Alpha = 1;
 }
 
+void UPlayerAnimation::FootStep_Notify()
+{
+	OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation());
+}
+
 void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 	APawn* OwningPawn = TryGetPawnOwner();
 	if (IsValid(OwningPawn))
 	{
-		ABSc3bCharacter* OwningPlayer = Cast<ABSc3bCharacter>(OwningPawn);
+		OwningPlayer = Cast<ABSc3bCharacter>(OwningPawn);
 		
 		//Setting animation values for state machine poses
 		Pitch = OwningPlayer->PlayerPitch;

@@ -30,6 +30,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FTransform LeftHand_Transform;
 
+	UPROPERTY()
+	class ABSc3bCharacter* OwningPlayer;
+
+	UFUNCTION(BlueprintCallable)
+	void FootStep_Notify();
+
 	UFUNCTION(BlueprintCallable)
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 };
