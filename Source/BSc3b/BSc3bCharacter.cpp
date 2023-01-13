@@ -57,10 +57,12 @@ ABSc3bCharacter::ABSc3bCharacter()
 	LaserSight = CreateDefaultSubobject<UNiagaraComponent>(TEXT("LaserSight"));
 	LaserSight->SetupAttachment(Weapon1, LaserSocketName);
 	LaserSight->SetVisibility(false);
+	LaserSight->SetIsReplicated(false);
 
 	LaserImpact = CreateDefaultSubobject<UNiagaraComponent>(TEXT("LaserImpact"));
 	LaserImpact->SetupAttachment(Weapon1);
 	LaserImpact->SetVisibility(false);
+	LaserImpact->SetIsReplicated(false);
 
 	//Will Setup custom movement rotation as this rotates the mesh for any movement
 	GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -74,6 +76,9 @@ ABSc3bCharacter::ABSc3bCharacter()
 	Health = 100;
 	OnRep_Health();
 	PlayerPitch = 0;
+	PlayerHorizontalVelocity = 0;
+	PlayerVerticalVelocity = 0;
+	bIsPlayerAiming = false;
 }
 
 void ABSc3bCharacter::BeginPlay()
@@ -117,6 +122,11 @@ void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	//Tell it to replicate the variable all clients at all times
 	DOREPLIFETIME(ABSc3bCharacter, Health);
+	
+	//Replicated variables used in animations
+	DOREPLIFETIME(ABSc3bCharacter, PlayerHorizontalVelocity);
+	DOREPLIFETIME(ABSc3bCharacter, PlayerVerticalVelocity);
+	DOREPLIFETIME(ABSc3bCharacter, bIsPlayerAiming);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerPitch, COND_SkipOwner);
 }
 
@@ -129,9 +139,6 @@ FTransform ABSc3bCharacter::GetWeaponTransform(FName Socket, ERelativeTransformS
 {
 	return Weapon1->GetSocketTransform(Socket, TransformSpace);
 }
-
-//////////////////////////////////////////////////////////////////////////
-// Input
 
 bool ABSc3bCharacter::Server_Shoot_Validate(FVector Location, FRotator Rotation)
 {
@@ -149,6 +156,8 @@ void ABSc3bCharacter::Server_Shoot_Implementation(FVector Location, FRotator Rot
 	SpawnBullet(Location, Rotation);
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Input
 void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
@@ -166,6 +175,10 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 
 		//Shooting
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ABSc3bCharacter::Shoot);
+
+		//Aiming
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ABSc3bCharacter::Aim);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ABSc3bCharacter::Aim);
 
 	}
 
@@ -229,7 +242,7 @@ void ABSc3bCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-
+	MoveAxisVector = MovementVector;
 	
 	if (Controller != nullptr)
 	{
@@ -316,6 +329,12 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 	
 }
 
+void ABSc3bCharacter::Aim(const FInputActionValue& Value)
+{
+	//Setting our aiming variable to be replicated
+	bIsPlayerAiming = Value.Get<bool>();
+}
+
 void ABSc3bCharacter::OrientLaserSight()
 {
 	// Start and End locations of Laser
@@ -344,6 +363,10 @@ void ABSc3bCharacter::SetPlayerPitchForOffset()
 	FRotator InterpRot = UKismetMathLibrary::RInterpTo(PlayerRotation, Difference, UGameplayStatics::GetWorldDeltaSeconds(GetWorld()), 10);
 	//Clamp the value otherwise we get values of 360
 	PlayerPitch = UKismetMathLibrary::ClampAngle(InterpRot.Pitch, -90, 90);
+
+	//Update other variables to be sent to the animation class
+	PlayerHorizontalVelocity = GetVelocity().Length() * MoveAxisVector.X;
+	PlayerVerticalVelocity = GetVelocity().Length() * MoveAxisVector.Y;
 }
 
 void ABSc3bCharacter::WeaponSway(float DeltaTime)

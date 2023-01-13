@@ -49,6 +49,10 @@ class ABSc3bCharacter : public ACharacter
 	/** Shoot Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ShootAction;
+	
+	/** Aim Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* AimAction;
 
 public:
 	ABSc3bCharacter();
@@ -61,6 +65,16 @@ public:
 
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	float PlayerPitch;
+
+	//Two variables used to handle walking blend space
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+	float PlayerHorizontalVelocity;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+	float PlayerVerticalVelocity;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+	bool bIsPlayerAiming;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LaserDistance;
@@ -119,6 +133,9 @@ protected:
 	UFUNCTION()
 	void Shoot(const FInputActionValue& Value);
 
+	UFUNCTION()
+	void Aim(const FInputActionValue& Value);
+
 	/*Create line trace for laser sight which acts as the collider. Spawn in
 	 * impact particle if laser is obstructed before reaching its end, otherwise
 	 * continue on until end
@@ -170,6 +187,9 @@ protected:
 	//Make the look axis value global as it needs to be accessed from other functions
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	FVector2D LookAxisVector;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	FVector2D MoveAxisVector;
 
 
 public:
