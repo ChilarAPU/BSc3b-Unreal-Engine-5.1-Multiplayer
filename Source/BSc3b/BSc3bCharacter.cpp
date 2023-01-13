@@ -124,9 +124,9 @@ void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ABSc3bCharacter, Health);
 	
 	//Replicated variables used in animations
-	DOREPLIFETIME(ABSc3bCharacter, PlayerHorizontalVelocity);
-	DOREPLIFETIME(ABSc3bCharacter, PlayerVerticalVelocity);
-	DOREPLIFETIME(ABSc3bCharacter, bIsPlayerAiming);
+	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerHorizontalVelocity, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerVerticalVelocity, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsPlayerAiming, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerPitch, COND_SkipOwner);
 }
 

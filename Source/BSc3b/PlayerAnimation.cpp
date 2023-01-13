@@ -29,6 +29,7 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		//Setting animation values for state machine poses
 		Pitch = OwningPlayer->PlayerPitch;
 		PlayerSpeed = OwningPlayer->GetVelocity().Length();
+		bPlayerAiming = OwningPlayer->bIsPlayerAiming;
 
 		//Setup LeftHand_Transform to work with FABRIK
 		FTransform PlayerWeapon = OwningPlayer->GetWeaponTransform(TEXT("LeftHandSocket"), RTS_World);
