@@ -26,6 +26,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bPlayerAiming;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float PlayerXVelocity;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float PlayerYVelocity;
+
 	//1 for attach, 0 for detach
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float LeftHand_FABRIK_Alpha;

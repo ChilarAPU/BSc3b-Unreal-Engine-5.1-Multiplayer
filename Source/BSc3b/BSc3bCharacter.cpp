@@ -79,6 +79,7 @@ ABSc3bCharacter::ABSc3bCharacter()
 	PlayerHorizontalVelocity = 0;
 	PlayerVerticalVelocity = 0;
 	bIsPlayerAiming = false;
+	
 }
 
 void ABSc3bCharacter::BeginPlay()
@@ -94,8 +95,8 @@ void ABSc3bCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 		//set the visibility of the laser sight to true only for the client
-		LaserSight->SetVisibility(true);
-		LaserImpact->SetVisibility(true);
+		//LaserSight->SetVisibility(true);
+		//LaserImpact->SetVisibility(true);
 	}
 }
 
@@ -127,6 +128,7 @@ void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerHorizontalVelocity, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerVerticalVelocity, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsPlayerAiming, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(ABSc3bCharacter, MoveAxisVector, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerPitch, COND_SkipOwner);
 }
 
@@ -154,6 +156,11 @@ void ABSc3bCharacter::Server_Shoot_Implementation(FVector Location, FRotator Rot
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnBullet(Location, Rotation);
+}
+
+void ABSc3bCharacter::Server_PlayerVelocity_Implementation(FVector2D MovementVector)
+{
+	MoveAxisVector = MovementVector;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -201,16 +208,23 @@ void ABSc3bCharacter::Server_Health_Implementation()
 		ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
 		GetController()->Possess(NewPlayer);
 		//Call client function on new player actor. This sets the laser sight up so that other clients cannot see it
-		NewPlayer->Client_Respawn();
+		//NewPlayer->Client_Respawn();
 	}
 
 	//OnRep_Health();
 }
 
-void ABSc3bCharacter::Client_Respawn_Implementation()
+void ABSc3bCharacter::Client_FlipLaserVisibility_Implementation()
 {
-	LaserSight->SetVisibility(true);
-	LaserImpact->SetVisibility(true);
+	//Make sure we only run this on the owning client
+	//This is especially import when running on the 
+	//Check has to run here, otherwise it does not work correctly
+	if (IsLocallyControlled())
+	{
+		LaserSight->ToggleVisibility();
+		LaserImpact->ToggleVisibility();
+	}
+	
 }
 
 void ABSc3bCharacter::Server_PlayFootstep_Implementation(FVector Location)
@@ -242,7 +256,14 @@ void ABSc3bCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-	MoveAxisVector = MovementVector;
+	if (HasAuthority())
+	{
+		MoveAxisVector = MovementVector;
+	} else if (IsLocallyControlled())
+	{
+		MoveAxisVector = MovementVector;
+		Server_PlayerVelocity(MovementVector);
+	}
 	
 	if (Controller != nullptr)
 	{
@@ -314,17 +335,6 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 			//call server function to subtract health
 			//Server_Health();
 		}
-		
-		//Log specific client / server
-		/*if (GetWorld()->GetNetMode() == NM_Client)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Client %d Health: %f"), GPlayInEditorID - 1, Health);
-		}
-		else if (GetWorld()->GetNetMode() == NM_ListenServer)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Server Health: %f"), Health);
-		}
-		*/
 	}
 	
 }
@@ -332,7 +342,26 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 {
 	//Setting our aiming variable to be replicated
-	bIsPlayerAiming = Value.Get<bool>();
+	if (HasAuthority())
+	{
+		bIsPlayerAiming = Value.Get<bool>();
+	} else if (IsLocallyControlled())
+	{
+		//Have to call this on client before going to server otherwise owning client will not
+		//see the same thing
+		bIsPlayerAiming = Value.Get<bool>();
+		Server_PlayerAiming(Value.Get<bool>());
+	}
+	Client_FlipLaserVisibility();
+	if (IsValid(AimSound))
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), AimSound);
+	}
+}
+
+void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming)
+{
+	bIsPlayerAiming = bIsAiming;
 }
 
 void ABSc3bCharacter::OrientLaserSight()
@@ -367,6 +396,7 @@ void ABSc3bCharacter::SetPlayerPitchForOffset()
 	//Update other variables to be sent to the animation class
 	PlayerHorizontalVelocity = GetVelocity().Length() * MoveAxisVector.X;
 	PlayerVerticalVelocity = GetVelocity().Length() * MoveAxisVector.Y;
+	
 }
 
 void ABSc3bCharacter::WeaponSway(float DeltaTime)

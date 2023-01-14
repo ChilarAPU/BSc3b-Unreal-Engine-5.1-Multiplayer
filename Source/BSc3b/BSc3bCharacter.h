@@ -85,6 +85,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	class USoundAttenuation* FootstepAttenuation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	class USoundBase* AimSound;
+
 	/* Called by shoot() to make sure any health changes are always
 	 * done on the server. This is to prevent clients from being able to
 	 * change their health client side
@@ -99,8 +102,8 @@ public:
 	 * does not show its laser sight on respawn
 	 */
 	UFUNCTION(Client, Reliable)
-	void Client_Respawn();
-	void Client_Respawn_Implementation();
+	void Client_FlipLaserVisibility();
+	void Client_FlipLaserVisibility_Implementation();
 
 	/* The only logic of this function is to move ourselves to the
 	 * server so we can then successfully call a multicast RPC. Location
@@ -169,6 +172,14 @@ protected:
 	bool Server_Shoot_Validate(FVector Location, FRotator Rotation);
 	void Server_Shoot_Implementation(FVector Location, FRotator Rotation);
 
+	UFUNCTION(Server, Reliable)
+	void Server_PlayerVelocity(FVector2D MovementVector);
+	void Server_PlayerVelocity_Implementation(FVector2D MovementVector);
+
+	UFUNCTION(Server, Reliable)
+	void Server_PlayerAiming(bool bIsAiming);
+	void Server_PlayerAiming_Implementation(bool bIsAiming);
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -188,7 +199,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	FVector2D LookAxisVector;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	UPROPERTY(Replicated, BlueprintReadOnly, EditAnywhere)
 	FVector2D MoveAxisVector;
 
 

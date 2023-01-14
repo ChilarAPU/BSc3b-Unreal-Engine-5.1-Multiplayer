@@ -30,6 +30,8 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		Pitch = OwningPlayer->PlayerPitch;
 		PlayerSpeed = OwningPlayer->GetVelocity().Length();
 		bPlayerAiming = OwningPlayer->bIsPlayerAiming;
+		PlayerXVelocity = OwningPlayer->PlayerVerticalVelocity;
+		PlayerYVelocity = OwningPlayer->PlayerHorizontalVelocity;
 
 		//Setup LeftHand_Transform to work with FABRIK
 		FTransform PlayerWeapon = OwningPlayer->GetWeaponTransform(TEXT("LeftHandSocket"), RTS_World);
