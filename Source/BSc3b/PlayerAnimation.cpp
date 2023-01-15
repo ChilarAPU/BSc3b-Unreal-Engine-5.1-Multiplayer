@@ -35,7 +35,16 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		PlayerYVelocity = OwningPlayer->PlayerHorizontalVelocity;
 		bIsPlayerDead = OwningPlayer->bIsDead;
 		bPlayerShoot = OwningPlayer->bIsShooting;
-		bPlayerSprinting = OwningPlayer->bIsSprinting;
+		
+		//Has to be above maximum player velocity when walking
+		if (OwningPlayer->GetVelocity().Length() > 250 && PlayerXVelocity > 0)
+		{
+			bPlayerSprinting = true;
+		}
+		else
+		{
+			bPlayerSprinting = false;
+		}
 
 		//Setup LeftHand_Transform to work with FABRIK
 		FTransform PlayerWeapon = OwningPlayer->GetWeaponTransform(TEXT("LeftHandSocket"), RTS_World);

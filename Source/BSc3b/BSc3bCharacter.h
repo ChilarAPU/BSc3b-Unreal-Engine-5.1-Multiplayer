@@ -223,8 +223,8 @@ protected:
 	void Server_PlayerShooting_Implementation(bool bShooting);
 
 	UFUNCTION(Server, Reliable)
-	void Server_PlayerSprinting(bool Sprinting);
-	void Server_PlayerSprinting_Implementation(bool Sprinting);
+	void Server_PlayerSprinting(bool Sprinting, float Speed);
+	void Server_PlayerSprinting_Implementation(bool Sprinting, float Speed);
 
 	////// PROTECTED CLIENT RPCS //////
 	/* Called whenever we aim in and out of our weapon to toggle the visibility of our

@@ -35,7 +35,7 @@ ABSc3bCharacter::ABSc3bCharacter()
 	// instead of recompiling to adjust them
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = 200.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
@@ -194,7 +194,7 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ABSc3bCharacter::Aim);
 
 		//Sprinting
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ABSc3bCharacter::Sprint);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ABSc3bCharacter::Sprint);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ABSc3bCharacter::Sprint);
 
 	}
@@ -269,7 +269,7 @@ void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 
 void ABSc3bCharacter::Move(const FInputActionValue& Value)
 {
-	// input is a Vector2D
+	// Replicate our move axis vector to be used in player state machine
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	if (HasAuthority())
 	{
@@ -279,7 +279,8 @@ void ABSc3bCharacter::Move(const FInputActionValue& Value)
 		MoveAxisVector = MovementVector;
 		Server_PlayerVelocity(MovementVector);
 	}
-	
+
+	//Add movement to our player. This value is automatically replicated by our controller
 	if (Controller != nullptr)
 	{
 		// find out which way is forward
@@ -291,13 +292,46 @@ void ABSc3bCharacter::Move(const FInputActionValue& Value)
 	
 		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
+		
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
+
+		/*if (!bIsSprinting)
+		{
+			return;
+		}
+
+		
+		if (MovementVector.Y <= 0)
+		{
+			if (HasAuthority())
+			{
+				GetCharacterMovement()->MaxWalkSpeed = 200;
+				UE_LOG(LogTemp, Warning, TEXT("1"));
+			}
+			else if (IsLocallyControlled())
+			{
+				GetCharacterMovement()->MaxWalkSpeed = 200;
+				Server_PlayerSprinting(bIsSprinting, 200);
+				UE_LOG(LogTemp, Warning, TEXT("2"));
+			}
+		} else
+		{
+			if (HasAuthority())
+			{
+				GetCharacterMovement()->MaxWalkSpeed = 500;
+				UE_LOG(LogTemp, Warning, TEXT("3"));
+			}
+			else if (IsLocallyControlled())
+			{
+				GetCharacterMovement()->MaxWalkSpeed = 500;
+				Server_PlayerSprinting(bIsSprinting, 500);
+				UE_LOG(LogTemp, Warning, TEXT("4"));
+			}
+		}	*/
+		} 
 	}
-	
-}
+
 
 void ABSc3bCharacter::Look(const FInputActionValue& Value)
 {
@@ -313,9 +347,14 @@ void ABSc3bCharacter::Look(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 {
+	//If we are sprinting, do not allow the player to shoot
+	if (bIsSprinting)
+	{
+		return;
+	}
 	if (Controller != nullptr)
 	{
-		const FName MuzzleSocket = TEXT("MuzzleSocket");
+		//const FName MuzzleSocket = TEXT("MuzzleSocket");
 		const FVector Location = LaserSight->GetComponentLocation();;
 		const FRotator Rotation = GetActorRotation();
 		
@@ -370,6 +409,11 @@ void ABSc3bCharacter::ShootComplete(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 {
+	//If we are sprinting, do not allow the player to aim
+	if (bIsSprinting)
+	{
+		return;	
+	}
 	//Setting our aiming variable to be replicated
 	if (HasAuthority())
 	{
@@ -381,7 +425,9 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 		bIsPlayerAiming = Value.Get<bool>();
 		Server_PlayerAiming(Value.Get<bool>());
 	}
+	//Toggle our laser sight visibility for our client only
 	Client_FlipLaserVisibility();
+	//Play sound attached to aiming
 	if (IsValid(AimSound))
 	{
 		UGameplayStatics::PlaySound2D(GetWorld(), AimSound);
@@ -390,13 +436,29 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 {
+	float Speed;
+	//Set speed based on whether we are already sprinting
+	if (bIsSprinting)
+	{
+		Speed = 200;
+	}
+	else
+	{
+		Speed = 500;
+	}
+
+	//Adjust walk speed that drives the animation and adjust the boolean that affects
+	//other logic inside the player such as shooting
 	if (HasAuthority())
 	{
+		GetCharacterMovement()->MaxWalkSpeed = Speed;
 		bIsSprinting = Value.Get<bool>();
+
 	} else if (IsLocallyControlled())
 	{
+		GetCharacterMovement()->MaxWalkSpeed = Speed;
 		bIsSprinting = Value.Get<bool>();
-		Server_PlayerSprinting(Value.Get<bool>());
+		Server_PlayerSprinting(Value.Get<bool>(), Speed);	
 	}
 }
 
@@ -410,8 +472,9 @@ void ABSc3bCharacter::Server_PlayerShooting_Implementation(bool bShooting)
 	bIsShooting = bShooting;
 }
 
-void ABSc3bCharacter::Server_PlayerSprinting_Implementation(bool Sprinting)
+void ABSc3bCharacter::Server_PlayerSprinting_Implementation(bool Sprinting, float Speed)
 {
+	GetCharacterMovement()->MaxWalkSpeed = Speed;
 	bIsSprinting = Sprinting;
 }
 
