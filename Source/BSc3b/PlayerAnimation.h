@@ -6,9 +6,10 @@
 #include "Animation/AnimInstance.h"
 #include "PlayerAnimation.generated.h"
 
-/**
- * 
- */
+//Forward Declarations
+class ABSc3bCharacter;
+
+
 UCLASS()
 class BSC3B_API UPlayerAnimation : public UAnimInstance
 {
@@ -16,7 +17,8 @@ class BSC3B_API UPlayerAnimation : public UAnimInstance
 
 	UPlayerAnimation();
 public:
-	
+
+	////// VALUES SET BY PLAYER TO HANDLE STATE MACHINE //////
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Pitch;
 
@@ -41,6 +43,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bPlayerSprinting;
 
+	////// FABRIK VARIABLES //////
 	//1 for attach, 0 for detach
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float LeftHand_FABRIK_Alpha;
@@ -49,7 +52,7 @@ public:
 	FTransform LeftHand_Transform;
 
 	UPROPERTY()
-	class ABSc3bCharacter* OwningPlayer;
+	ABSc3bCharacter* OwningPlayer;
 
 	UFUNCTION(BlueprintCallable)
 	void FootStep_Notify();

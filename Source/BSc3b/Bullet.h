@@ -6,6 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "Bullet.generated.h"
 
+//Forward Declarations
+class ABSc3bCharacter;
+
 UCLASS()
 class BSC3B_API ABullet : public AActor
 {
@@ -25,7 +28,7 @@ public:
 	float BulletSpeed;
 
 	UPROPERTY()
-	class ABSc3bCharacter* Player;
+	ABSc3bCharacter* Player;
 
 	void AddImpulseToBullet(FVector Direction);
 
