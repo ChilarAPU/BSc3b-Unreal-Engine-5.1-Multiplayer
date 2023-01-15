@@ -88,6 +88,12 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 	USoundBase* AimSound;
 
+	/* Set when movement key is pressed while sprinting other than forwards. This stops the player
+	 * from continuing to sprint in directions they shouldn't
+	 */
+	UPROPERTY(EditAnywhere)
+	bool bStopSprinting;
+
 public:
 	ABSc3bCharacter();
 

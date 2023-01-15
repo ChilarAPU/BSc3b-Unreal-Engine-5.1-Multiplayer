@@ -81,6 +81,7 @@ ABSc3bCharacter::ABSc3bCharacter()
 	bIsDead = false;
 	bIsShooting = false;
 	bIsSprinting = false;
+	bStopSprinting = false;
 	
 }
 
@@ -296,41 +297,32 @@ void ABSc3bCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 
-		/*if (!bIsSprinting)
+		//Sprinting related code
+		//Are we sprinting or have we run through this code already?
+		if (!bIsSprinting || bStopSprinting)
 		{
 			return;
 		}
 
+		//Are we moving forwards?
+		if (MovementVector.Y > 0)
+		{
+			return;
+		}
 		
-		if (MovementVector.Y <= 0)
+		if (HasAuthority())
 		{
-			if (HasAuthority())
-			{
-				GetCharacterMovement()->MaxWalkSpeed = 200;
-				UE_LOG(LogTemp, Warning, TEXT("1"));
-			}
-			else if (IsLocallyControlled())
-			{
-				GetCharacterMovement()->MaxWalkSpeed = 200;
-				Server_PlayerSprinting(bIsSprinting, 200);
-				UE_LOG(LogTemp, Warning, TEXT("2"));
-			}
-		} else
+			bStopSprinting = true;
+			GetCharacterMovement()->MaxWalkSpeed = 200;
+		}
+		else if (IsLocallyControlled())
 		{
-			if (HasAuthority())
-			{
-				GetCharacterMovement()->MaxWalkSpeed = 500;
-				UE_LOG(LogTemp, Warning, TEXT("3"));
-			}
-			else if (IsLocallyControlled())
-			{
-				GetCharacterMovement()->MaxWalkSpeed = 500;
-				Server_PlayerSprinting(bIsSprinting, 500);
-				UE_LOG(LogTemp, Warning, TEXT("4"));
-			}
-		}	*/
+			bStopSprinting = true;
+			GetCharacterMovement()->MaxWalkSpeed = 200;
+			Server_PlayerSprinting(bIsSprinting, 200);
 		} 
-	}
+	} 
+}
 
 
 void ABSc3bCharacter::Look(const FInputActionValue& Value)
@@ -447,6 +439,9 @@ void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 		Speed = 500;
 	}
 
+	//Reset value this is used to optimise related code in Move()
+	bStopSprinting = false;
+	
 	//Adjust walk speed that drives the animation and adjust the boolean that affects
 	//other logic inside the player such as shooting
 	if (HasAuthority())
