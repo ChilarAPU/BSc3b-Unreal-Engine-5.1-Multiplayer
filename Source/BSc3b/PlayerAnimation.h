@@ -32,6 +32,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float PlayerYVelocity;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsPlayerDead;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bPlayerShoot;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bPlayerSprinting;
+
 	//1 for attach, 0 for detach
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float LeftHand_FABRIK_Alpha;

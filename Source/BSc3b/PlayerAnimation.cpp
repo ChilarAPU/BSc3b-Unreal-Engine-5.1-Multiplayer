@@ -26,12 +26,16 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		OwningPlayer = Cast<ABSc3bCharacter>(OwningPawn);
 		
-		//Setting animation values for state machine poses
+		//Setting animation values that handle state machine poses
+		//Have to do this as animation values are not automatically replicated
 		Pitch = OwningPlayer->PlayerPitch;
 		PlayerSpeed = OwningPlayer->GetVelocity().Length();
 		bPlayerAiming = OwningPlayer->bIsPlayerAiming;
 		PlayerXVelocity = OwningPlayer->PlayerVerticalVelocity;
 		PlayerYVelocity = OwningPlayer->PlayerHorizontalVelocity;
+		bIsPlayerDead = OwningPlayer->bIsDead;
+		bPlayerShoot = OwningPlayer->bIsShooting;
+		bPlayerSprinting = OwningPlayer->bIsSprinting;
 
 		//Setup LeftHand_Transform to work with FABRIK
 		FTransform PlayerWeapon = OwningPlayer->GetWeaponTransform(TEXT("LeftHandSocket"), RTS_World);

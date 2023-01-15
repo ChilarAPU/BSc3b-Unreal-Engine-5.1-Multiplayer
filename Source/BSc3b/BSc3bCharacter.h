@@ -54,6 +54,10 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* AimAction;
 
+	/** Sprint Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SprintAction;
+
 public:
 	ABSc3bCharacter();
 
@@ -75,6 +79,15 @@ public:
 
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	bool bIsPlayerAiming;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+	bool bIsDead;
+	
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+	bool bIsShooting;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, EditAnywhere)
+	bool bIsSprinting;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LaserDistance;
@@ -136,8 +149,17 @@ protected:
 	UFUNCTION()
 	void Shoot(const FInputActionValue& Value);
 
+	/*
+	 * Tells our animation that we do not want to continue shooting
+	 */
+	UFUNCTION()
+	void ShootComplete(const FInputActionValue& Value);
+
 	UFUNCTION()
 	void Aim(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void Sprint(const FInputActionValue& Value);
 
 	/*Create line trace for laser sight which acts as the collider. Spawn in
 	 * impact particle if laser is obstructed before reaching its end, otherwise
@@ -180,6 +202,14 @@ protected:
 	void Server_PlayerAiming(bool bIsAiming);
 	void Server_PlayerAiming_Implementation(bool bIsAiming);
 
+	UFUNCTION(Server, Reliable)
+	void Server_PlayerShooting(bool bShooting);
+	void Server_PlayerShooting_Implementation(bool bShooting);
+
+	UFUNCTION(Server, Reliable)
+	void Server_PlayerSprinting(bool Sprinting);
+	void Server_PlayerSprinting_Implementation(bool Sprinting);
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -201,6 +231,8 @@ protected:
 
 	UPROPERTY(Replicated, BlueprintReadOnly, EditAnywhere)
 	FVector2D MoveAxisVector;
+
+
 
 
 public:

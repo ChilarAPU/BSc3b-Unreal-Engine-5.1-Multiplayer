@@ -71,14 +71,17 @@ ABSc3bCharacter::ABSc3bCharacter()
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
+	//default values
 	LaserDistance = 1000;
-	
 	Health = 100;
 	OnRep_Health();
 	PlayerPitch = 0;
 	PlayerHorizontalVelocity = 0;
 	PlayerVerticalVelocity = 0;
 	bIsPlayerAiming = false;
+	bIsDead = false;
+	bIsShooting = false;
+	bIsSprinting = false;
 	
 }
 
@@ -130,6 +133,9 @@ void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsPlayerAiming, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, MoveAxisVector, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerPitch, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsDead, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsShooting, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsSprinting, COND_SkipOwner);
 }
 
 void ABSc3bCharacter::OnRep_Health()
@@ -182,10 +188,15 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 
 		//Shooting
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ABSc3bCharacter::Shoot);
+		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Completed, this, &ABSc3bCharacter::ShootComplete);
 
 		//Aiming
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ABSc3bCharacter::Aim);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ABSc3bCharacter::Aim);
+
+		//Sprinting
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ABSc3bCharacter::Sprint);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ABSc3bCharacter::Sprint);
 
 	}
 
@@ -203,12 +214,17 @@ void ABSc3bCharacter::Server_Health_Implementation()
 		Health -= 1;
 		
 		//temporary way to spawn in new player character
-		const FVector t = GetActorLocation();
-		const FRotator r = GetActorRotation();
-		ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
-		GetController()->Possess(NewPlayer);
-		//Call client function on new player actor. This sets the laser sight up so that other clients cannot see it
-		//NewPlayer->Client_Respawn();
+		if (Health < 98)
+		{
+			bIsDead = true;
+			const FVector t = GetActorLocation();
+			const FRotator r = GetActorRotation();
+			ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
+			GetController()->Possess(NewPlayer);
+			//Call client function on new player actor. This sets the laser sight up so that other clients cannot see it
+			//NewPlayer->Client_Respawn();
+		}
+		
 	}
 
 	//OnRep_Health();
@@ -300,15 +316,6 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 {
 	if (Controller != nullptr)
 	{
-		
-		if (GetOwner()->GetLocalRole() == ROLE_Authority) //Only server has the role of authority
-		{
-			//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, FString::Printf(TEXT("%s: Shoot"), *GetOwner()->GetRolePropertyName().ToString()));
-		} 
-		/*if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy) //Client With Human based movement has this role
-			{
-			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, FString::Printf(TEXT("%s: Shoot"), *GetRolePropertyName().ToString()));
-			}*/
 		const FName MuzzleSocket = TEXT("MuzzleSocket");
 		const FVector Location = LaserSight->GetComponentLocation();;
 		const FRotator Rotation = GetActorRotation();
@@ -317,11 +324,17 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 		if (!HasAuthority())
 		{
 			Server_Shoot(Location, Rotation);
+
+			//Change shooting variable for animation. Optimise this into one server call
+			bIsShooting = Value.Get<bool>();
+			Server_PlayerShooting(Value.Get<bool>());
 		} else //meaning we are currently on the server
 		{
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			SpawnBullet(Location, Rotation);
+
+			bIsShooting = Value.Get<bool>();
 		}
 		
 		if (GetOwner()->GetLocalRole() == ROLE_Authority)
@@ -337,6 +350,23 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 		}
 	}
 	
+}
+
+void ABSc3bCharacter::ShootComplete(const FInputActionValue& Value)
+{
+	if (Controller != nullptr)
+	{
+		if (HasAuthority())
+		{
+			bIsShooting = Value.Get<bool>();
+		} else if (IsLocallyControlled())
+		{
+			//Have to call this on client before going to server otherwise owning client will not
+			//see the same thing
+			bIsShooting = Value.Get<bool>();
+			Server_PlayerShooting(Value.Get<bool>());
+		}
+	}
 }
 
 void ABSc3bCharacter::Aim(const FInputActionValue& Value)
@@ -359,9 +389,31 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 	}
 }
 
+void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
+{
+	if (HasAuthority())
+	{
+		bIsSprinting = Value.Get<bool>();
+	} else if (IsLocallyControlled())
+	{
+		bIsSprinting = Value.Get<bool>();
+		Server_PlayerSprinting(Value.Get<bool>());
+	}
+}
+
 void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming)
 {
 	bIsPlayerAiming = bIsAiming;
+}
+
+void ABSc3bCharacter::Server_PlayerShooting_Implementation(bool bShooting)
+{
+	bIsShooting = bShooting;
+}
+
+void ABSc3bCharacter::Server_PlayerSprinting_Implementation(bool Sprinting)
+{
+	bIsSprinting = Sprinting;
 }
 
 void ABSc3bCharacter::OrientLaserSight()
