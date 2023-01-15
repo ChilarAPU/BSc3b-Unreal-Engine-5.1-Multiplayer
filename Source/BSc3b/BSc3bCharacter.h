@@ -242,10 +242,12 @@ protected:
 	void Multi_PlayFootstep(FVector Location);
 	void Multi_PlayFootstep_Implementation(FVector Location);
 
+	////// REP NOTIFY FUNCTIONS //////
 	//Function to call whenever I would change the health function. Can check health value for example
 	UFUNCTION()
 	void OnRep_Health();
 
+	////// PROTECTED VARIABLES //////
 	//Make the look axis value global as it needs to be accessed from setting pitch functions
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	FVector2D LookAxisVector;
