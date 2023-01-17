@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+	// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "BSc3bCharacter.h"
 #include "Camera/CameraComponent.h"
@@ -230,15 +230,15 @@ void ABSc3bCharacter::Server_Health_Implementation()
 	//OnRep_Health();
 }
 
-void ABSc3bCharacter::Client_FlipLaserVisibility_Implementation()
+void ABSc3bCharacter::Client_FlipLaserVisibility_Implementation(bool Visible)
 {
 	//Make sure we only run this on the owning client
 	//This is especially import when running on the 
 	//Check has to run here, otherwise it does not work correctly
 	if (IsLocallyControlled())
 	{
-		LaserSight->ToggleVisibility();
-		LaserImpact->ToggleVisibility();
+		LaserSight->SetVisibility(Visible);
+		LaserImpact->SetVisibility(Visible);
 	}
 	
 }
@@ -339,7 +339,7 @@ void ABSc3bCharacter::Look(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 {
-	//If we are sprinting, do not allow the player to shoot
+	//If we are sprinting, do not allow the player to shoot	
 	if (bIsSprinting)
 	{
 		return;
@@ -401,7 +401,7 @@ void ABSc3bCharacter::ShootComplete(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 {
-	//If we are sprinting, do not allow the player to aim
+	//If we are sprinting and moving forward, do not allow the player to aim
 	if (bIsSprinting)
 	{
 		return;	
@@ -418,7 +418,7 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 		Server_PlayerAiming(Value.Get<bool>());
 	}
 	//Toggle our laser sight visibility for our client only
-	Client_FlipLaserVisibility();
+	Client_FlipLaserVisibility(Value.Get<bool>());
 	//Play sound attached to aiming
 	if (IsValid(AimSound))
 	{

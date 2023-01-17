@@ -237,8 +237,8 @@ protected:
 	 * laser sight
 	 */
 	UFUNCTION(Client, Reliable)
-	void Client_FlipLaserVisibility();
-	void Client_FlipLaserVisibility_Implementation();
+	void Client_FlipLaserVisibility(bool Visible);
+	void Client_FlipLaserVisibility_Implementation(bool Visible);
 
 	////// PROTECTED MULTICAST RPCS //////
 	/* Called by our Server footstep RPC to make sure every client will hear this footstep.
