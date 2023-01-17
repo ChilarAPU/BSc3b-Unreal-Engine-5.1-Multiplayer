@@ -35,7 +35,7 @@ ABSc3bCharacter::ABSc3bCharacter()
 	// instead of recompiling to adjust them
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 200.f;
+	GetCharacterMovement()->MaxWalkSpeed = 300.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
@@ -82,6 +82,7 @@ ABSc3bCharacter::ABSc3bCharacter()
 	bIsShooting = false;
 	bIsSprinting = false;
 	bStopSprinting = false;
+	bWasAimingCanceled = false;
 	
 }
 
@@ -175,10 +176,6 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 {
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
-		//Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		//Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABSc3bCharacter::Move);
@@ -402,20 +399,31 @@ void ABSc3bCharacter::ShootComplete(const FInputActionValue& Value)
 void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 {
 	//If we are sprinting and moving forward, do not allow the player to aim
+	float Speed;
 	if (bIsSprinting)
 	{
 		return;	
+	}
+	if (!bIsPlayerAiming)
+	{
+		Speed = 150;
+	}
+	else
+	{
+		Speed = 300;
 	}
 	//Setting our aiming variable to be replicated
 	if (HasAuthority())
 	{
 		bIsPlayerAiming = Value.Get<bool>();
+		GetCharacterMovement()->MaxWalkSpeed = Speed;
 	} else if (IsLocallyControlled())
 	{
 		//Have to call this on client before going to server otherwise owning client will not
 		//see the same thing
 		bIsPlayerAiming = Value.Get<bool>();
-		Server_PlayerAiming(Value.Get<bool>());
+		GetCharacterMovement()->MaxWalkSpeed = Speed;
+		Server_PlayerAiming(Value.Get<bool>(), Speed);
 	}
 	//Toggle our laser sight visibility for our client only
 	Client_FlipLaserVisibility(Value.Get<bool>());
@@ -428,11 +436,17 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 {
+	//We need to check again in case the player stops aiming while holding down the sprint key
+	if (bIsPlayerAiming  || bWasAimingCanceled)
+	{
+		bWasAimingCanceled = Value.Get<bool>();
+		return;
+	}
 	float Speed;
 	//Set speed based on whether we are already sprinting
 	if (bIsSprinting)
 	{
-		Speed = 200;
+		Speed = 300;
 	}
 	else
 	{
@@ -457,9 +471,10 @@ void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 	}
 }
 
-void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming)
+void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming, float speed)
 {
 	bIsPlayerAiming = bIsAiming;
+	GetCharacterMovement()->MaxWalkSpeed = speed;
 }
 
 void ABSc3bCharacter::Server_PlayerShooting_Implementation(bool bShooting)

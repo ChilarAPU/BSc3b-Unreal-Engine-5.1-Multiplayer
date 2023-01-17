@@ -42,10 +42,6 @@ class ABSc3bCharacter : public ACharacter
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
-	
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
 
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -93,6 +89,9 @@ class ABSc3bCharacter : public ACharacter
 	 */
 	UPROPERTY(EditAnywhere)
 	bool bStopSprinting;
+
+	UPROPERTY()
+	bool bWasAimingCanceled;
 
 public:
 	ABSc3bCharacter();
@@ -221,8 +220,8 @@ protected:
 	void Server_PlayerVelocity_Implementation(FVector2D MovementVector);
 
 	UFUNCTION(Server, Reliable)
-	void Server_PlayerAiming(bool bIsAiming);
-	void Server_PlayerAiming_Implementation(bool bIsAiming);
+	void Server_PlayerAiming(bool bIsAiming, float speed);
+	void Server_PlayerAiming_Implementation(bool bIsAiming, float speed);
 
 	UFUNCTION(Server, Reliable)
 	void Server_PlayerShooting(bool bShooting);

@@ -37,7 +37,7 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		bPlayerShoot = OwningPlayer->bIsShooting;
 		
 		//Has to be above maximum player velocity when walking
-		if (OwningPlayer->GetVelocity().Length() > 250 && PlayerXVelocity > 0)
+		if (OwningPlayer->GetVelocity().Length() > 350 && PlayerXVelocity > 0)
 		{
 			bPlayerSprinting = true;
 		}
