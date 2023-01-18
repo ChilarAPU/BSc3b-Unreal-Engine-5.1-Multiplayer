@@ -43,6 +43,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bPlayerSprinting;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bHit;
+
 	////// FABRIK VARIABLES //////
 	//1 for attach, 0 for detach
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -56,6 +59,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void FootStep_Notify();
+
+	UFUNCTION(BlueprintCallable)
+	void Shoot_Notify(bool bAiming);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;

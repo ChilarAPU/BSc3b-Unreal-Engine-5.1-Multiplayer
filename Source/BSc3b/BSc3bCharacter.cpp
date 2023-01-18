@@ -83,6 +83,7 @@ ABSc3bCharacter::ABSc3bCharacter()
 	bIsSprinting = false;
 	bStopSprinting = false;
 	bWasAimingCanceled = false;
+	bHitByBullet = false;
 	
 }
 
@@ -127,6 +128,7 @@ void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	//Tell it to replicate the variable all clients at all times
 	DOREPLIFETIME(ABSc3bCharacter, Health);
+	DOREPLIFETIME(ABSc3bCharacter, bHitByBullet);
 	
 	//Replicated variables used in animations
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerHorizontalVelocity, COND_SkipOwner);
@@ -136,7 +138,7 @@ void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerPitch, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsDead, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsShooting, COND_SkipOwner);
-	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsSprinting, COND_SkipOwner);
+	DOREPLIFETIME(ABSc3bCharacter, bIsSprinting);
 }
 
 void ABSc3bCharacter::OnRep_Health()
@@ -195,6 +197,9 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ABSc3bCharacter::Sprint);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ABSc3bCharacter::Sprint);
 
+		//Reloading
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ABSc3bCharacter::Reload);
+
 	}
 
 }
@@ -211,7 +216,7 @@ void ABSc3bCharacter::Server_Health_Implementation()
 		Health -= 1;
 		
 		//temporary way to spawn in new player character
-		if (Health < 98)
+		if (Health < 95)
 		{
 			bIsDead = true;
 			const FVector t = GetActorLocation();
@@ -223,7 +228,6 @@ void ABSc3bCharacter::Server_Health_Implementation()
 		}
 		
 	}
-
 	//OnRep_Health();
 }
 
@@ -343,26 +347,19 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 	}
 	if (Controller != nullptr)
 	{
-		//const FName MuzzleSocket = TEXT("MuzzleSocket");
-		const FVector Location = LaserSight->GetComponentLocation();;
-		const FRotator Rotation = GetActorRotation();
-		
 		//Call server function if we currently do no have ROLE_AUTHORITY
 		if (!HasAuthority())
 		{
-			Server_Shoot(Location, Rotation);
 
 			//Change shooting variable for animation. Optimise this into one server call
 			bIsShooting = Value.Get<bool>();
 			Server_PlayerShooting(Value.Get<bool>());
 		} else //meaning we are currently on the server
 		{
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			SpawnBullet(Location, Rotation);
 
 			bIsShooting = Value.Get<bool>();
 		}
+		
 		
 		if (GetOwner()->GetLocalRole() == ROLE_Authority)
 		{
@@ -376,6 +373,7 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 			//Server_Health();
 		}
 	}
+	
 	
 }
 
@@ -466,12 +464,52 @@ void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 	} else if (IsLocallyControlled())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = Speed;
-		bIsSprinting = Value.Get<bool>();
 		Server_PlayerSprinting(Value.Get<bool>(), Speed);	
 	}
 }
 
-void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming, float speed)
+void ABSc3bCharacter::Reload(const FInputActionValue& Value)
+{
+	
+}
+
+void ABSc3bCharacter::ShootLogic(bool bAimingIn)
+{
+	//If we are sprinting, do not allow the player to shoot	
+	if (Controller != nullptr)
+	{
+		
+		FVector Location;
+		FRotator Rotation;
+		if (bAimingIn)
+		{
+			Location = LaserSight->GetComponentLocation();
+			Rotation = GetActorRotation();
+		}
+		else
+		{
+			const FName MuzzleSocket = TEXT("MuzzleSocket");
+			Location = Weapon1->GetSocketLocation(MuzzleSocket);
+			Rotation = Weapon1->GetSocketRotation(MuzzleSocket);
+		}
+		
+		//Call server function if we currently do no have ROLE_AUTHORITY
+		 //meaning we are currently on the server
+			if (HasAuthority())
+			{
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				SpawnBullet(Location, Rotation);
+			}else
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("WW"));
+				Server_Shoot(Location, Rotation);
+			}
+		
+	}
+}
+
+	void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming, float speed)
 {
 	bIsPlayerAiming = bIsAiming;
 	GetCharacterMovement()->MaxWalkSpeed = speed;

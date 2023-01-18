@@ -4,7 +4,6 @@
 #include "PlayerAnimation.h"
 
 #include "BSc3bCharacter.h"
-#include "GameFramework/CharacterMovementComponent.h"
 
 UPlayerAnimation::UPlayerAnimation()
 {
@@ -16,6 +15,11 @@ UPlayerAnimation::UPlayerAnimation()
 void UPlayerAnimation::FootStep_Notify()
 {
 	OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation());
+}
+
+void UPlayerAnimation::Shoot_Notify(bool bAiming)
+{
+	OwningPlayer->ShootLogic(bAiming);
 }
 
 void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
@@ -35,6 +39,7 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		PlayerYVelocity = OwningPlayer->PlayerHorizontalVelocity;
 		bIsPlayerDead = OwningPlayer->bIsDead;
 		bPlayerShoot = OwningPlayer->bIsShooting;
+		bHit = OwningPlayer->bHitByBullet;
 		
 		//Has to be above maximum player velocity when walking
 		if (OwningPlayer->GetVelocity().Length() > 350 && PlayerXVelocity > 0)

@@ -20,11 +20,16 @@ ABullet::ABullet()
 	BulletMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 	//Will not block the players movement
 	BulletMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	BulletMesh->SetRelativeRotation(FRotator(0.0, -90, 0.0));
+	BulletMesh->SetRelativeRotation(FRotator(0.0, -90, -90));
+	BulletMesh->SetRelativeScale3D(FVector(0.1, 0.1, 0.1));
 	BulletMesh->SetIsReplicated(true);
 	BulletMesh->SetNotifyRigidBodyCollision(true);
 
 	BulletMesh->OnComponentBeginOverlap.AddDynamic(this, &ABullet::PlayerOverlap);
+
+	//Set bullet to despawn 10 seconds after it has been fired. Quick and easy way to stop
+	//our level from lagging due to too many meshes
+	InitialLifeSpan = 10;
 
 	BulletSpeed = 1000;
 	bReplicates = true;
@@ -35,7 +40,7 @@ ABullet::ABullet()
 
 void ABullet::AddImpulseToBullet(FVector Direction)
 {
-	BulletMesh->AddImpulse(Direction * BulletSpeed, NAME_None);	
+	BulletMesh->AddImpulse(Direction * BulletSpeed, NAME_None);
 }
 
 void ABullet::PlayerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

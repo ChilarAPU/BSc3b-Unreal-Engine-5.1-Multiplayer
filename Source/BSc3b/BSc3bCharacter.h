@@ -62,6 +62,10 @@ class ABSc3bCharacter : public ACharacter
 	/** Sprint Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SprintAction;
+	
+	/** Sprint Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ReloadAction;
 
 	////// PRIVATE VARIABLES //////
 	/* Actor which should spawn when the player shoot a weapon */
@@ -128,6 +132,9 @@ public:
 	/* Replicate whether player is sprinting or not to animation */
 	UPROPERTY(Replicated, BlueprintReadOnly, EditAnywhere)
 	bool bIsSprinting;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, EditAnywhere)
+	bool bHitByBullet;
 	
 	////// PUBLIC SERVER RPCS //////
 	/* Called by shoot() to make sure any health changes are always
@@ -151,6 +158,10 @@ public:
 	/* Used by animation instance to get the weapons transform */
 	UFUNCTION()
 	FTransform GetWeaponTransform(FName Socket, ERelativeTransformSpace TransformSpace);
+
+	/* Called by shoot notify event that spawns in a bullet at the guns laser sight location*/
+	UFUNCTION()
+	void ShootLogic(bool bAimingIn);
 
 protected:
 
@@ -177,6 +188,11 @@ protected:
 	UFUNCTION()
 	void Sprint(const FInputActionValue& Value);
 
+	/** Called for Reloading input*/
+	UFUNCTION()
+	void Reload(const FInputActionValue& Value);
+	
+	
 	////// PROTECTED LOGIC FUNCTIONS //////
 	/*Create line trace for laser sight which acts as the collider. Spawn in
 	 * impact particle if laser is obstructed before reaching its end, otherwise
