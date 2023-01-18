@@ -4,6 +4,7 @@
 #include "Bullet.h"
 
 #include "BSc3bCharacter.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values
 ABullet::ABullet()
@@ -68,6 +69,23 @@ void ABullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrim
 	BulletMesh->SetNotifyRigidBodyCollision(false);
 }
 
+void ABullet::CustomCollision()
+{
+	FVector End = BulletMesh->GetComponentLocation();
+	const TArray<AActor*> ActorsToIgnore;
+	FHitResult OutHit;
+	UKismetSystemLibrary::LineTraceSingle(GetWorld(), CachedLocation, End, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::Persistent, OutHit, true);
+	/*FVector Start = LaserSight->GetComponentLocation();
+	FVector End = Start + Weapon1->GetRightVector() * LaserDistance;
+	//Actors to ignore (which is none)
+	const TArray<AActor*> ActorsToIgnore;
+	//Store result of linetrace
+	FHitResult OutHit;
+	UKismetSystemLibrary::LineTraceSingle(GetWorld(), Start, End, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, OutHit, true);
+	*/
+	
+}
+
 // Called when the game starts or when spawned
 void ABullet::BeginPlay()
 {
@@ -77,6 +95,7 @@ void ABullet::BeginPlay()
 	BulletMesh->OnComponentHit.AddDynamic(this, &ABullet::OnHit);
 	
 	Player = Cast<ABSc3bCharacter>(GetInstigator());
+	CachedLocation = GetActorLocation();
 	
 }
 
@@ -84,6 +103,17 @@ void ABullet::BeginPlay()
 void ABullet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+
+	if (HasAuthority())
+	{
+		CustomCollision();
+		FVector t = BulletMesh->GetComponentLocation();
+		UE_LOG(LogTemp, Warning, TEXT("%f, %f, %f"), t.X, t.Y, t.Z);
+		//Storing our current location, ready for the next tick
+		CachedLocation = BulletMesh->GetComponentLocation();
+	}
+
 
 }
 

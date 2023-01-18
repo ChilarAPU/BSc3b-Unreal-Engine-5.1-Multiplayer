@@ -8,6 +8,7 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -102,6 +103,15 @@ void ABSc3bCharacter::BeginPlay()
 		//set the visibility of the laser sight to true only for the client
 		//LaserSight->SetVisibility(true);
 		//LaserImpact->SetVisibility(true);
+	}
+	if (!IsValid(PlayerHUDClass))
+	{
+		return;
+	}
+	if (IsLocallyControlled())
+	{
+		PlayerHUD = CreateWidget<UUserWidget>(GetWorld(), PlayerHUDClass);
+		PlayerHUD->AddToViewport();
 	}
 }
 

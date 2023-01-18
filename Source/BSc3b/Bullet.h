@@ -38,6 +38,12 @@ public:
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
 
+	UPROPERTY()
+	FVector CachedLocation;
+	
+	UFUNCTION()
+	void CustomCollision();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

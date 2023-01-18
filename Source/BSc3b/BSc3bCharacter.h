@@ -18,6 +18,7 @@ class UInputAction;
 class USoundBase;
 class USoundAttenuation;
 class UInputComponent;
+class UUserWidget;
 
 UCLASS(config=Game)
 class ABSc3bCharacter : public ACharacter
@@ -87,6 +88,12 @@ class ABSc3bCharacter : public ACharacter
 	/* Cloth sound that plays whenever the player aims in to replicate the sound of clothes moving */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 	USoundBase* AimSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> PlayerHUDClass;
+
+	UPROPERTY()
+	UUserWidget* PlayerHUD;
 
 	/* Set when movement key is pressed while sprinting other than forwards. This stops the player
 	 * from continuing to sprint in directions they shouldn't
