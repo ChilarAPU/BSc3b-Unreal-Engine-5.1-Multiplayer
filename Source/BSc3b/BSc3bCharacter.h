@@ -18,7 +18,7 @@ class UInputAction;
 class USoundBase;
 class USoundAttenuation;
 class UInputComponent;
-class UUserWidget;
+class UPlayerHUD;
 
 UCLASS(config=Game)
 class ABSc3bCharacter : public ACharacter
@@ -93,7 +93,7 @@ class ABSc3bCharacter : public ACharacter
 	TSubclassOf<UUserWidget> PlayerHUDClass;
 
 	UPROPERTY()
-	UUserWidget* PlayerHUD;
+	UPlayerHUD* PlayerHUD;
 
 	/* Set when movement key is pressed while sprinting other than forwards. This stops the player
 	 * from continuing to sprint in directions they shouldn't

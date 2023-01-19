@@ -8,7 +8,7 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Blueprint/UserWidget.h"
+#include "PlayerHUD.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -110,7 +110,7 @@ void ABSc3bCharacter::BeginPlay()
 	}
 	if (IsLocallyControlled())
 	{
-		PlayerHUD = CreateWidget<UUserWidget>(GetWorld(), PlayerHUDClass);
+		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), PlayerHUDClass);
 		PlayerHUD->AddToViewport();
 	}
 }
@@ -129,6 +129,10 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 	{
 		SetPlayerPitchForOffset();
 		Server_SetPlayerPitchForOffset();
+	}
+	if (IsValid(PlayerHUD))
+	{
+		PlayerHUD->HealthText = FString::SanitizeFloat(Health);
 	}
 }
 

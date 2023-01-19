@@ -26,7 +26,7 @@ ABullet::ABullet()
 	BulletMesh->SetIsReplicated(true);
 	BulletMesh->SetNotifyRigidBodyCollision(true);
 
-	BulletMesh->OnComponentBeginOverlap.AddDynamic(this, &ABullet::PlayerOverlap);
+	//BulletMesh->OnComponentBeginOverlap.AddDynamic(this, &ABullet::PlayerOverlap);
 
 	//Set bullet to despawn 10 seconds after it has been fired. Quick and easy way to stop
 	//our level from lagging due to too many meshes
@@ -75,14 +75,15 @@ void ABullet::CustomCollision()
 	const TArray<AActor*> ActorsToIgnore;
 	FHitResult OutHit;
 	UKismetSystemLibrary::LineTraceSingle(GetWorld(), CachedLocation, End, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::Persistent, OutHit, true);
-	/*FVector Start = LaserSight->GetComponentLocation();
-	FVector End = Start + Weapon1->GetRightVector() * LaserDistance;
-	//Actors to ignore (which is none)
-	const TArray<AActor*> ActorsToIgnore;
-	//Store result of linetrace
-	FHitResult OutHit;
-	UKismetSystemLibrary::LineTraceSingle(GetWorld(), Start, End, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, OutHit, true);
-	*/
+	if (OutHit.bBlockingHit)
+	{
+		Player = Cast<ABSc3bCharacter>(OutHit.GetActor());
+		if (Player)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("PlayerHit"));
+			Player->Server_Health();
+		}
+	}
 	
 }
 
@@ -109,7 +110,6 @@ void ABullet::Tick(float DeltaTime)
 	{
 		CustomCollision();
 		FVector t = BulletMesh->GetComponentLocation();
-		UE_LOG(LogTemp, Warning, TEXT("%f, %f, %f"), t.X, t.Y, t.Z);
 		//Storing our current location, ready for the next tick
 		CachedLocation = BulletMesh->GetComponentLocation();
 	}
