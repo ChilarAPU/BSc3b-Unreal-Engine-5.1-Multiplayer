@@ -9,6 +9,7 @@
 #include "NiagaraComponent.h"
 #include "BSc3bCharacter.generated.h"
 
+class ABSc3bController;
 //Forward Declarations
 class UCameraComponent;
 class USkeletalMeshComponent;
@@ -89,12 +90,6 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 	USoundBase* AimSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<UUserWidget> PlayerHUDClass;
-
-	UPROPERTY()
-	UPlayerHUD* PlayerHUD;
-
 	/* Set when movement key is pressed while sprinting other than forwards. This stops the player
 	 * from continuing to sprint in directions they shouldn't
 	 */
@@ -103,6 +98,9 @@ class ABSc3bCharacter : public ACharacter
 
 	UPROPERTY()
 	bool bWasAimingCanceled;
+
+	UPROPERTY()
+	ABSc3bController* PlayerController;
 
 public:
 	ABSc3bCharacter();
@@ -262,6 +260,9 @@ protected:
 	void Client_FlipLaserVisibility(bool Visible);
 	void Client_FlipLaserVisibility_Implementation(bool Visible);
 
+	UFUNCTION(Client, Reliable)
+	void Client_Respawn();
+	void Client_Respawn_Implementation();
 	////// PROTECTED MULTICAST RPCS //////
 	/* Called by our Server footstep RPC to make sure every client will hear this footstep.
 	 * Has to be called by the server otherwise it acts as a client RPC

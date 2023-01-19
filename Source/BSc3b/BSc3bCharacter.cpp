@@ -1,6 +1,8 @@
 	// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "BSc3bCharacter.h"
+
+#include "BSc3bController.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -9,6 +11,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "PlayerHUD.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -85,6 +88,7 @@ ABSc3bCharacter::ABSc3bCharacter()
 	bStopSprinting = false;
 	bWasAimingCanceled = false;
 	bHitByBullet = false;
+	PlayerController = nullptr;
 	
 }
 
@@ -94,24 +98,13 @@ void ABSc3bCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	//Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	PlayerController = Cast<ABSc3bController>(Controller);
+	if (PlayerController)
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
-		//set the visibility of the laser sight to true only for the client
-		//LaserSight->SetVisibility(true);
-		//LaserImpact->SetVisibility(true);
-	}
-	if (!IsValid(PlayerHUDClass))
-	{
-		return;
-	}
-	if (IsLocallyControlled())
-	{
-		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), PlayerHUDClass);
-		PlayerHUD->AddToViewport();
 	}
 }
 
@@ -130,9 +123,14 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 		SetPlayerPitchForOffset();
 		Server_SetPlayerPitchForOffset();
 	}
-	if (IsValid(PlayerHUD))
+	PlayerController = Cast<ABSc3bController>(Controller);
+	if (!PlayerController)
 	{
-		PlayerHUD->HealthText = FString::SanitizeFloat(Health);
+		return;
+	}
+	if (IsValid(PlayerController->PlayerHUD))
+	{
+		PlayerController->PlayerHUD->HealthText = FString::SanitizeFloat(Health);
 	}
 }
 
@@ -237,12 +235,10 @@ void ABSc3bCharacter::Server_Health_Implementation()
 			const FRotator r = GetActorRotation();
 			ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
 			GetController()->Possess(NewPlayer);
-			//Call client function on new player actor. This sets the laser sight up so that other clients cannot see it
 			//NewPlayer->Client_Respawn();
 		}
 		
 	}
-	//OnRep_Health();
 }
 
 void ABSc3bCharacter::Client_FlipLaserVisibility_Implementation(bool Visible)
@@ -258,7 +254,12 @@ void ABSc3bCharacter::Client_FlipLaserVisibility_Implementation(bool Visible)
 	
 }
 
-void ABSc3bCharacter::Server_PlayFootstep_Implementation(FVector Location)
+void ABSc3bCharacter::Client_Respawn_Implementation()
+{
+	//Any client specific calls needed before respawning
+}
+
+	void ABSc3bCharacter::Server_PlayFootstep_Implementation(FVector Location)
 {
 	Multi_PlayFootstep(Location);
 }

@@ -77,11 +77,14 @@ void ABullet::CustomCollision()
 	UKismetSystemLibrary::LineTraceSingle(GetWorld(), CachedLocation, End, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::Persistent, OutHit, true);
 	if (OutHit.bBlockingHit)
 	{
-		Player = Cast<ABSc3bCharacter>(OutHit.GetActor());
-		if (Player)
+		ABSc3bCharacter* HitPlayer = Cast<ABSc3bCharacter>(OutHit.GetActor());
+		if (HitPlayer)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("PlayerHit"));
-			Player->Server_Health();
+			if (HitPlayer->IsPlayerControlled())
+			{
+				HitPlayer->Server_Health();
+			}
+			
 		}
 	}
 	
