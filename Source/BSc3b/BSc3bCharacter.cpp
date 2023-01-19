@@ -163,7 +163,7 @@ FTransform ABSc3bCharacter::GetWeaponTransform(FName Socket, ERelativeTransformS
 	return Weapon1->GetSocketTransform(Socket, TransformSpace);
 }
 
-bool ABSc3bCharacter::Server_Shoot_Validate(FVector Location, FRotator Rotation)
+	bool ABSc3bCharacter::Server_Shoot_Validate(FVector Location, FRotator Rotation)
 {
 	//Currently inside the server
 	//Would be where cheat detection would be implemented.
@@ -216,17 +216,20 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 
 }
 
-bool ABSc3bCharacter::Server_Health_Validate()
+bool ABSc3bCharacter::Server_Health_Validate(FName Bone)
 {
 	return true;
 }
 
-void ABSc3bCharacter::Server_Health_Implementation()
+void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		Health -= 1;
-		
+		if (Bone == "head")
+		{
+			UE_LOG(LogTemp, Warning, TEXT("HeadShot"));
+		}
 		//temporary way to spawn in new player character
 		if (Health < 95)
 		{

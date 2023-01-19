@@ -147,9 +147,9 @@ public:
 	 * change their health client side
 	 */
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_Health();
-	bool Server_Health_Validate();
-	void Server_Health_Implementation();
+	void Server_Health(FName Bone);
+	bool Server_Health_Validate(FName Bone);
+	void Server_Health_Implementation(FName Bone);
 
 	/* The only logic of this function is to move ourselves to the
 	 * server so we can then successfully call a multicast RPC. Location

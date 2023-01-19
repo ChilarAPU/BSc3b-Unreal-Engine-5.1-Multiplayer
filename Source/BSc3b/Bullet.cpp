@@ -53,7 +53,7 @@ void ABullet::PlayerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 		//Without this, clients would not be able to call their server RPCs
 		if (HitPlayer->IsLocallyControlled())
 		{
-			HitPlayer->Server_Health();
+			//HitPlayer->Server_Health();
 		}
 	}
 	
@@ -78,11 +78,12 @@ void ABullet::CustomCollision()
 	if (OutHit.bBlockingHit)
 	{
 		ABSc3bCharacter* HitPlayer = Cast<ABSc3bCharacter>(OutHit.GetActor());
+		FName HitBone =  OutHit.BoneName;
 		if (HitPlayer)
 		{
 			if (HitPlayer->IsPlayerControlled())
 			{
-				HitPlayer->Server_Health();
+				HitPlayer->Server_Health(HitBone);
 			}
 			
 		}
