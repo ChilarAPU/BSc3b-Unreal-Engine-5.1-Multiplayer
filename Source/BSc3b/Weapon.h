@@ -9,9 +9,18 @@
 /**
  * 
  */
+
+
 UCLASS()
 class BSC3B_API UWeapon : public USkeletalMeshComponent
 {
 	GENERATED_BODY()
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attachment, meta = (AllowPrivateAccess = true))
+	UStaticMeshComponent* Scope;
+
+public:
+	UWeapon();
+
+	virtual void BeginPlay() override;
 };
