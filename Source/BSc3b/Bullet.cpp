@@ -118,6 +118,5 @@ void ABullet::Tick(float DeltaTime)
 		CachedLocation = BulletMesh->GetComponentLocation();
 	}
 
-
 }
 

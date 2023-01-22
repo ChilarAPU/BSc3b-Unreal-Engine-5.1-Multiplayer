@@ -12,7 +12,7 @@
 class ABSc3bController;
 //Forward Declarations
 class UCameraComponent;
-class USkeletalMeshComponent;
+class UWeapon;
 class UNiagaraComponent;
 class UInputMappingContext;
 class UInputAction;
@@ -32,7 +32,7 @@ class ABSc3bCharacter : public ACharacter
 	UCameraComponent* FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Weapons, meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* Weapon1;
+	UWeapon* Weapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Weapons, meta = (AllowPrivateAccess = "true"))
 	UNiagaraComponent* LaserSight;

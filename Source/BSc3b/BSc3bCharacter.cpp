@@ -11,6 +11,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "PlayerHUD.h"
+#include "Weapon.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -53,17 +54,17 @@ ABSc3bCharacter::ABSc3bCharacter()
 
 	//Create weapon static mesh component
 	const FName WeaponSocketName = TEXT("weapon_handle");
-	Weapon1 = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
-	Weapon1->SetupAttachment(GetMesh(), WeaponSocketName);
+	Weapon = CreateDefaultSubobject<UWeapon>(TEXT("Weapon New"));
+	Weapon->SetupAttachment(GetMesh(), WeaponSocketName);
 
 	const FName LaserSocketName = TEXT("b_gun_muzzleflash");
 	LaserSight = CreateDefaultSubobject<UNiagaraComponent>(TEXT("LaserSight"));
-	LaserSight->SetupAttachment(Weapon1, LaserSocketName);
+	LaserSight->SetupAttachment(Weapon, LaserSocketName);
 	LaserSight->SetVisibility(false);
 	LaserSight->SetIsReplicated(false);
 
 	LaserImpact = CreateDefaultSubobject<UNiagaraComponent>(TEXT("LaserImpact"));
-	LaserImpact->SetupAttachment(Weapon1);
+	LaserImpact->SetupAttachment(Weapon);
 	LaserImpact->SetVisibility(false);
 	LaserImpact->SetIsReplicated(false);
 
@@ -112,8 +113,12 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	OrientLaserSight();
-	WeaponSway(DeltaSeconds);
+	if (IsValid(Weapon))
+	{
+		OrientLaserSight();
+    	WeaponSway(DeltaSeconds);	
+	}
+	
 	//Aim Offset replication code
 	if (HasAuthority())
 	{
@@ -160,7 +165,13 @@ void ABSc3bCharacter::OnRep_Health()
 
 FTransform ABSc3bCharacter::GetWeaponTransform(FName Socket, ERelativeTransformSpace TransformSpace)
 {
-	return Weapon1->GetSocketTransform(Socket, TransformSpace);
+	if (IsValid(Weapon))
+	{
+		return Weapon->GetSocketTransform(Socket, TransformSpace);
+	}
+	//return an identity transform
+	return FTransform();
+	
 }
 
 	bool ABSc3bCharacter::Server_Shoot_Validate(FVector Location, FRotator Rotation)
@@ -283,7 +294,7 @@ void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 	T->SetInstigator(this);
 	if (ABullet* Bullet = Cast<ABullet>(T))
 	{
-		Bullet->AddImpulseToBullet(Weapon1->GetRightVector());
+		Bullet->AddImpulseToBullet(Weapon->GetRightVector());
 	}
 }
 
@@ -410,6 +421,14 @@ void ABSc3bCharacter::ShootComplete(const FInputActionValue& Value)
 			Server_PlayerShooting(Value.Get<bool>());
 		}
 	}
+	if (bIsPlayerAiming && !LaserSight->IsVisible())
+	{
+		Client_FlipLaserVisibility(true);
+	} else if (!bIsPlayerAiming && LaserSight->IsVisible())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WW"));
+		Client_FlipLaserVisibility(false);
+	}
 }
 
 void ABSc3bCharacter::Aim(const FInputActionValue& Value)
@@ -441,19 +460,23 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 		GetCharacterMovement()->MaxWalkSpeed = Speed;
 		Server_PlayerAiming(Value.Get<bool>(), Speed);
 	}
-	//Toggle our laser sight visibility for our client only
-	Client_FlipLaserVisibility(Value.Get<bool>());
 	//Play sound attached to aiming
 	if (IsValid(AimSound))
 	{
 		UGameplayStatics::PlaySound2D(GetWorld(), AimSound);
 	}
+	if (!bIsShooting)
+	{
+		//Toggle our laser sight visibility for our client only
+		Client_FlipLaserVisibility(Value.Get<bool>());
+	}
+	
 }
 
 void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 {
 	//We need to check again in case the player stops aiming while holding down the sprint key
-	if (bIsPlayerAiming  || bWasAimingCanceled)
+	if (bIsPlayerAiming  || bWasAimingCanceled || bIsShooting)
 	{
 		bWasAimingCanceled = Value.Get<bool>();
 		return;
@@ -493,6 +516,10 @@ void ABSc3bCharacter::Reload(const FInputActionValue& Value)
 
 void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 {
+	if (!IsValid(Weapon))
+	{
+		return;
+	}
 	//If we are sprinting, do not allow the player to shoot	
 	if (Controller != nullptr)
 	{
@@ -507,8 +534,8 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 		else
 		{
 			const FName MuzzleSocket = TEXT("MuzzleSocket");
-			Location = Weapon1->GetSocketLocation(MuzzleSocket);
-			Rotation = Weapon1->GetSocketRotation(MuzzleSocket);
+			Location = Weapon->GetSocketLocation(MuzzleSocket);
+			Rotation = Weapon->GetSocketRotation(MuzzleSocket);
 		}
 		
 		//Call server function if we currently do no have ROLE_AUTHORITY
@@ -548,7 +575,7 @@ void ABSc3bCharacter::OrientLaserSight()
 {
 	// Start and End locations of Laser
 	FVector Start = LaserSight->GetComponentLocation();
-	FVector End = Start + Weapon1->GetRightVector() * LaserDistance;
+	FVector End = Start + Weapon->GetRightVector() * LaserDistance;
 	//Actors to ignore (which is none)
 	const TArray<AActor*> ActorsToIgnore;
 	//Store result of linetrace
@@ -592,14 +619,14 @@ void ABSc3bCharacter::WeaponSway(float DeltaTime)
 	FinalRot = FRotator(LookAxisVector.Y * -1 * MaxSwayDegree, LookAxisVector.X * -1 * MaxSwayDegree, LookAxisVector.X * -1 * MaxSwayDegree);
 	FRotator RotationDifference = UKismetMathLibrary::MakeRotator(InitRot.Roll + FinalRot.Roll, InitRot.Pitch - FinalRot.Pitch, InitRot.Yaw + FinalRot.Yaw);
 	//Do all our interping in relative space as this keeps our values to normal amounts
-	FRotator InterpDifference = UKismetMathLibrary::RInterpTo(Weapon1->GetRelativeRotation(), RotationDifference, DeltaTime, InterpSpeed);
+	FRotator InterpDifference = UKismetMathLibrary::RInterpTo(Weapon->GetRelativeRotation(), RotationDifference, DeltaTime, InterpSpeed);
 	//Variables to hold the break rotator function call
 	float Roll, Pitch, Yaw;
 	UKismetMathLibrary::BreakRotator(InterpDifference, Roll, Pitch, Yaw);
 	//Clamp all values between MaxSwayDegree and MaxSwayDegree * -1 otherwise our gun would not stop swaying
 	InterpDifference = UKismetMathLibrary::MakeRotator(UKismetMathLibrary::FClamp(Roll, MaxSwayDegree * -1, MaxSwayDegree),
 		UKismetMathLibrary::FClamp(Pitch, MaxSwayDegree * -1, MaxSwayDegree), UKismetMathLibrary::FClamp(Yaw, MaxSwayDegree * -1, MaxSwayDegree));
-	Weapon1->SetRelativeRotation(InterpDifference);
+	Weapon->SetRelativeRotation(InterpDifference);
 }
 
 void ABSc3bCharacter::Server_SetPlayerPitchForOffset_Implementation()
