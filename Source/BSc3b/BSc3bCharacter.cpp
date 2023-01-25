@@ -89,6 +89,7 @@ ABSc3bCharacter::ABSc3bCharacter()
 	bStopSprinting = false;
 	bWasAimingCanceled = false;
 	bHitByBullet = false;
+	bIsChangingAttachments = false;
 	PlayerController = nullptr;
 	
 }
@@ -222,6 +223,10 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 
 		//Reloading
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ABSc3bCharacter::Reload);
+
+		//Attachment System
+		EnhancedInputComponent->BindAction(AttachmentAction, ETriggerEvent::Started, this, &ABSc3bCharacter::OpenAttachments);
+		EnhancedInputComponent->BindAction(AttachmentAction, ETriggerEvent::Completed, this, &ABSc3bCharacter::OpenAttachments);
 
 	}
 
@@ -370,7 +375,7 @@ void ABSc3bCharacter::Look(const FInputActionValue& Value)
 void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 {
 	//If we are sprinting, do not allow the player to shoot	
-	if (bIsSprinting)
+	if (bIsSprinting || bIsChangingAttachments)
 	{
 		return;
 	}
@@ -435,7 +440,7 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 {
 	//If we are sprinting and moving forward, do not allow the player to aim
 	float Speed;
-	if (bIsSprinting)
+	if (bIsSprinting || bIsChangingAttachments)
 	{
 		return;	
 	}
@@ -512,6 +517,28 @@ void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 void ABSc3bCharacter::Reload(const FInputActionValue& Value)
 {
 	
+}
+
+void ABSc3bCharacter::OpenAttachments(const FInputActionValue& Value)
+{
+	//Show our cursor and stop the mouse from moving our camera
+	PlayerController->SetShowMouseCursor(Value.Get<bool>());
+	PlayerController->SetIgnoreLookInput(Value.Get<bool>());
+	//Set value to stop certain mouse inputs
+	bIsChangingAttachments = Value.Get<bool>();
+	//Flip our attachment buttons visiblity
+	PlayerController->PlayerHUD->SetButtonVisibility(Value.Get<bool>());
+	
+	//Set our input mode so we can interact with our widget with one click
+	if (Value.Get<bool>())
+	{
+		const FInputModeGameAndUI Input;
+		PlayerController->SetInputMode(Input);
+	} else
+	{
+		const FInputModeGameOnly Input;
+		PlayerController->SetInputMode(Input);
+	}
 }
 
 void ABSc3bCharacter::ShootLogic(bool bAimingIn)

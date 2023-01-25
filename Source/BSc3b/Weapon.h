@@ -10,6 +10,14 @@
  * 
  */
 
+UENUM(BlueprintType)
+enum EAttachmentKey : int
+{
+	None = 0,
+	RedDot = 1,
+	LongRange = 2
+};
+
 
 UCLASS()
 class BSC3B_API UWeapon : public USkeletalMeshComponent
@@ -21,6 +29,11 @@ class BSC3B_API UWeapon : public USkeletalMeshComponent
 
 public:
 	UWeapon();
+
+	EAttachmentKey Attachment;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attachments)
+	TMap<TEnumAsByte<EAttachmentKey>, UStaticMesh*> Attachments;
 
 	virtual void BeginPlay() override;
 };

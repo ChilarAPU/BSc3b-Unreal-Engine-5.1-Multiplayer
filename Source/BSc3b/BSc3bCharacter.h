@@ -69,6 +69,10 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ReloadAction;
 
+	/** Attachment Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* AttachmentAction;
+
 	////// PRIVATE VARIABLES //////
 	/* Actor which should spawn when the player shoot a weapon */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Bullet, meta = (AllowPrivateAccess = "true"))
@@ -98,6 +102,9 @@ class ABSc3bCharacter : public ACharacter
 
 	UPROPERTY()
 	bool bWasAimingCanceled;
+
+	UPROPERTY()
+	bool bIsChangingAttachments;
 
 	UPROPERTY()
 	ABSc3bController* PlayerController;
@@ -196,6 +203,10 @@ protected:
 	/** Called for Reloading input*/
 	UFUNCTION()
 	void Reload(const FInputActionValue& Value);
+
+	/** Called for Reloading input*/
+	UFUNCTION()
+	void OpenAttachments(const FInputActionValue& Value);
 	
 	
 	////// PROTECTED LOGIC FUNCTIONS //////

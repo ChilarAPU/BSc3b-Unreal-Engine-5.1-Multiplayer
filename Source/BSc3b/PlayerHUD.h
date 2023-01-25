@@ -17,6 +17,9 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 
 	virtual void NativeConstruct() override;
 
+	UFUNCTION()
+	void OnScopeClicked();
+
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -24,4 +27,10 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	class UTextBlock* Health;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	class UButton* Scope;
+
+	UFUNCTION()
+	void SetButtonVisibility(bool bVisible);
 };

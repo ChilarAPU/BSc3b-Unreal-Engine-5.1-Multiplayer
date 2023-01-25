@@ -9,6 +9,10 @@ UWeapon::UWeapon()
 	//FVector t = GetSocketLocation(Socket);
 	//Scope->SetRelativeLocation(t);
 	//Scope->SetupAttachment(GetAttachmentRoot(), Socket);
+
+	Attachments.Emplace(None, nullptr);
+	Attachments.Emplace(RedDot, nullptr);
+	Attachments.Emplace(LongRange, nullptr);
 }
 
 void UWeapon::BeginPlay()
