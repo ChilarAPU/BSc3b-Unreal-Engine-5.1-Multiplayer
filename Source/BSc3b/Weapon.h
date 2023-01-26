@@ -18,22 +18,65 @@ enum EAttachmentKey : int
 	LongRange = 2
 };
 
+UENUM(BlueprintType)
+enum EAttachmentType : int
+{
+	Scope = 0,
+	Grip = 1
+};
+
+USTRUCT(BlueprintType)
+struct FAttachmentMesh
+{
+	GENERATED_BODY()
+	
+public:
+
+	FAttachmentMesh()
+	{
+		Type = Scope;
+		Mesh = nullptr;
+	}
+	
+	FAttachmentMesh(EAttachmentType type, UStaticMesh* mesh)
+	{
+		Type = type;
+		Mesh = mesh;
+	}
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TEnumAsByte<EAttachmentType> Type;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UStaticMesh* Mesh;
+};
+
+class AAttachment;
 
 UCLASS()
 class BSC3B_API UWeapon : public USkeletalMeshComponent
 {
 	GENERATED_BODY()
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attachment, meta = (AllowPrivateAccess = true))
-	UStaticMeshComponent* Scope;
+	TSubclassOf<AAttachment> AttachmentActor;
+
+	UPROPERTY()
+	AAttachment* ScopeActor;
 
 public:
 	UWeapon();
 
-	EAttachmentKey Attachment;
+	//EAttachmentKey Attachment;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attachments)
-	TMap<TEnumAsByte<EAttachmentKey>, UStaticMesh*> Attachments;
+	TMap<TEnumAsByte<EAttachmentKey>, FAttachmentMesh> Attachments;
+
+	UFUNCTION()
+	void EquipAttachment(EAttachmentKey Attachment);
 
 	virtual void BeginPlay() override;
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 };

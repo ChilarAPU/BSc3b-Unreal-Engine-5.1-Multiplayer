@@ -581,6 +581,11 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 	}
 }
 
+void ABSc3bCharacter::EquipWeaponAttachment(EAttachmentKey Attachment)
+{
+	Weapon->EquipAttachment(Attachment);
+}
+
 	void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming, float speed)
 {
 	bIsPlayerAiming = bIsAiming;

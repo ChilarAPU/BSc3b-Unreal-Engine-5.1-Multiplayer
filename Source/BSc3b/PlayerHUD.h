@@ -10,6 +10,8 @@
  * 
  */
 
+class ABSc3bCharacter;
+
 UCLASS()
 class BSC3B_API UPlayerHUD : public UUserWidget
 {
@@ -19,6 +21,12 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 
 	UFUNCTION()
 	void OnScopeClicked();
+
+	UFUNCTION()
+	void OnLongScopeClicked();
+
+	UPROPERTY()
+	ABSc3bCharacter* OwningPlayer;
 
 public:
 
@@ -30,6 +38,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	class UButton* Scope;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	class UButton* LongScope;
 
 	UFUNCTION()
 	void SetButtonVisibility(bool bVisible);

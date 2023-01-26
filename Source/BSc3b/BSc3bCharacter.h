@@ -9,6 +9,7 @@
 #include "NiagaraComponent.h"
 #include "BSc3bCharacter.generated.h"
 
+enum EAttachmentKey : int;
 class ABSc3bController;
 //Forward Declarations
 class UCameraComponent;
@@ -174,6 +175,12 @@ public:
 	/* Called by shoot notify event that spawns in a bullet at the guns laser sight location*/
 	UFUNCTION()
 	void ShootLogic(bool bAimingIn);
+
+	/* Called by widget to equip an attachment. Just an access through function so the component can stay
+	 * private
+	 */
+	UFUNCTION()
+	void EquipWeaponAttachment(EAttachmentKey Attachment);
 
 protected:
 
