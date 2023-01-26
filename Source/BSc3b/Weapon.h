@@ -15,14 +15,16 @@ enum EAttachmentKey : int
 {
 	None = 0,
 	RedDot = 1,
-	LongRange = 2
+	LongRange = 2,
+	Silencer = 3
 };
 
 UENUM(BlueprintType)
 enum EAttachmentType : int
 {
 	Scope = 0,
-	Grip = 1
+	Grip = 1,
+	Muzzle = 2
 };
 
 USTRUCT(BlueprintType)
@@ -63,6 +65,9 @@ class BSC3B_API UWeapon : public USkeletalMeshComponent
 
 	UPROPERTY()
 	AAttachment* ScopeActor;
+
+	UPROPERTY()
+	AAttachment* MuzzleActor;
 
 public:
 	UWeapon();

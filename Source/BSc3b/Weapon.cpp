@@ -9,26 +9,40 @@ UWeapon::UWeapon()
 {
 	Attachments.Emplace(RedDot, FAttachmentMesh(Scope, nullptr));
 	Attachments.Emplace(LongRange, FAttachmentMesh(Scope, nullptr));
-	//Attachments.Emplace(RedDot, nullptr);
-	//Attachments.Emplace(LongRange, nullptr);
+	Attachments.Emplace(Silencer, FAttachmentMesh(Muzzle, nullptr));
 }
 
 void UWeapon::EquipAttachment(EAttachmentKey Attachment)
 {
-	if (IsValid(ScopeActor))
+	if (Attachments.Find(Attachment)->Type == Scope)
 	{
-		ScopeActor->Attachment->SetStaticMesh(Attachments.Find(Attachment)->Mesh);
-		UE_LOG(LogTemp, Warning, TEXT("Attachment"));
+		if (IsValid(ScopeActor))
+    	{
+    		ScopeActor->Attachment->SetStaticMesh(Attachments.Find(Attachment)->Mesh);
+    	}	
 	}
+	if (Attachments.Find(Attachment)->Type == Muzzle)
+	{
+		if (IsValid(MuzzleActor))
+		{
+			MuzzleActor->Attachment->SetStaticMesh(Attachments.Find(Attachment)->Mesh);
+		}
+	}
+	
 }
 
 void UWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	FActorSpawnParameters SpawnParams;
+	
+	//Spawning sight actor into world
 	FTransform SocketT = GetSocketTransform(TEXT("SightSocket"), RTS_World);
 	ScopeActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
-	
+
+	//Spawning muzzle actor into world
+	SocketT = GetSocketTransform(TEXT("MuzzleSocket"), RTS_World);
+	MuzzleActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
 	
 }
 
@@ -36,10 +50,13 @@ void UWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponen
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
-	FTransform SocketT = GetSocketTransform(TEXT("SightSocket"), RTS_World);
-	if (IsValid(ScopeActor))
+	if (IsValid(ScopeActor) && IsValid(MuzzleActor))
 	{
+		FTransform SocketT = GetSocketTransform(TEXT("SightSocket"), RTS_World);
 		ScopeActor->SetActorTransform(SocketT);
+		
+		SocketT = GetSocketTransform(TEXT("MuzzleSocket"), RTS_World);
+		MuzzleActor->SetActorTransform(SocketT);
 	}
 
 }

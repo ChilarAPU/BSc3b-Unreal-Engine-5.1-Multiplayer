@@ -33,7 +33,7 @@ void UPlayerHUD::OnLongScopeClicked()
 {
 	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 
-	OwningPlayer->EquipWeaponAttachment(LongRange);
+	OwningPlayer->EquipWeaponAttachment(Silencer);
 }
 
 void UPlayerHUD::SetButtonVisibility(bool bVisible)
