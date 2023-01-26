@@ -2,6 +2,7 @@
 
 #include "BSc3bCharacter.h"
 
+#include "Attachment.h"
 #include "BSc3bController.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -90,7 +91,9 @@ ABSc3bCharacter::ABSc3bCharacter()
 	bWasAimingCanceled = false;
 	bHitByBullet = false;
 	bIsChangingAttachments = false;
+	bReloading = false;
 	PlayerController = nullptr;
+	Ammo = 30;
 	
 }
 
@@ -157,6 +160,7 @@ void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsDead, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsShooting, COND_SkipOwner);
 	DOREPLIFETIME(ABSc3bCharacter, bIsSprinting);
+	DOREPLIFETIME(ABSc3bCharacter, bReloading);
 }
 
 void ABSc3bCharacter::OnRep_Health()
@@ -222,7 +226,7 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ABSc3bCharacter::Sprint);
 
 		//Reloading
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ABSc3bCharacter::Reload);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &ABSc3bCharacter::Reload);
 
 		//Attachment System
 		EnhancedInputComponent->BindAction(AttachmentAction, ETriggerEvent::Started, this, &ABSc3bCharacter::OpenAttachments);
@@ -295,12 +299,18 @@ void ABSc3bCharacter::Multi_PlayFootstep_Implementation(FVector Location)
 
 void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 {
+	if (Ammo <= 0)
+	{
+		return;
+	}
 	AActor* T = GetWorld()->SpawnActor<AActor>(SpawnObject, Location, Rotation);
 	T->SetInstigator(this);
 	if (ABullet* Bullet = Cast<ABullet>(T))
 	{
 		Bullet->AddImpulseToBullet(Weapon->GetRightVector());
 	}
+	Ammo --;
+	UE_LOG(LogTemp, Warning, TEXT("%d"), Ammo);
 }
 
 void ABSc3bCharacter::Move(const FInputActionValue& Value)
@@ -516,7 +526,14 @@ void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Reload(const FInputActionValue& Value)
 {
-	
+	if (HasAuthority())
+	{
+		bReloading = Value.Get<bool>();
+	}
+	else if (IsLocallyControlled())
+	{
+		Server_Reload(Value.Get<bool>());
+	}
 }
 
 void ABSc3bCharacter::OpenAttachments(const FInputActionValue& Value)
@@ -586,6 +603,36 @@ void ABSc3bCharacter::EquipWeaponAttachment(EAttachmentKey Attachment)
 	Weapon->EquipAttachment(Attachment);
 }
 
+void ABSc3bCharacter::ToggleMagazineVisibility(bool Hide)
+{
+	if (Hide)
+	{
+		Weapon->HideBoneByName(TEXT("b_gun_mag"), EPhysBodyOp::PBO_None);
+	} else
+	{
+		Weapon->UnHideBoneByName(TEXT("b_gun_mag"));
+	}
+	
+}
+
+void ABSc3bCharacter::SpawnWeaponMagazine(bool ShouldDestroy)
+{
+	if (ShouldDestroy)
+	{
+		Weapon->MagActor->Destroy();
+	}
+	else
+	{
+		Weapon->SpawnMag(TEXT("b_gun_magSocket"));
+	}
+}
+
+void ABSc3bCharacter::UpdateMagazineTransform()
+{
+	FTransform SocketT = GetMesh()->GetSocketTransform(TEXT("mag_socket"), RTS_World);
+	Weapon->UpdateMagTransform(SocketT);
+}
+
 	void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming, float speed)
 {
 	bIsPlayerAiming = bIsAiming;
@@ -603,7 +650,12 @@ void ABSc3bCharacter::Server_PlayerSprinting_Implementation(bool Sprinting, floa
 	bIsSprinting = Sprinting;
 }
 
-void ABSc3bCharacter::OrientLaserSight()
+void ABSc3bCharacter::Server_Reload_Implementation(bool Reload)
+{
+	bReloading = Reload;
+}
+
+	void ABSc3bCharacter::OrientLaserSight()
 {
 	// Start and End locations of Laser
 	FVector Start = LaserSight->GetComponentLocation();

@@ -46,6 +46,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bHit;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bPlayerReload;
+
 	////// FABRIK VARIABLES //////
 	//1 for attach, 0 for detach
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -62,6 +65,16 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Shoot_Notify(bool bAiming);
+
+	UFUNCTION(BlueprintCallable)
+	void EndReload_Notify();
+
+	UFUNCTION(BlueprintCallable)
+	void AttachMag_Notify();
+
+	UFUNCTION(BlueprintCallable)
+	void DetachMag_Notify();
+
 
 	UFUNCTION(BlueprintCallable)
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;

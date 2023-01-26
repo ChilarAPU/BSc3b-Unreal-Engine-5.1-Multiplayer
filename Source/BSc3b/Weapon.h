@@ -69,6 +69,9 @@ class BSC3B_API UWeapon : public USkeletalMeshComponent
 	UPROPERTY()
 	AAttachment* MuzzleActor;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attachment, meta = (AllowPrivateAccess = true))
+	UStaticMesh* MagazineMesh;
+
 public:
 	UWeapon();
 
@@ -79,6 +82,15 @@ public:
 
 	UFUNCTION()
 	void EquipAttachment(EAttachmentKey Attachment);
+
+	UPROPERTY()
+	AAttachment* MagActor;
+
+	UFUNCTION()
+	void SpawnMag(FName SocketName);
+
+	UFUNCTION()
+	void UpdateMagTransform(FTransform Transform);
 
 	virtual void BeginPlay() override;
 

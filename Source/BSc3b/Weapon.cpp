@@ -31,6 +31,26 @@ void UWeapon::EquipAttachment(EAttachmentKey Attachment)
 	
 }
 
+void UWeapon::SpawnMag(FName SocketName)
+{
+	FTransform SocketT = GetSocketTransform(SocketName, RTS_World);
+	MagActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
+	if (IsValid(MagazineMesh))
+	{
+		MagActor->Attachment->SetStaticMesh(MagazineMesh);
+	}
+	
+}
+
+void UWeapon::UpdateMagTransform(FTransform Transform)
+{
+	if (IsValid(MagActor))
+	{
+		MagActor->SetActorTransform(Transform);
+	}
+	
+}
+
 void UWeapon::BeginPlay()
 {
 	Super::BeginPlay();

@@ -110,6 +110,9 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY()
 	ABSc3bController* PlayerController;
 
+	UPROPERTY()
+	int Ammo;
+
 public:
 	ABSc3bCharacter();
 
@@ -148,6 +151,9 @@ public:
 
 	UPROPERTY(Replicated, BlueprintReadOnly, EditAnywhere)
 	bool bHitByBullet;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, EditAnywhere)
+	bool bReloading;
 	
 	////// PUBLIC SERVER RPCS //////
 	/* Called by shoot() to make sure any health changes are always
@@ -166,6 +172,11 @@ public:
 	UFUNCTION(Server, Unreliable)
 	void Server_PlayFootstep(FVector Location);
 	void Server_PlayFootstep_Implementation(FVector Location);
+
+	/* Only functionality is to tell our state machine to start the reload animation*/
+	UFUNCTION(Server, Reliable)
+	void Server_Reload(bool Reload);
+	void Server_Reload_Implementation(bool Reload);
 	
 	////// LOGIC FUNCTION NEEDED TO BE ACCESSED OUTSIDE OF CURRENT CLASS //////
 	/* Used by animation instance to get the weapons transform */
@@ -181,6 +192,15 @@ public:
 	 */
 	UFUNCTION()
 	void EquipWeaponAttachment(EAttachmentKey Attachment);
+
+	UFUNCTION()
+	void ToggleMagazineVisibility(bool Hide);
+
+	UFUNCTION()
+	void SpawnWeaponMagazine(bool ShouldDestroy);
+
+	UFUNCTION()
+	void UpdateMagazineTransform();
 
 protected:
 

@@ -14,6 +14,7 @@ AAttachment::AAttachment()
 	
 	Attachment = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon New"));
 	Attachment->SetupAttachment(GetRootComponent());
+	Attachment->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 }
 

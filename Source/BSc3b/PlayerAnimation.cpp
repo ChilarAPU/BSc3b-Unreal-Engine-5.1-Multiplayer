@@ -22,6 +22,30 @@ void UPlayerAnimation::Shoot_Notify(bool bAiming)
 	OwningPlayer->ShootLogic(bAiming);
 }
 
+void UPlayerAnimation::EndReload_Notify()
+{
+	if (OwningPlayer->HasAuthority())
+	{
+		OwningPlayer->bReloading = false;
+	}
+	else if (OwningPlayer->IsLocallyControlled())
+	{
+		OwningPlayer->Server_Reload(false);
+	}
+}
+
+void UPlayerAnimation::AttachMag_Notify()
+{
+	OwningPlayer->ToggleMagazineVisibility(false);
+	OwningPlayer->SpawnWeaponMagazine(true);
+}
+
+void UPlayerAnimation::DetachMag_Notify()
+{
+	OwningPlayer->ToggleMagazineVisibility(true);
+	OwningPlayer->SpawnWeaponMagazine(false);
+}
+
 void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
@@ -40,6 +64,7 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		bIsPlayerDead = OwningPlayer->bIsDead;
 		bPlayerShoot = OwningPlayer->bIsShooting;
 		bHit = OwningPlayer->bHitByBullet;
+		bPlayerReload = OwningPlayer->bReloading;
 		
 		//Has to be above maximum player velocity when walking
 		if (OwningPlayer->GetVelocity().Length() > 350 && PlayerXVelocity > 0)
@@ -51,6 +76,15 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 			bPlayerSprinting = false;
 		}
 
+		if (bPlayerReload)
+		{
+			LeftHand_FABRIK_Alpha = 0;
+		}
+		else
+		{
+			LeftHand_FABRIK_Alpha = 1;
+		}
+
 		//Setup LeftHand_Transform to work with FABRIK
 		FTransform PlayerWeapon = OwningPlayer->GetWeaponTransform(TEXT("LeftHandSocket"), RTS_World);
 		//Values set in Transformation function
@@ -59,5 +93,7 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		OwningPlayer->GetMesh()->TransformToBoneSpace(TEXT("hand_r"), PlayerWeapon.GetLocation(), PlayerWeapon.GetRotation().Rotator(), OutPos, OutRot);
 		LeftHand_Transform.SetLocation(OutPos);
 		LeftHand_Transform.SetRotation(OutRot.Quaternion());
+
+		OwningPlayer->UpdateMagazineTransform();
 	}
 }
