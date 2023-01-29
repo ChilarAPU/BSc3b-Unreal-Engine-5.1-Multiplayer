@@ -83,14 +83,6 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Laser, meta = (AllowPrivateAccess = "true"))
 	float LaserDistance;
 
-	/* Footstep sound that gets played through animation notify event */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
-	USoundBase* Footstep;
-
-	/* Sound attenuation for footsteps or anything with similar volume level */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
-	USoundAttenuation* FootstepAttenuation;
-
 	/* Cloth sound that plays whenever the player aims in to replicate the sound of clothes moving */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 	USoundBase* AimSound;
@@ -170,8 +162,8 @@ public:
 	 * gets passed through the animation notify event
 	 */
 	UFUNCTION(Server, Unreliable)
-	void Server_PlayFootstep(FVector Location);
-	void Server_PlayFootstep_Implementation(FVector Location);
+	void Server_PlayFootstep(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation);
+	void Server_PlayFootstep_Implementation(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation);
 
 	/* Only functionality is to tell our state machine to start the reload animation*/
 	UFUNCTION(Server, Reliable)
@@ -315,8 +307,8 @@ protected:
 	 * Has to be called by the server otherwise it acts as a client RPC
 	 */
 	UFUNCTION(NetMulticast, Unreliable)
-	void Multi_PlayFootstep(FVector Location);
-	void Multi_PlayFootstep_Implementation(FVector Location);
+	void Multi_PlayFootstep(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation);
+	void Multi_PlayFootstep_Implementation(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation);
 
 	////// REP NOTIFY FUNCTIONS //////
 	//Function to call whenever I would change the health function. Can check health value for example

@@ -292,17 +292,17 @@ void ABSc3bCharacter::Client_Respawn_Implementation()
 	//Any client specific calls needed before respawning
 }
 
-	void ABSc3bCharacter::Server_PlayFootstep_Implementation(FVector Location)
+	void ABSc3bCharacter::Server_PlayFootstep_Implementation(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation)
 {
-	Multi_PlayFootstep(Location);
+	Multi_PlayFootstep(Location, Sound, Attenuation);
 }
 
-void ABSc3bCharacter::Multi_PlayFootstep_Implementation(FVector Location)
+void ABSc3bCharacter::Multi_PlayFootstep_Implementation(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation)
 {
 	//Error check just in case variables have not been set
-	if (IsValid(Footstep) && IsValid(FootstepAttenuation))
+	if (IsValid(Sound) && IsValid(Attenuation))
 	{
-		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Footstep, Location, FRotator::ZeroRotator, 1, 1, 0, FootstepAttenuation);	
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Sound, Location, FRotator::ZeroRotator, 1, 1, 0, Attenuation);	
 	}
 
 }

@@ -14,7 +14,8 @@ UPlayerAnimation::UPlayerAnimation()
 
 void UPlayerAnimation::FootStep_Notify()
 {
-	OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation());
+	WalkAttenuation->Attenuation.FalloffDistance = 500;
+	OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), WalkFootstep, WalkAttenuation);
 }
 
 void UPlayerAnimation::Shoot_Notify(bool bAiming)
@@ -42,6 +43,18 @@ void UPlayerAnimation::AttachMag_Notify()
 void UPlayerAnimation::DetachMag_Notify()
 {
 	OwningPlayer->ToggleMagazineVisibility(true);
+}
+
+void UPlayerAnimation::JogFootstep_Notify()
+{
+	WalkAttenuation->Attenuation.FalloffDistance = 700;
+	OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), JogFootstep, WalkAttenuation);
+}
+
+void UPlayerAnimation::RunFootstep_Notify()
+{
+	WalkAttenuation->Attenuation.FalloffDistance = 900;
+	OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), RunFootstep, WalkAttenuation);
 }
 
 void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)

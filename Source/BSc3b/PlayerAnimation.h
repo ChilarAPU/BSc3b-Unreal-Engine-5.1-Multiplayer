@@ -49,6 +49,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bPlayerReload;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* WalkFootstep;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* JogFootstep;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* RunFootstep;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundAttenuation* WalkAttenuation;
+
 	////// FABRIK VARIABLES //////
 	//1 for attach, 0 for detach
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -74,6 +86,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void DetachMag_Notify();
+
+	UFUNCTION(BlueprintCallable)
+	void JogFootstep_Notify();
+
+	UFUNCTION(BlueprintCallable)
+	void RunFootstep_Notify();
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
