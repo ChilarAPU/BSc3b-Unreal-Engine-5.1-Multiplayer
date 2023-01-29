@@ -10,6 +10,9 @@
  * 
  */
 
+class UButton;
+class UTextBlock;
+
 class ABSc3bCharacter;
 
 UCLASS()
@@ -25,6 +28,12 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 	UFUNCTION()
 	void OnLongScopeClicked();
 
+	UFUNCTION()
+	void OnSilencerClicked();
+
+	UFUNCTION()
+	void OnForegripClicked();
+
 	UPROPERTY()
 	ABSc3bCharacter* OwningPlayer;
 
@@ -34,13 +43,19 @@ public:
 	FString HealthText;
 	
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* Health;
+	UTextBlock* Health;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	class UButton* Scope;
+	UButton* ScopeButton;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	class UButton* LongScope;
+	UButton* LongScopeButton;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UButton* SilencerButton;
+	
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UButton* ForegripButton;
 
 	UFUNCTION()
 	void SetButtonVisibility(bool bVisible);

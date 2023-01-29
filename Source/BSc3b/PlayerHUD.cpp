@@ -13,11 +13,17 @@
 void UPlayerHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
-	Scope->OnClicked.AddDynamic(this, &UPlayerHUD::OnScopeClicked);
-	Scope->IsFocusable = false;
+	ScopeButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnScopeClicked);
+	ScopeButton->IsFocusable = false;
 	
-	LongScope->OnClicked.AddDynamic(this, &UPlayerHUD::OnLongScopeClicked);
-	LongScope->IsFocusable = false;
+	LongScopeButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnLongScopeClicked);
+	LongScopeButton->IsFocusable = false;
+
+	SilencerButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnSilencerClicked);
+	SilencerButton->IsFocusable = false;
+
+	ForegripButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnForegripClicked);
+	ForegripButton->IsFocusable = false;
 }
 
 void UPlayerHUD::OnScopeClicked()
@@ -34,6 +40,22 @@ void UPlayerHUD::OnLongScopeClicked()
 {
 	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 
+	OwningPlayer->EquipWeaponAttachment(LongRange);
+	OwningPlayer->Server_EquipWeaponAttachment(LongRange);
+}
+
+void UPlayerHUD::OnSilencerClicked()
+{
+	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
+
+	OwningPlayer->EquipWeaponAttachment(Silencer);
+	OwningPlayer->Server_EquipWeaponAttachment(ForeGrip);
+}
+
+void UPlayerHUD::OnForegripClicked()
+{
+	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
+
 	OwningPlayer->EquipWeaponAttachment(ForeGrip);
 	OwningPlayer->Server_EquipWeaponAttachment(ForeGrip);
 }
@@ -42,11 +64,15 @@ void UPlayerHUD::SetButtonVisibility(bool bVisible)
 {
 	if (bVisible)
 	{
-		Scope->SetVisibility(ESlateVisibility::Visible);
-		LongScope->SetVisibility(ESlateVisibility::Visible);
+		ScopeButton->SetVisibility(ESlateVisibility::Visible);
+		LongScopeButton->SetVisibility(ESlateVisibility::Visible);
+		SilencerButton->SetVisibility(ESlateVisibility::Visible);
+		ForegripButton->SetVisibility(ESlateVisibility::Visible);
 	} else
 	{
-		Scope->SetVisibility(ESlateVisibility::Hidden);
-		LongScope->SetVisibility(ESlateVisibility::Hidden);
+		ScopeButton->SetVisibility(ESlateVisibility::Hidden);
+		LongScopeButton->SetVisibility(ESlateVisibility::Hidden);
+		SilencerButton->SetVisibility(ESlateVisibility::Hidden);
+		ForegripButton->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
