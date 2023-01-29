@@ -16,7 +16,8 @@ enum EAttachmentKey : int
 	None = 0,
 	RedDot = 1,
 	LongRange = 2,
-	Silencer = 3
+	Silencer = 3,
+	ForeGrip = 4
 };
 
 UENUM(BlueprintType)
@@ -63,11 +64,14 @@ class BSC3B_API UWeapon : public USkeletalMeshComponent
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attachment, meta = (AllowPrivateAccess = true))
 	TSubclassOf<AAttachment> AttachmentActor;
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	AAttachment* ScopeActor;
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	AAttachment* MuzzleActor;
+
+	UPROPERTY(Replicated)
+	AAttachment* GripActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attachment, meta = (AllowPrivateAccess = true))
 	UStaticMesh* MagazineMesh;
@@ -92,8 +96,13 @@ public:
 	UFUNCTION()
 	void UpdateMagTransform(FTransform Transform);
 
+	UFUNCTION()
+	void SpawnAttachment();
+
 	virtual void BeginPlay() override;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
 };

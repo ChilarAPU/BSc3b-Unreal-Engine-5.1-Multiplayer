@@ -37,13 +37,11 @@ void UPlayerAnimation::EndReload_Notify()
 void UPlayerAnimation::AttachMag_Notify()
 {
 	OwningPlayer->ToggleMagazineVisibility(false);
-	OwningPlayer->SpawnWeaponMagazine(true);
 }
 
 void UPlayerAnimation::DetachMag_Notify()
 {
 	OwningPlayer->ToggleMagazineVisibility(true);
-	OwningPlayer->SpawnWeaponMagazine(false);
 }
 
 void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)

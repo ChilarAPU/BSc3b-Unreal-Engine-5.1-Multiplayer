@@ -197,10 +197,19 @@ public:
 	void ToggleMagazineVisibility(bool Hide);
 
 	UFUNCTION()
-	void SpawnWeaponMagazine(bool ShouldDestroy);
-
-	UFUNCTION()
 	void UpdateMagazineTransform();
+
+	UFUNCTION(Server, Unreliable)
+	void Server_EquipWeaponAttachment(EAttachmentKey Attachment);
+	void Server_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_EquipWeaponAttachment(EAttachmentKey Attachment);
+	void Multicast_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment);
+
+	UFUNCTION(Server, Unreliable)
+	void Server_Spawn();
+	void Server_Spawn_Implementation();
 
 protected:
 

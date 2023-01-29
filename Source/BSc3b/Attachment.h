@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Attachment.generated.h"
 
+class UWeapon;
+
 UCLASS()
 class BSC3B_API AAttachment : public AActor
 {
@@ -13,6 +15,9 @@ class BSC3B_API AAttachment : public AActor
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attachment, meta = (AllowPrivateAccess = true))
 	USceneComponent* Root;
+
+	UPROPERTY()
+	UWeapon* OwningWeapon;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -20,6 +25,13 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attachment, meta = (AllowPrivateAccess = true))
 	UStaticMeshComponent* Attachment;
+
+	UPROPERTY()
+	FTransform TargetTransform;
+
+	UFUNCTION()
+	void GetOwningWeapon(UWeapon* Weapon, FName Socket);
+	
 
 protected:
 	// Called when the game starts or when spawned

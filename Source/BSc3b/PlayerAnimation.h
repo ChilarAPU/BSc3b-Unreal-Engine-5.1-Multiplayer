@@ -74,8 +74,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void DetachMag_Notify();
-
-
+	
 	UFUNCTION(BlueprintCallable)
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 };

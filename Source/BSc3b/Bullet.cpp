@@ -26,6 +26,9 @@ ABullet::ABullet()
 	BulletMesh->SetIsReplicated(true);
 	BulletMesh->SetNotifyRigidBodyCollision(true);
 
+	BulletTrail = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Trail"));
+	BulletTrail->SetupAttachment(BulletMesh);
+
 	//BulletMesh->OnComponentBeginOverlap.AddDynamic(this, &ABullet::PlayerOverlap);
 
 	//Set bullet to despawn 10 seconds after it has been fired. Quick and easy way to stop

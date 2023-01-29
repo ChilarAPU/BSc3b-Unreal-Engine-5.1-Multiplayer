@@ -10,6 +10,7 @@ UWeapon::UWeapon()
 	Attachments.Emplace(RedDot, FAttachmentMesh(Scope, nullptr));
 	Attachments.Emplace(LongRange, FAttachmentMesh(Scope, nullptr));
 	Attachments.Emplace(Silencer, FAttachmentMesh(Muzzle, nullptr));
+	Attachments.Emplace(ForeGrip, FAttachmentMesh(Grip, nullptr));
 }
 
 void UWeapon::EquipAttachment(EAttachmentKey Attachment)
@@ -26,6 +27,13 @@ void UWeapon::EquipAttachment(EAttachmentKey Attachment)
 		if (IsValid(MuzzleActor))
 		{
 			MuzzleActor->Attachment->SetStaticMesh(Attachments.Find(Attachment)->Mesh);
+		}
+	}
+	if (Attachments.Find(Attachment)->Type == Grip)
+	{
+		if (IsValid(GripActor))
+		{
+			GripActor->Attachment->SetStaticMesh(Attachments.Find(Attachment)->Mesh);
 		}
 	}
 	
@@ -51,18 +59,29 @@ void UWeapon::UpdateMagTransform(FTransform Transform)
 	
 }
 
+void UWeapon::SpawnAttachment()
+{
+	FTransform SocketT = GetSocketTransform(TEXT("SightSocket"), RTS_World);
+	ScopeActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
+	//Attach attachment to a socket on this weapon
+	ScopeActor->GetOwningWeapon(this, TEXT("SightSocket"));
+
+	SocketT = GetSocketTransform(TEXT("MuzzleSocket"), RTS_World);
+	MuzzleActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
+	//Attach attachment to a socket on this weapon
+	MuzzleActor->GetOwningWeapon(this, TEXT("MuzzleSocket"));
+
+	SocketT = GetSocketTransform(TEXT("GripSocket"), RTS_World);
+	GripActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
+	//Attach attachment to a socket on this weapon
+	GripActor->GetOwningWeapon(this, TEXT("GripSocket"));
+}
+
 void UWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	FActorSpawnParameters SpawnParams;
 	
-	//Spawning sight actor into world
-	FTransform SocketT = GetSocketTransform(TEXT("SightSocket"), RTS_World);
-	ScopeActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
-
-	//Spawning muzzle actor into world
-	SocketT = GetSocketTransform(TEXT("MuzzleSocket"), RTS_World);
-	MuzzleActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
+	SpawnAttachment();
 	
 }
 
@@ -70,13 +89,9 @@ void UWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponen
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
-	if (IsValid(ScopeActor) && IsValid(MuzzleActor))
-	{
-		FTransform SocketT = GetSocketTransform(TEXT("SightSocket"), RTS_World);
-		ScopeActor->SetActorTransform(SocketT);
-		
-		SocketT = GetSocketTransform(TEXT("MuzzleSocket"), RTS_World);
-		MuzzleActor->SetActorTransform(SocketT);
-	}
+}
 
+void UWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }

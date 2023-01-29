@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Bullet.generated.h"
 
+class UNiagaraComponent;
 //Forward Declarations
 class ABSc3bCharacter;
 
@@ -23,6 +24,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Bullet")
 	UStaticMeshComponent* BulletMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Particle")
+	UNiagaraComponent* BulletTrail;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
 	float BulletSpeed;

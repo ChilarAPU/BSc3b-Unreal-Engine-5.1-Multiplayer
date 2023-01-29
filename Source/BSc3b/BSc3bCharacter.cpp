@@ -111,6 +111,16 @@ void ABSc3bCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+	/*if (HasAuthority())
+	{
+		Weapon->SpawnAttachment();
+	} else if (IsLocallyControlled())
+	{
+		Server_Spawn();	
+	}
+	*/
+	//Server_Spawn();
+	
 }
 
 void ABSc3bCharacter::Tick(float DeltaSeconds)
@@ -313,7 +323,12 @@ void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 	UE_LOG(LogTemp, Warning, TEXT("%d"), Ammo);
 }
 
-void ABSc3bCharacter::Move(const FInputActionValue& Value)
+	void ABSc3bCharacter::Server_Spawn_Implementation()
+	{
+		Weapon->SpawnAttachment();
+	}
+
+	void ABSc3bCharacter::Move(const FInputActionValue& Value)
 {
 	// Replicate our move axis vector to be used in player state machine
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -603,28 +618,29 @@ void ABSc3bCharacter::EquipWeaponAttachment(EAttachmentKey Attachment)
 	Weapon->EquipAttachment(Attachment);
 }
 
+void ABSc3bCharacter::Server_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment)
+{
+	//Weapon->EquipAttachment(Attachment);
+	Multicast_EquipWeaponAttachment(Attachment);
+}
+
+void ABSc3bCharacter::Multicast_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment)
+{
+	Weapon->EquipAttachment(Attachment);
+}
+
 void ABSc3bCharacter::ToggleMagazineVisibility(bool Hide)
 {
 	if (Hide)
 	{
+		Weapon->SpawnMag(TEXT("b_gun_magSocket"));
 		Weapon->HideBoneByName(TEXT("b_gun_mag"), EPhysBodyOp::PBO_None);
 	} else
 	{
 		Weapon->UnHideBoneByName(TEXT("b_gun_mag"));
-	}
-	
-}
-
-void ABSc3bCharacter::SpawnWeaponMagazine(bool ShouldDestroy)
-{
-	if (ShouldDestroy)
-	{
 		Weapon->MagActor->Destroy();
 	}
-	else
-	{
-		Weapon->SpawnMag(TEXT("b_gun_magSocket"));
-	}
+	
 }
 
 void ABSc3bCharacter::UpdateMagazineTransform()

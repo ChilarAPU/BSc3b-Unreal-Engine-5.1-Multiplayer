@@ -27,13 +27,15 @@ void UPlayerHUD::OnScopeClicked()
 	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 
 	OwningPlayer->EquipWeaponAttachment(RedDot);
+	OwningPlayer->Server_EquipWeaponAttachment(RedDot);
 }
 
 void UPlayerHUD::OnLongScopeClicked()
 {
 	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 
-	OwningPlayer->EquipWeaponAttachment(Silencer);
+	OwningPlayer->EquipWeaponAttachment(ForeGrip);
+	OwningPlayer->Server_EquipWeaponAttachment(ForeGrip);
 }
 
 void UPlayerHUD::SetButtonVisibility(bool bVisible)
