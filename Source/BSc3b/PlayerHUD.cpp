@@ -49,7 +49,7 @@ void UPlayerHUD::OnSilencerClicked()
 	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 
 	OwningPlayer->EquipWeaponAttachment(Silencer);
-	OwningPlayer->Server_EquipWeaponAttachment(ForeGrip);
+	OwningPlayer->Server_EquipWeaponAttachment(Silencer);
 }
 
 void UPlayerHUD::OnForegripClicked()

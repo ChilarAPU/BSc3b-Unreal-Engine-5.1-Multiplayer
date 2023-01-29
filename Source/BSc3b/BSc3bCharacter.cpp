@@ -258,6 +258,7 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 		Health -= 1;
 		if (Bone == "head")
 		{
+			Health = 0;
 			UE_LOG(LogTemp, Warning, TEXT("HeadShot"));
 		}
 		//temporary way to spawn in new player character
@@ -456,7 +457,6 @@ void ABSc3bCharacter::ShootComplete(const FInputActionValue& Value)
 		Client_FlipLaserVisibility(true);
 	} else if (!bIsPlayerAiming && LaserSight->IsVisible())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("WW"));
 		Client_FlipLaserVisibility(false);
 	}
 }
@@ -465,7 +465,7 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 {
 	//If we are sprinting and moving forward, do not allow the player to aim
 	float Speed;
-	if (bIsSprinting || bIsChangingAttachments)
+	if (bIsSprinting || bIsChangingAttachments || bReloading)
 	{
 		return;	
 	}
@@ -669,6 +669,7 @@ void ABSc3bCharacter::Server_PlayerSprinting_Implementation(bool Sprinting, floa
 void ABSc3bCharacter::Server_Reload_Implementation(bool Reload)
 {
 	bReloading = Reload;
+	Ammo = 30;
 }
 
 	void ABSc3bCharacter::OrientLaserSight()

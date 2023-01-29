@@ -49,6 +49,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bPlayerReload;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bPlayerChangingAttachments;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	USoundBase* WalkFootstep;
 
@@ -57,6 +60,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	USoundBase* RunFootstep;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* MagDetach;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* MagAttach;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	USoundAttenuation* WalkAttenuation;

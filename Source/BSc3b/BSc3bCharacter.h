@@ -97,13 +97,7 @@ class ABSc3bCharacter : public ACharacter
 	bool bWasAimingCanceled;
 
 	UPROPERTY()
-	bool bIsChangingAttachments;
-
-	UPROPERTY()
 	ABSc3bController* PlayerController;
-
-	UPROPERTY()
-	int Ammo;
 
 public:
 	ABSc3bCharacter();
@@ -202,6 +196,12 @@ public:
 	UFUNCTION(Server, Unreliable)
 	void Server_Spawn();
 	void Server_Spawn_Implementation();
+
+	UPROPERTY()
+	int Ammo;
+
+	UPROPERTY()
+	bool bIsChangingAttachments;
 
 protected:
 

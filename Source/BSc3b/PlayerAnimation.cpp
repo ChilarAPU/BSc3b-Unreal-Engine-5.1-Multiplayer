@@ -4,6 +4,7 @@
 #include "PlayerAnimation.h"
 
 #include "BSc3bCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 UPlayerAnimation::UPlayerAnimation()
 {
@@ -28,6 +29,7 @@ void UPlayerAnimation::EndReload_Notify()
 	if (OwningPlayer->HasAuthority())
 	{
 		OwningPlayer->bReloading = false;
+		OwningPlayer->Ammo = 30;
 	}
 	else if (OwningPlayer->IsLocallyControlled())
 	{
@@ -37,11 +39,20 @@ void UPlayerAnimation::EndReload_Notify()
 
 void UPlayerAnimation::AttachMag_Notify()
 {
+	if (IsValid(MagAttach))
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), MagAttach);
+	}
 	OwningPlayer->ToggleMagazineVisibility(false);
 }
 
 void UPlayerAnimation::DetachMag_Notify()
 {
+	if (IsValid(MagDetach))
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), MagDetach);
+	}
+	
 	OwningPlayer->ToggleMagazineVisibility(true);
 }
 
@@ -76,6 +87,7 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		bPlayerShoot = OwningPlayer->bIsShooting;
 		bHit = OwningPlayer->bHitByBullet;
 		bPlayerReload = OwningPlayer->bReloading;
+		bPlayerChangingAttachments = OwningPlayer->bIsChangingAttachments;
 		
 		//Has to be above maximum player velocity when walking
 		if (OwningPlayer->GetVelocity().Length() > 350 && PlayerXVelocity > 0)
