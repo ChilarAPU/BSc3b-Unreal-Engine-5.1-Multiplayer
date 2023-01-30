@@ -110,6 +110,15 @@ void ABSc3bCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+		Client_HideHead();
+		
+		//Setting this here forces clients input to switch to the game on launch
+		//not sure if this is a good feature or not
+		/*PlayerController->SetShowMouseCursor(false);
+		PlayerController->SetIgnoreLookInput(false);
+		const FInputModeGameOnly Input;
+		PlayerController->SetInputMode(Input);
+		*/
 	}
 	/*if (HasAuthority())
 	{
@@ -167,8 +176,8 @@ void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsPlayerAiming, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, MoveAxisVector, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerPitch, COND_SkipOwner);
-	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsDead, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsShooting, COND_SkipOwner);
+	DOREPLIFETIME(ABSc3bCharacter, bIsDead);
 	DOREPLIFETIME(ABSc3bCharacter, bIsSprinting);
 	DOREPLIFETIME(ABSc3bCharacter, bReloading);
 }
@@ -265,10 +274,11 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 		if (Health < 95)
 		{
 			bIsDead = true;
-			const FVector t = GetActorLocation();
-			const FRotator r = GetActorRotation();
-			ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
-			GetController()->Possess(NewPlayer);
+			Client_Respawn();
+			//const FVector t = GetActorLocation();
+			//const FRotator r = GetActorRotation();
+			//ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
+			//GetController()->Possess(NewPlayer);
 			//NewPlayer->Client_Respawn();
 		}
 		
@@ -288,12 +298,42 @@ void ABSc3bCharacter::Client_FlipLaserVisibility_Implementation(bool Visible)
 	
 }
 
+void ABSc3bCharacter::Server_Respawn_Implementation()
+{
+	Client_ResetInput();
+	const FVector t = GetActorLocation();
+	const FRotator r = GetActorRotation();
+	ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
+	GetController()->Possess(NewPlayer);
+	//NewPlayer->Client_Respawn();
+	NewPlayer->Client_HideHead();
+}
+
+void ABSc3bCharacter::Client_ResetInput_Implementation()
+{
+	if (IsValid(PlayerController))
+	{
+		PlayerController->ShowRespawnButton(false);
+	}
+
+}
+
+void ABSc3bCharacter::Client_HideHead_Implementation()
+{
+	if (IsLocallyControlled())
+	{
+		FName Head = TEXT("head");
+		GetMesh()->HideBoneByName(Head, PBO_None);
+	}
+}
+
 void ABSc3bCharacter::Client_Respawn_Implementation()
 {
 	//Any client specific calls needed before respawning
+	PlayerController->ShowRespawnButton(true);
 }
 
-	void ABSc3bCharacter::Server_PlayFootstep_Implementation(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation)
+void ABSc3bCharacter::Server_PlayFootstep_Implementation(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation)
 {
 	Multi_PlayFootstep(Location, Sound, Attenuation);
 }
@@ -324,12 +364,12 @@ void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 	UE_LOG(LogTemp, Warning, TEXT("%d"), Ammo);
 }
 
-	void ABSc3bCharacter::Server_Spawn_Implementation()
-	{
-		Weapon->SpawnAttachment();
-	}
+void ABSc3bCharacter::Server_Spawn_Implementation()
+{
+	Weapon->SpawnAttachment();
+}
 
-	void ABSc3bCharacter::Move(const FInputActionValue& Value)
+void ABSc3bCharacter::Move(const FInputActionValue& Value)
 {
 	// Replicate our move axis vector to be used in player state machine
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -553,6 +593,10 @@ void ABSc3bCharacter::Reload(const FInputActionValue& Value)
 
 void ABSc3bCharacter::OpenAttachments(const FInputActionValue& Value)
 {
+	if (bIsPlayerAiming)
+	{
+		return;
+	}
 	//Show our cursor and stop the mouse from moving our camera
 	PlayerController->SetShowMouseCursor(Value.Get<bool>());
 	PlayerController->SetIgnoreLookInput(Value.Get<bool>());

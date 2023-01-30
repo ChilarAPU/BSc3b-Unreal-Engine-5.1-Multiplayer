@@ -197,6 +197,18 @@ public:
 	void Server_Spawn();
 	void Server_Spawn_Implementation();
 
+	UFUNCTION(Server, Reliable)
+	void Server_Respawn();
+	void Server_Respawn_Implementation();
+
+	UFUNCTION(Client, Reliable)
+	void Client_ResetInput();
+	void Client_ResetInput_Implementation();
+	
+	UFUNCTION(Client, Reliable)
+	void Client_HideHead();
+	void Client_HideHead_Implementation();
+
 	UPROPERTY()
 	int Ammo;
 
@@ -298,6 +310,7 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void Client_FlipLaserVisibility(bool Visible);
 	void Client_FlipLaserVisibility_Implementation(bool Visible);
+	
 
 	UFUNCTION(Client, Reliable)
 	void Client_Respawn();

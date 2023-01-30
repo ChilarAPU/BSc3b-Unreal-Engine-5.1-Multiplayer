@@ -24,6 +24,9 @@ void UPlayerHUD::NativeConstruct()
 
 	ForegripButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnForegripClicked);
 	ForegripButton->IsFocusable = false;
+
+	RespawnButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnRespawnClicked);
+	RespawnButton->IsFocusable = false;
 }
 
 void UPlayerHUD::OnScopeClicked()
@@ -58,6 +61,12 @@ void UPlayerHUD::OnForegripClicked()
 
 	OwningPlayer->EquipWeaponAttachment(ForeGrip);
 	OwningPlayer->Server_EquipWeaponAttachment(ForeGrip);
+}
+
+void UPlayerHUD::OnRespawnClicked()
+{
+	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
+	OwningPlayer->Server_Respawn();
 }
 
 void UPlayerHUD::SetButtonVisibility(bool bVisible)

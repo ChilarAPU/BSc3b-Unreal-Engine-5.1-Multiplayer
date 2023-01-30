@@ -31,5 +31,8 @@ public:
 	
 	UPROPERTY()
 	UPlayerHUD* PlayerHUD;
+
+	UFUNCTION()
+	void ShowRespawnButton(bool Visible);
 	
 };

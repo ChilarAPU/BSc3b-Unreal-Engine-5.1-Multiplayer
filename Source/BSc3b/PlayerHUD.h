@@ -34,6 +34,9 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 	UFUNCTION()
 	void OnForegripClicked();
 
+	UFUNCTION()
+	void OnRespawnClicked();
+
 	UPROPERTY()
 	ABSc3bCharacter* OwningPlayer;
 
@@ -56,6 +59,9 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* ForegripButton;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UButton* RespawnButton;
 
 	UFUNCTION()
 	void SetButtonVisibility(bool bVisible);
