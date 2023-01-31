@@ -267,6 +267,15 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		Health -= 1;
+		if (bHitByBullet)
+		{
+			bHitByBullet = false;
+		} else
+		{
+			bHitByBullet = true;
+		}
+		
+		
 		if (Bone == "head")
 		{
 			Health = 0;
@@ -285,6 +294,11 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 		}
 		
 	}
+}
+
+void ABSc3bCharacter::Server_EndHit_Implementation()
+{
+	bHitByBullet = false;
 }
 
 void ABSc3bCharacter::Client_FlipLaserVisibility_Implementation(bool Visible)

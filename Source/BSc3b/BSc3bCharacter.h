@@ -203,6 +203,10 @@ public:
 	void Server_Spawn();
 	void Server_Spawn_Implementation();
 
+	UFUNCTION(Server, Unreliable)
+	void Server_EndHit();
+	void Server_EndHit_Implementation();
+
 	UFUNCTION(Server, Reliable)
 	void Server_Respawn();
 	void Server_Respawn_Implementation();

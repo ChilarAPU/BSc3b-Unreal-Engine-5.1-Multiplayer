@@ -45,7 +45,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bHit;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bPlayerReload;
 
@@ -102,6 +102,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void RunFootstep_Notify();
+
+	UFUNCTION(BlueprintCallable)
+	void EndOfHit_Notify();
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;

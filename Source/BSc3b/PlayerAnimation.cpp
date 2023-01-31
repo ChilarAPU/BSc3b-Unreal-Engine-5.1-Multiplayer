@@ -69,6 +69,11 @@ void UPlayerAnimation::RunFootstep_Notify()
 	OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), RunFootstep, WalkAttenuation);
 }
 
+void UPlayerAnimation::EndOfHit_Notify()
+{
+	OwningPlayer->Server_EndHit();
+}
+
 void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
@@ -108,6 +113,7 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		{
 			LeftHand_FABRIK_Alpha = 1;
 		}
+		
 
 		//Setup LeftHand_Transform to work with FABRIK
 		FTransform PlayerWeapon = OwningPlayer->GetWeaponTransform(TEXT("LeftHandSocket"), RTS_World);
