@@ -14,6 +14,7 @@
 #include "PlayerHUD.h"
 #include "Weapon.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
+#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -212,6 +213,7 @@ void ABSc3bCharacter::Server_Shoot_Implementation(FVector Location, FRotator Rot
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnBullet(Location, Rotation);
+	Multi_PlayFootstep(Location, Gunshot, GunshotAttenuation);
 }
 
 void ABSc3bCharacter::Server_PlayerVelocity_Implementation(FVector2D MovementVector)
@@ -362,6 +364,12 @@ void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 	}
 	Ammo --;
 	UE_LOG(LogTemp, Warning, TEXT("%d"), Ammo);
+	//adjust this as it is run on server, do not want this
+	if (IsValid(PlayerController->PlayerHUD))
+	{
+		PlayerController->PlayerHUD->AmmoCount = FString::FromInt(Ammo);	
+	}
+
 }
 
 void ABSc3bCharacter::Server_Spawn_Implementation()
@@ -530,17 +538,30 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 		GetCharacterMovement()->MaxWalkSpeed = Speed;
 		Server_PlayerAiming(Value.Get<bool>(), Speed);
 	}
-	//Play sound attached to aiming
-	if (IsValid(AimSound))
-	{
-		UGameplayStatics::PlaySound2D(GetWorld(), AimSound);
-	}
+	
+	SpawnClothSound(.3);
+	
 	if (!bIsShooting)
 	{
 		//Toggle our laser sight visibility for our client only
 		Client_FlipLaserVisibility(Value.Get<bool>());
 	}
 	
+}
+
+void ABSc3bCharacter::SpawnClothSound(float Duration)
+{
+	if (IsValid(ClothSound))
+	{
+		//get random float
+		float StartTime = UKismetMathLibrary::RandomFloatInRange(0, 26);
+		float Pitch = UKismetMathLibrary::RandomFloatInRange(1, 4);
+		//play sound at random position
+		UAudioComponent* Sound = UGameplayStatics::SpawnSoundAttached(ClothSound, GetMesh(), NAME_None, FVector::Zero(), FRotator::ZeroRotator,
+			EAttachLocation::KeepRelativeOffset, false, 1, Pitch, StartTime);
+		//stop sound after 1 second
+		Sound->StopDelayed(Duration);
+	}
 }
 
 void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
@@ -581,6 +602,7 @@ void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Reload(const FInputActionValue& Value)
 {
+	SpawnClothSound(.7);
 	if (HasAuthority())
 	{
 		bReloading = Value.Get<bool>();
@@ -615,6 +637,8 @@ void ABSc3bCharacter::OpenAttachments(const FInputActionValue& Value)
 		const FInputModeGameOnly Input;
 		PlayerController->SetInputMode(Input);
 	}
+
+	SpawnClothSound(.3);
 }
 
 void ABSc3bCharacter::ShootLogic(bool bAimingIn)
@@ -648,6 +672,7 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 				FActorSpawnParameters SpawnParams;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 				SpawnBullet(Location, Rotation);
+				Multi_PlayFootstep(Location, Gunshot, GunshotAttenuation);
 			}else
 			{
 				//UE_LOG(LogTemp, Warning, TEXT("WW"));

@@ -87,6 +87,15 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 	USoundBase* AimSound;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+	USoundBase* ClothSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+	USoundBase* Gunshot;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+	USoundAttenuation* GunshotAttenuation;
+
 	/* Set when movement key is pressed while sprinting other than forwards. This stops the player
 	 * from continuing to sprint in directions they shouldn't
 	 */
@@ -95,9 +104,6 @@ class ABSc3bCharacter : public ACharacter
 
 	UPROPERTY()
 	bool bWasAimingCanceled;
-
-	UPROPERTY()
-	ABSc3bController* PlayerController;
 
 public:
 	ABSc3bCharacter();
@@ -214,6 +220,12 @@ public:
 
 	UPROPERTY()
 	bool bIsChangingAttachments;
+
+	UFUNCTION()
+	void SpawnClothSound(float Duration);
+
+	UPROPERTY()
+	ABSc3bController* PlayerController;
 
 protected:
 

@@ -35,6 +35,7 @@ void UPlayerAnimation::EndReload_Notify()
 	{
 		OwningPlayer->Server_Reload(false);
 	}
+	OwningPlayer->SpawnClothSound(.3);
 }
 
 void UPlayerAnimation::AttachMag_Notify()

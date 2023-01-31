@@ -44,6 +44,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString HealthText;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString AmmoCount;
 	
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* Health;
