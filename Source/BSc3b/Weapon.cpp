@@ -11,30 +11,53 @@ UWeapon::UWeapon()
 	Attachments.Emplace(LongRange, FAttachmentMesh(Scope, nullptr));
 	Attachments.Emplace(Silencer, FAttachmentMesh(Muzzle, nullptr));
 	Attachments.Emplace(ForeGrip, FAttachmentMesh(Grip, nullptr));
+
+	//Default values for weapon statistics
+	DamageStat = 5;
+	RangeStat = 5.7;
+	StabilityStat = 4.3;
+	MobilityStat = 4;
+}
+
+void UWeapon::SetAttachmentMesh(AAttachment* Actor, EAttachmentKey Attachment, TEnumAsByte<EAttachmentKey>& CachedAttachment)
+{
+	if (IsValid(Actor))
+	{
+		if (Actor->Attachment->GetStaticMesh() == Attachments.Find(Attachment)->Mesh)
+		{
+			//We have clicked the button for the same mesh so do nothing
+			return;
+		}
+		if (CachedAttachment != Attachment)
+		{
+			DamageStat -= Attachments.Find(CachedAttachment)->Damage;
+			RangeStat -= Attachments.Find(CachedAttachment)->Range;
+			StabilityStat -= Attachments.Find(CachedAttachment)->Stability;
+			MobilityStat -= Attachments.Find(CachedAttachment)->Mobility;
+		}
+		
+		Actor->Attachment->SetStaticMesh(Attachments.Find(Attachment)->Mesh);
+		DamageStat += Attachments.Find(Attachment)->Damage;
+		RangeStat += Attachments.Find(Attachment)->Range;
+		StabilityStat += Attachments.Find(Attachment)->Stability;
+		MobilityStat += Attachments.Find(Attachment)->Mobility;
+		CachedAttachment = Attachment;
+	}
 }
 
 void UWeapon::EquipAttachment(EAttachmentKey Attachment)
 {
 	if (Attachments.Find(Attachment)->Type == Scope)
 	{
-		if (IsValid(ScopeActor))
-    	{
-    		ScopeActor->Attachment->SetStaticMesh(Attachments.Find(Attachment)->Mesh);
-    	}	
+		SetAttachmentMesh(ScopeActor, Attachment, CachedScopeKey);
 	}
 	if (Attachments.Find(Attachment)->Type == Muzzle)
 	{
-		if (IsValid(MuzzleActor))
-		{
-			MuzzleActor->Attachment->SetStaticMesh(Attachments.Find(Attachment)->Mesh);
-		}
+		SetAttachmentMesh(MuzzleActor, Attachment, CachedMuzzleKey);
 	}
 	if (Attachments.Find(Attachment)->Type == Grip)
 	{
-		if (IsValid(GripActor))
-		{
-			GripActor->Attachment->SetStaticMesh(Attachments.Find(Attachment)->Mesh);
-		}
+		SetAttachmentMesh(GripActor, Attachment, CachedGripKey);
 	}
 	
 }

@@ -219,7 +219,7 @@ public:
 	void Client_HideHead();
 	void Client_HideHead_Implementation();
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	int Ammo;
 
 	UPROPERTY()

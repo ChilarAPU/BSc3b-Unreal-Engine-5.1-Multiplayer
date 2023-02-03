@@ -12,6 +12,7 @@
 
 class UButton;
 class UTextBlock;
+class UProgressBar;
 
 class ABSc3bCharacter;
 
@@ -40,6 +41,18 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 	UPROPERTY()
 	ABSc3bCharacter* OwningPlayer;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UTextBlock* MobilityText;
+	
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UTextBlock* StabilityText;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UTextBlock* RangeText;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UTextBlock* DamageText;
+
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -65,6 +78,21 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* RespawnButton;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UProgressBar* DamageStatBar;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UProgressBar* RangeStatBar;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UProgressBar* StabilityStatBar;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UProgressBar* MobilityStatBar;
+	
+	UFUNCTION()
+	void AdjustStatPercentage(UProgressBar* Bar, float value);
 
 	UFUNCTION()
 	void SetButtonVisibility(bool bVisible);

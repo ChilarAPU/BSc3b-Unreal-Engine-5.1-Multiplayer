@@ -160,6 +160,12 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 	if (IsValid(PlayerController->PlayerHUD))
 	{
 		PlayerController->PlayerHUD->HealthText = FString::SanitizeFloat(Health);
+		PlayerController->PlayerHUD->AmmoCount = FString::SanitizeFloat(Ammo);
+		//Call this function so we dont have to include the progress bar file
+		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->DamageStatBar, Weapon->DamageStat);
+		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->RangeStatBar, Weapon->RangeStat);
+		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->MobilityStatBar, Weapon->MobilityStat);
+		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->StabilityStatBar, Weapon->StabilityStat);
 	}
 }
 
@@ -170,6 +176,7 @@ void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	//Tell it to replicate the variable all clients at all times
 	DOREPLIFETIME(ABSc3bCharacter, Health);
 	DOREPLIFETIME(ABSc3bCharacter, bHitByBullet);
+	DOREPLIFETIME(ABSc3bCharacter, Ammo);
 	
 	//Replicated variables used in animations
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerHorizontalVelocity, COND_SkipOwner);
@@ -267,6 +274,7 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		Health -= 1;
+		
 		if (bHitByBullet)
 		{
 			bHitByBullet = false;
@@ -616,6 +624,10 @@ void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Reload(const FInputActionValue& Value)
 {
+	if (bIsPlayerAiming)
+	{
+		return;
+	}
 	SpawnClothSound(.7);
 	if (HasAuthority())
 	{
