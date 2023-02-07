@@ -75,7 +75,6 @@ void ABullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrim
 void ABullet::CustomCollision()
 {
 	FVector End = BulletMesh->GetComponentLocation();
-	const TArray<AActor*> ActorsToIgnore;
 	FHitResult OutHit;
 	UKismetSystemLibrary::LineTraceSingle(GetWorld(), CachedLocation, End, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::Persistent, OutHit, true);
 	if (OutHit.bBlockingHit)
@@ -87,6 +86,7 @@ void ABullet::CustomCollision()
 			if (HitPlayer->IsPlayerControlled())
 			{
 				HitPlayer->Server_Health(HitBone);
+				ActorsToIgnore.Emplace(HitPlayer);
 			}
 			
 		}

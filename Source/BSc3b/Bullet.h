@@ -14,6 +14,9 @@ UCLASS()
 class BSC3B_API ABullet : public AActor
 {
 	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<AActor*> ActorsToIgnore;
 	
 public:	
 	// Sets default values for this actor's properties

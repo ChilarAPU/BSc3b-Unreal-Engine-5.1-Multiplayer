@@ -136,7 +136,7 @@ public:
 	/* Replicate whether player is shooting or not to animation */
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	bool bIsShooting;
-
+	
 	/* Replicate whether player is sprinting or not to animation */
 	UPROPERTY(Replicated, BlueprintReadOnly, EditAnywhere)
 	bool bIsSprinting;
