@@ -16,7 +16,10 @@ UPlayerAnimation::UPlayerAnimation()
 void UPlayerAnimation::FootStep_Notify()
 {
 	WalkAttenuation->Attenuation.FalloffDistance = 500;
-	OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), WalkFootstep, WalkAttenuation);
+	if (OwningPlayer->IsLocallyControlled())
+	{
+		OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), WalkFootstep, WalkAttenuation);
+	}
 }
 
 void UPlayerAnimation::Shoot_Notify(bool bAiming)
@@ -60,13 +63,20 @@ void UPlayerAnimation::DetachMag_Notify()
 void UPlayerAnimation::JogFootstep_Notify()
 {
 	WalkAttenuation->Attenuation.FalloffDistance = 700;
-	OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), JogFootstep, WalkAttenuation);
+	if (OwningPlayer->IsLocallyControlled())
+	{
+		OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), JogFootstep, WalkAttenuation);	
+	}
+	
 }
 
 void UPlayerAnimation::RunFootstep_Notify()
 {
 	WalkAttenuation->Attenuation.FalloffDistance = 900;
-	OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), RunFootstep, WalkAttenuation);
+	if (OwningPlayer->IsLocallyControlled())
+	{
+		OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), RunFootstep, WalkAttenuation);	
+	}
 }
 
 void UPlayerAnimation::EndOfHit_Notify()

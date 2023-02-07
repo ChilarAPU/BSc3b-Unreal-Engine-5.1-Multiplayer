@@ -4,6 +4,7 @@
 #include "Bullet.h"
 
 #include "BSc3bCharacter.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values
@@ -29,8 +30,6 @@ ABullet::ABullet()
 	BulletTrail = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Trail"));
 	BulletTrail->SetupAttachment(BulletMesh);
 
-	//BulletMesh->OnComponentBeginOverlap.AddDynamic(this, &ABullet::PlayerOverlap);
-
 	//Set bullet to despawn 10 seconds after it has been fired. Quick and easy way to stop
 	//our level from lagging due to too many meshes
 	InitialLifeSpan = 10;
@@ -39,37 +38,13 @@ ABullet::ABullet()
 	bReplicates = true;
 	BulletMesh->SetSimulatePhysics(true);
 	Player = nullptr;
+	BulletMesh->SetNotifyRigidBodyCollision(false);
 	
 }
 
 void ABullet::AddImpulseToBullet(FVector Direction)
 {
 	BulletMesh->AddImpulse(Direction * BulletSpeed, NAME_None);
-}
-
-void ABullet::PlayerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	ABSc3bCharacter* HitPlayer = Cast<ABSc3bCharacter>(OtherActor);
-	if (HitPlayer)
-	{
-		//Without this, clients would not be able to call their server RPCs
-		if (HitPlayer->IsLocallyControlled())
-		{
-			//HitPlayer->Server_Health();
-		}
-	}
-	
-}
-
-void ABullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
-	FVector NormalImpulse, const FHitResult& Hit)
-{
-	//We have hit a solid object, stop overlap events to avoid accidental overlap events
-	UE_LOG(LogTemp, Warning, TEXT("Bullet Hit Event"));
-	BulletMesh->SetGenerateOverlapEvents(false);
-	//Stop hit events from being constantly outputted as we have no more need for them
-	BulletMesh->SetNotifyRigidBodyCollision(false);
 }
 
 void ABullet::CustomCollision()
@@ -87,9 +62,13 @@ void ABullet::CustomCollision()
 			{
 				HitPlayer->Server_Health(HitBone);
 				ActorsToIgnore.Emplace(HitPlayer);
+				return;
 			}
-			
 		}
+		BulletMesh->SetGenerateOverlapEvents(false);
+		//Stop hit events from being constantly outputted as we have no more need for them
+		BulletMesh->SetNotifyRigidBodyCollision(false);
+		BulletMesh->SetSimulatePhysics(false);
 	}
 	
 }
@@ -99,8 +78,6 @@ void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
 	SetReplicateMovement(true);
-	//have to set this in begin play as the constructor does not work
-	BulletMesh->OnComponentHit.AddDynamic(this, &ABullet::OnHit);
 	
 	Player = Cast<ABSc3bCharacter>(GetInstigator());
 	CachedLocation = GetActorLocation();
@@ -116,7 +93,6 @@ void ABullet::Tick(float DeltaTime)
 	if (HasAuthority())
 	{
 		CustomCollision();
-		FVector t = BulletMesh->GetComponentLocation();
 		//Storing our current location, ready for the next tick
 		CachedLocation = BulletMesh->GetComponentLocation();
 	}

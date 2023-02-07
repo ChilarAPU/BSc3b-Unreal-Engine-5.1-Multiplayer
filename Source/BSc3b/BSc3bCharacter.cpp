@@ -216,7 +216,6 @@ FTransform ABSc3bCharacter::GetWeaponTransform(FName Socket, ERelativeTransformS
 
 void ABSc3bCharacter::Server_Shoot_Implementation(FVector Location, FRotator Rotation)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Server_Shoot_Implementation HAS BEEN CALLED"));
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnBullet(Location, Rotation);
@@ -385,7 +384,6 @@ void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 		Bullet->AddImpulseToBullet(Weapon->GetRightVector());
 	}
 	Ammo --;
-	UE_LOG(LogTemp, Warning, TEXT("%d"), Ammo);
 	//adjust this as it is run on server, do not want this
 	if (IsValid(PlayerController->PlayerHUD))
 	{
@@ -568,7 +566,6 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 		//Toggle our laser sight visibility for our client only
 		Client_FlipLaserVisibility(Value.Get<bool>());
 	}
-	
 }
 
 void ABSc3bCharacter::SpawnClothSound(float Duration)
