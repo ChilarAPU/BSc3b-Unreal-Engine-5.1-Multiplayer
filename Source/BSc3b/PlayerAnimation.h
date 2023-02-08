@@ -52,6 +52,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bPlayerChangingAttachments;
 
+	////// SOUND VARIABLES USED IN NOTIFY EVENTS //////
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	USoundBase* WalkFootstep;
 
@@ -66,8 +67,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	USoundBase* MagAttach;
-
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	USoundAttenuation* WalkAttenuation;
 
@@ -82,6 +82,7 @@ public:
 	UPROPERTY()
 	ABSc3bCharacter* OwningPlayer;
 
+	////// C++ FUNCTIONS CALLED IN CORRESPONDING BLUEPRINT NOTIFY EVENTS //////
 	UFUNCTION(BlueprintCallable)
 	void FootStep_Notify();
 
@@ -105,7 +106,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void EndOfHit_Notify();
-	
+
+	/* Set our values that handle the state machine here */
 	UFUNCTION(BlueprintCallable)
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 };

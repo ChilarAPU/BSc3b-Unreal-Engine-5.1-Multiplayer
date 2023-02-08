@@ -25,7 +25,6 @@ ABullet::ABullet()
 	BulletMesh->SetRelativeRotation(FRotator(0.0, -90, -90));
 	BulletMesh->SetRelativeScale3D(FVector(0.1, 0.1, 0.1));
 	BulletMesh->SetIsReplicated(true);
-	BulletMesh->SetNotifyRigidBodyCollision(true);
 
 	BulletTrail = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Trail"));
 	BulletTrail->SetupAttachment(BulletMesh);
@@ -56,8 +55,10 @@ void ABullet::CustomCollision()
 	{
 		ABSc3bCharacter* HitPlayer = Cast<ABSc3bCharacter>(OutHit.GetActor());
 		FName HitBone =  OutHit.BoneName;
+		//If we have hit a player
 		if (HitPlayer)
 		{
+			//make sure we run this locally and only on the hit player
 			if (HitPlayer->IsPlayerControlled())
 			{
 				HitPlayer->Server_Health(HitBone);
@@ -65,6 +66,7 @@ void ABullet::CustomCollision()
 				return;
 			}
 		}
+		//If we have overlapped with an object other than a player
 		BulletMesh->SetGenerateOverlapEvents(false);
 		//Stop hit events from being constantly outputted as we have no more need for them
 		BulletMesh->SetNotifyRigidBodyCollision(false);

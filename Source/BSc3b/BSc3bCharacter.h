@@ -75,26 +75,10 @@ class ABSc3bCharacter : public ACharacter
 	UInputAction* AttachmentAction;
 
 	////// PRIVATE VARIABLES //////
-	/* Actor which should spawn when the player shoot a weapon */
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Bullet, meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<ABullet> SpawnObject;
 
 	/* Easily adjust how long the laser should travel */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Laser, meta = (AllowPrivateAccess = "true"))
 	float LaserDistance;
-
-	/* Cloth sound that plays whenever the player aims in to replicate the sound of clothes moving */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
-	USoundBase* AimSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
-	USoundBase* ClothSound;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
-	USoundBase* Gunshot;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess = "true"))
-	USoundAttenuation* GunshotAttenuation;
 
 	/* Set when movement key is pressed while sprinting other than forwards. This stops the player
 	 * from continuing to sprint in directions they shouldn't
@@ -102,6 +86,8 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY(EditAnywhere)
 	bool bStopSprinting;
 
+	/* Used to stop our sprinting mechanic from breaking when it is pressed while aiming
+	 * then released after aiming has ceased */
 	UPROPERTY()
 	bool bWasAimingCanceled;
 
@@ -129,21 +115,23 @@ public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	bool bIsPlayerAiming;
 
-	/* Replicate whether player is dead or not to animation */
+	/* Replicate whether player is dead to animation */
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	bool bIsDead;
 
-	/* Replicate whether player is shooting or not to animation */
+	/* Replicate whether player is shooting to animation */
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	bool bIsShooting;
 	
-	/* Replicate whether player is sprinting or not to animation */
+	/* Replicate whether player is sprinting to animation */
 	UPROPERTY(Replicated, BlueprintReadOnly, EditAnywhere)
 	bool bIsSprinting;
 
+	/* Replicate whether player has been hit by a bullet */
 	UPROPERTY(Replicated, BlueprintReadOnly, EditAnywhere)
 	bool bHitByBullet;
 
+	/* Replicate whether player is reloading */
 	UPROPERTY(Replicated, BlueprintReadOnly, EditAnywhere)
 	bool bReloading;
 	
@@ -185,46 +173,66 @@ public:
 	UFUNCTION()
 	void EquipWeaponAttachment(EAttachmentKey Attachment);
 
+	/* Spawn a new magazine mesh in our hand while simultaneously hiding the magazine that is attached to our weapon */
 	UFUNCTION()
 	void ToggleMagazineVisibility(bool Hide);
 
+	/* Called by animation to update the transform of our magazine. NOTE: IMRPOVE BY ATTACHING TO SOCKET INSTEAD OF
+	 * SETTING LOCATION EVERY FRAME
+	 */
 	UFUNCTION()
 	void UpdateMagazineTransform();
 
+	/* Wrapper function to call Multicast_EquipWeaponAttachment()*/
 	UFUNCTION(Server, Unreliable)
 	void Server_EquipWeaponAttachment(EAttachmentKey Attachment);
 	void Server_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment);
 
+	/* Equip an attachment for other clients missing out our owning client */
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_EquipWeaponAttachment(EAttachmentKey Attachment);
 	void Multicast_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment);
 
+	/* Spawn weapon attachment actors on the server. This also attaches these actors to specific sockets on the weapon*/
 	UFUNCTION(Server, Unreliable)
 	void Server_Spawn();
 	void Server_Spawn_Implementation();
 
+	/* Called at the end of hit animation and simply returns our boolean to false*/
 	UFUNCTION(Server, Unreliable)
 	void Server_EndHit();
 	void Server_EndHit_Implementation();
 
+	/* Spawn in a new character class and posses them. Also run functionality needed before posses can happen */
 	UFUNCTION(Server, Reliable)
 	void Server_Respawn();
 	void Server_Respawn_Implementation();
 
+	/* Called when Respawn button is pressed and simply hides the button again */
 	UFUNCTION(Client, Reliable)
 	void Client_ResetInput();
 	void Client_ResetInput_Implementation();
-	
-	UFUNCTION(Client, Reliable)
-	void Client_HideHead();
-	void Client_HideHead_Implementation();
 
+	/* Have to call a custom begin play function as the server client does not
+	 * run BeginPlay() for some reason when spawning in a new character
+	 */
+	UFUNCTION(Client, Reliable)
+	void Client_CustomBeginPlay();
+	void Client_CustomBeginPlay_Implementation();
+
+	/* Holds the ammo for the current gun */
 	UPROPERTY(Replicated)
 	int Ammo;
 
+	/* Determines whether the player is inside the attachment changing pose. Used to stop other inputs from
+	 * passing
+	 */
 	UPROPERTY()
 	bool bIsChangingAttachments;
 
+	/* Spawn a 2D cloth sound at a random time inside the sound file along with adjusting the pitch between
+	 * a value of 1 - 4
+	 */
 	UFUNCTION()
 	void SpawnClothSound(float Duration);
 
@@ -277,12 +285,6 @@ protected:
 	UFUNCTION()
 	void SetPlayerPitchForOffset();
 
-	/*Procedurally interpolate the weapon rotation when the player moves the camera
-	 * to give the effect of the weapon swaying around. ALl rotation is done in
-	 * object space so at to avoid any unaccounted negative world space values */
-	UFUNCTION()
-	void WeaponSway(float DeltaTime);
-
 	/* Logic function for spawning in a bullet at any location/rotation we pass through assigning
 	* the correct owner for the actor, as well as adding an impulse to the bullet */
 	UFUNCTION()
@@ -327,10 +329,13 @@ protected:
 	void Client_FlipLaserVisibility(bool Visible);
 	void Client_FlipLaserVisibility_Implementation(bool Visible);
 	
-
+	/* Simple function that shows the respawn button when a player has been killed. Can also include other
+	 * client specific functionality that can happen upon death
+	 */
 	UFUNCTION(Client, Reliable)
 	void Client_Respawn();
 	void Client_Respawn_Implementation();
+	
 	////// PROTECTED MULTICAST RPCS //////
 	/* Called by our Server footstep RPC to make sure every client will hear this footstep.
 	 * Has to be called by the server otherwise it acts as a client RPC

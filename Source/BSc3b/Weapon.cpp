@@ -7,6 +7,7 @@
 
 UWeapon::UWeapon()
 {
+	//Default values to fill out the TMap in blueprint
 	Attachments.Emplace(RedDot, FAttachmentMesh(Scope, nullptr));
 	Attachments.Emplace(LongRange, FAttachmentMesh(Scope, nullptr));
 	Attachments.Emplace(Silencer, FAttachmentMesh(Muzzle, nullptr));

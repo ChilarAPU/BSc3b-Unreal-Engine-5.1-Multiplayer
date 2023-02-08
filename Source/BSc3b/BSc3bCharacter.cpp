@@ -11,6 +11,7 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "PlayerAnimation.h"
 #include "PlayerHUD.h"
 #include "Weapon.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
@@ -52,6 +53,7 @@ ABSc3bCharacter::ABSc3bCharacter()
 	FollowCamera->SetupAttachment(GetMesh(), CameraSocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = true; // Camera does not rotate relative to arm
 	FollowCamera->SetRelativeLocation(FVector(-4.506538, 0.355924, -4.909522)); //Set Location of camera
+	FollowCamera->SetFieldOfView(110);
 	//Dont need to set rotation as the camera is attached to the head socket of mesh, overriding any rotation values
 
 	//Create weapon static mesh component
@@ -111,7 +113,7 @@ void ABSc3bCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
-		Client_HideHead();
+		Client_CustomBeginPlay();
 		
 		//Setting this here forces clients input to switch to the game on launch
 		//not sure if this is a good feature or not
@@ -140,7 +142,7 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 	if (IsValid(Weapon))
 	{
 		OrientLaserSight();
-    	WeaponSway(DeltaSeconds);	
+		PlayerController->WeaponSway(DeltaSeconds, LookAxisVector, Weapon);
 	}
 	
 	//Aim Offset replication code
@@ -219,7 +221,7 @@ void ABSc3bCharacter::Server_Shoot_Implementation(FVector Location, FRotator Rot
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnBullet(Location, Rotation);
-	Multi_PlayFootstep(Location, Gunshot, GunshotAttenuation);
+	Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);
 }
 
 void ABSc3bCharacter::Server_PlayerVelocity_Implementation(FVector2D MovementVector)
@@ -329,7 +331,7 @@ void ABSc3bCharacter::Server_Respawn_Implementation()
 	ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
 	GetController()->Possess(NewPlayer);
 	//NewPlayer->Client_Respawn();
-	NewPlayer->Client_HideHead();
+	NewPlayer->Client_CustomBeginPlay();
 }
 
 void ABSc3bCharacter::Client_ResetInput_Implementation()
@@ -341,10 +343,11 @@ void ABSc3bCharacter::Client_ResetInput_Implementation()
 
 }
 
-void ABSc3bCharacter::Client_HideHead_Implementation()
+void ABSc3bCharacter::Client_CustomBeginPlay_Implementation()
 {
 	if (IsLocallyControlled())
 	{
+		//Hide the head from our newly spawned player
 		FName Head = TEXT("head");
 		GetMesh()->HideBoneByName(Head, PBO_None);
 	}
@@ -377,7 +380,7 @@ void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 	{
 		return;
 	}
-	AActor* T = GetWorld()->SpawnActor<AActor>(SpawnObject, Location, Rotation);
+	AActor* T = GetWorld()->SpawnActor<AActor>(PlayerController->SpawnObject, Location, Rotation);
 	T->SetInstigator(this);
 	if (ABullet* Bullet = Cast<ABullet>(T))
 	{
@@ -570,13 +573,17 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 
 void ABSc3bCharacter::SpawnClothSound(float Duration)
 {
-	if (IsValid(ClothSound))
+	if (!IsValid(PlayerController))
+	{
+		return;
+	}
+	if (IsValid(PlayerController->ClothSound))
 	{
 		//get random float
 		float StartTime = UKismetMathLibrary::RandomFloatInRange(0, 26);
 		float Pitch = UKismetMathLibrary::RandomFloatInRange(1, 4);
 		//play sound at random position
-		UAudioComponent* Sound = UGameplayStatics::SpawnSoundAttached(ClothSound, GetMesh(), NAME_None, FVector::Zero(), FRotator::ZeroRotator,
+		UAudioComponent* Sound = UGameplayStatics::SpawnSoundAttached(PlayerController->ClothSound, GetMesh(), NAME_None, FVector::Zero(), FRotator::ZeroRotator,
 			EAttachLocation::KeepRelativeOffset, false, 1, Pitch, StartTime);
 		//stop sound after 1 second
 		Sound->StopDelayed(Duration);
@@ -695,7 +702,7 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 				FActorSpawnParameters SpawnParams;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 				SpawnBullet(Location, Rotation);
-				Multi_PlayFootstep(Location, Gunshot, GunshotAttenuation);
+				Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);
 			}else
 			{
 				//UE_LOG(LogTemp, Warning, TEXT("WW"));
@@ -712,7 +719,6 @@ void ABSc3bCharacter::EquipWeaponAttachment(EAttachmentKey Attachment)
 
 void ABSc3bCharacter::Server_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment)
 {
-	//Weapon->EquipAttachment(Attachment);
 	Multicast_EquipWeaponAttachment(Attachment);
 }
 
@@ -741,7 +747,7 @@ void ABSc3bCharacter::UpdateMagazineTransform()
 	Weapon->UpdateMagTransform(SocketT);
 }
 
-	void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming, float speed)
+void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming, float speed)
 {
 	bIsPlayerAiming = bIsAiming;
 	GetCharacterMovement()->MaxWalkSpeed = speed;
@@ -792,34 +798,12 @@ void ABSc3bCharacter::SetPlayerPitchForOffset()
 	FRotator InterpRot = UKismetMathLibrary::RInterpTo(PlayerRotation, Difference, UGameplayStatics::GetWorldDeltaSeconds(GetWorld()), 10);
 	//Clamp the value otherwise we get values of 360
 	PlayerPitch = UKismetMathLibrary::ClampAngle(InterpRot.Pitch, -90, 90);
+	
 
 	//Update other variables to be sent to the animation class
 	PlayerHorizontalVelocity = GetVelocity().Length() * MoveAxisVector.X;
 	PlayerVerticalVelocity = GetVelocity().Length() * MoveAxisVector.Y;
 	
-}
-
-void ABSc3bCharacter::WeaponSway(float DeltaTime)
-{
-	//Values the gun will be interpolating between
-	FRotator FinalRot, InitRot;
-	//Maximum value the gun can sway
-	const float MaxSwayDegree = 2.5;
-	//Speed at which the gun reaches the final rotation value
-	const float InterpSpeed = 2.5;
-	//Multiplying each lookaxis vector value by -1 flips the incoming direction
-	//LookAxisVector relates to the speed of our mouse movement
-	FinalRot = FRotator(LookAxisVector.Y * -1 * MaxSwayDegree, LookAxisVector.X * -1 * MaxSwayDegree, LookAxisVector.X * -1 * MaxSwayDegree);
-	FRotator RotationDifference = UKismetMathLibrary::MakeRotator(InitRot.Roll + FinalRot.Roll, InitRot.Pitch - FinalRot.Pitch, InitRot.Yaw + FinalRot.Yaw);
-	//Do all our interping in relative space as this keeps our values to normal amounts
-	FRotator InterpDifference = UKismetMathLibrary::RInterpTo(Weapon->GetRelativeRotation(), RotationDifference, DeltaTime, InterpSpeed);
-	//Variables to hold the break rotator function call
-	float Roll, Pitch, Yaw;
-	UKismetMathLibrary::BreakRotator(InterpDifference, Roll, Pitch, Yaw);
-	//Clamp all values between MaxSwayDegree and MaxSwayDegree * -1 otherwise our gun would not stop swaying
-	InterpDifference = UKismetMathLibrary::MakeRotator(UKismetMathLibrary::FClamp(Roll, MaxSwayDegree * -1, MaxSwayDegree),
-		UKismetMathLibrary::FClamp(Pitch, MaxSwayDegree * -1, MaxSwayDegree), UKismetMathLibrary::FClamp(Yaw, MaxSwayDegree * -1, MaxSwayDegree));
-	Weapon->SetRelativeRotation(InterpDifference);
 }
 
 void ABSc3bCharacter::Server_SetPlayerPitchForOffset_Implementation()

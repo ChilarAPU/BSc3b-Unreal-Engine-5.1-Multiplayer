@@ -106,6 +106,7 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		bPlayerChangingAttachments = OwningPlayer->bIsChangingAttachments;
 		
 		//Has to be above maximum player velocity when walking
+		//Set sprinting animation to play based on player velocity and not a boolean from a players input
 		if (OwningPlayer->GetVelocity().Length() > 350 && PlayerXVelocity > 0)
 		{
 			bPlayerSprinting = true;
@@ -115,6 +116,7 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 			bPlayerSprinting = false;
 		}
 
+		//Stop our Left hand IK temporarily when playing the reload animation
 		if (bPlayerReload)
 		{
 			LeftHand_FABRIK_Alpha = 0;

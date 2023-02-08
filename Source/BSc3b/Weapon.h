@@ -10,6 +10,7 @@
  * 
  */
 
+/* Holds all available attachments that can be placed on the weapon*/
 UENUM(BlueprintType)
 enum EAttachmentKey : int
 {
@@ -20,6 +21,7 @@ enum EAttachmentKey : int
 	ForeGrip = 4
 };
 
+/* Holds all available attachment types that are available on the weapon*/
 UENUM(BlueprintType)
 enum EAttachmentType : int
 {
@@ -54,13 +56,15 @@ public:
 		Stability = stability;
 		Mobility = mobility;
 	}
-	
+	/* What attachment type should be assigned to this struct */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TEnumAsByte<EAttachmentType> Type;
 
+	/* What mesh should be assigned to this struct */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	UStaticMesh* Mesh;
 
+	/* Statistic modifiers for this value in the struct */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Statistics, meta = (ClampMin = -5, ClampMax = 5, UIMin = -5, UIMax = 5))
 	float Damage;
 
@@ -81,9 +85,11 @@ class BSC3B_API UWeapon : public USkeletalMeshComponent
 {
 	GENERATED_BODY()
 
+	/* Attachment actor reference*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attachment, meta = (AllowPrivateAccess = true))
 	TSubclassOf<AAttachment> AttachmentActor;
 
+	/* All attachment types associated actors which are always spawned with the weapon */
 	UPROPERTY(Replicated)
 	AAttachment* ScopeActor;
 
@@ -93,12 +99,18 @@ class BSC3B_API UWeapon : public USkeletalMeshComponent
 	UPROPERTY(Replicated)
 	AAttachment* GripActor;
 
+	/* Mesh for our magazine that replaces original one on weapon during reload animation */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attachment, meta = (AllowPrivateAccess = true))
 	UStaticMesh* MagazineMesh;
 
+	/* Handles spawning a new attachment mesh along with adjusting the statistic parameters.
+	 * This gets called through a button press on the players widget. */
 	UFUNCTION()
 	void SetAttachmentMesh(AAttachment* Actor, EAttachmentKey Attachment, TEnumAsByte<EAttachmentKey>& CachedAttachment);
 
+	/* Holds the old attachment key for each type. This is used in SetAttachmentMesh() to remove old attachments
+	 * statistics before adding on the new ones. 
+	 */
 	UPROPERTY()
 	TEnumAsByte<EAttachmentKey> CachedScopeKey;
 
@@ -108,12 +120,18 @@ class BSC3B_API UWeapon : public USkeletalMeshComponent
 	UPROPERTY()
 	TEnumAsByte<EAttachmentKey> CachedGripKey;
 
+	/* TMap which holds all our attachments for the current weapon along with their associate values.
+	 * Gets set in blueprints for ease of access. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attachments, meta = (AllowPrivateAccess))
+	TMap<TEnumAsByte<EAttachmentKey>, FAttachmentMesh> Attachments;
+
 
 public:
 	UWeapon();
 
-	//EAttachmentKey Attachment;
-
+	/* Default statistic values for the weapon. These get adjusted through attachments and shown through a progress
+	 * bar on the players HUD.
+	 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Statistics)
 	float DamageStat;
 
@@ -126,21 +144,23 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Statistics)
 	float MobilityStat;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attachments)
-	TMap<TEnumAsByte<EAttachmentKey>, FAttachmentMesh> Attachments;
-
+	/* Finds our attachment with the given enum key and ensures we spawn it inside the correct actor*/
 	UFUNCTION()
 	void EquipAttachment(EAttachmentKey Attachment);
 
 	UPROPERTY()
 	AAttachment* MagActor;
 
+	/* Spawn our magazine mesh at the players left hand. Called by reload notify event*/
 	UFUNCTION()
 	void SpawnMag(FName SocketName);
 
+	/* Updates our magazine transform. NOTE: SHOULD BE DEPRECATE WHEN ATTACH TO SOCKET IS IMPLEMENTED*/
 	UFUNCTION()
 	void UpdateMagTransform(FTransform Transform);
 
+	/* Spawns the attachment type actors into the world for local client only as opposed to where the actors
+	 * are spawned in the server through the player*/
 	UFUNCTION()
 	void SpawnAttachment();
 

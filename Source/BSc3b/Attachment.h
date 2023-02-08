@@ -16,6 +16,7 @@ class BSC3B_API AAttachment : public AActor
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attachment, meta = (AllowPrivateAccess = true))
 	USceneComponent* Root;
 
+	/* Weapon that owns this attachment */
 	UPROPERTY()
 	UWeapon* OwningWeapon;
 	
@@ -29,6 +30,7 @@ public:
 	UPROPERTY()
 	FTransform TargetTransform;
 
+	/* Attach this actor to a socket on the owning weapon */
 	UFUNCTION()
 	void GetOwningWeapon(UWeapon* Weapon, FName Socket);
 	

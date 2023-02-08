@@ -23,6 +23,7 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 
 	virtual void NativeConstruct() override;
 
+	////// UMG BUTTON DELEGATE FUNCTIONS //////
 	UFUNCTION()
 	void OnScopeClicked();
 
@@ -41,6 +42,7 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 	UPROPERTY()
 	ABSc3bCharacter* OwningPlayer;
 
+	////// UMG TEXT VALUES ONLY BOUND IN C++ TO ADJUST VISIBILITY //////
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UTextBlock* MobilityText;
 	
@@ -55,6 +57,7 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 
 public:
 
+	////// UMG WIDGETS BOUND TO BLUEPRINT VALUES //////
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString HealthText;
 
@@ -90,10 +93,14 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UProgressBar* MobilityStatBar;
-	
+
+	/* Divide our statistic values so they work in the 0 - 1 value range which is required for
+	 * progress bars to function correctly
+	 */
 	UFUNCTION()
 	void AdjustStatPercentage(UProgressBar* Bar, float value);
 
+	/* Adjust the visibility of everything relates to attachments in the widget */
 	UFUNCTION()
 	void SetButtonVisibility(bool bVisible);
 };

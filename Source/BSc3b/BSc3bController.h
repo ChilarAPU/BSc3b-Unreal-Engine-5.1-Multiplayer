@@ -9,6 +9,8 @@
 class UPlayerAnimation;
 class UPlayerHUD;
 class ABSc3bCharacter;
+class ABullet;
+class UWeapon;
 /**
  * 
  */
@@ -43,5 +45,24 @@ public:
 
 	UFUNCTION()
 	void ShowRespawnButton(bool Visible);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* ClothSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* Gunshot;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundAttenuation* GunshotAttenuation;
+
+	/* Actor which should spawn when the player shoot a weapon */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Bullet, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<ABullet> SpawnObject;
+
+	/*Procedurally interpolate the weapon rotation when the player moves the camera
+	* to give the effect of the weapon swaying around. ALl rotation is done in
+	* object space so at to avoid any unaccounted negative world space values */
+	UFUNCTION()
+	void WeaponSway(float DeltaTime, FVector2D LookAxis, UWeapon* Weapon);
 	
 };
