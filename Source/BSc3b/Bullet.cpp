@@ -81,7 +81,8 @@ void ABullet::BeginPlay()
 	
 	Player = Cast<ABSc3bCharacter>(GetInstigator());
 	CachedLocation = GetActorLocation();
-	
+	//Make sure we cannot hit the player that shot this bullet
+	ActorsToIgnore.Emplace(Player);
 }
 
 // Called every frame

@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "BSc3bController.generated.h"
 
+class UPlayerAnimation;
 class UPlayerHUD;
 class ABSc3bCharacter;
 /**
@@ -23,6 +24,10 @@ class BSC3B_API ABSc3bController : public APlayerController
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UPlayerHUD> PlayerHUDClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UPlayerAnimation> PlayerAnimClass;
+
+
 public:
 	
 	ABSc3bController();
@@ -31,6 +36,10 @@ public:
 	
 	UPROPERTY()
 	UPlayerHUD* PlayerHUD;
+
+	/* Encapsulate the TSubclassOf variable into an easier to access and read value */
+	UPROPERTY()
+	UPlayerAnimation* PlayerAnim;
 
 	UFUNCTION()
 	void ShowRespawnButton(bool Visible);

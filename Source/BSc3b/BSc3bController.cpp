@@ -4,6 +4,7 @@
 #include "BSc3bController.h"
 
 #include "BSc3bCharacter.h"
+#include "PlayerAnimation.h"
 #include "PlayerHUD.h"
 #include "Components/Button.h"
 
@@ -15,9 +16,10 @@ ABSc3bController::ABSc3bController()
 void ABSc3bController::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("Controller"));
+	//Cast to our character just in case we ever need it
 	PlayerClass = Cast<ABSc3bCharacter>(GetCharacter());
-	
+
+	//Set and spawn our HUD onto the client
 	if (!IsValid(PlayerHUDClass))
 	{
 		return;
@@ -27,6 +29,12 @@ void ABSc3bController::BeginPlay()
 		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), PlayerHUDClass);
     	PlayerHUD->AddToViewport();	
 	}
+	//Set our player animation class so we can adjust the values inside of it directly from our character
+	if (!IsValid(PlayerAnimClass))
+	{
+		return;
+	}
+	PlayerAnim = PlayerAnimClass.GetDefaultObject();
 	
 }
 

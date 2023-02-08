@@ -15,35 +15,47 @@ class BSC3B_API ABullet : public AActor
 {
 	GENERATED_BODY()
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Bullet", meta = (AllowPrivateAccess))
+	USceneComponent* DefaultSceneRoot;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Particle",  meta = (AllowPrivateAccess))
+	UNiagaraComponent* BulletTrail;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Bullet", meta = (AllowPrivateAccess))
+	UStaticMeshComponent* BulletMesh;
+
+	/* Used in line trace to specify what actors it should ignore */
 	UPROPERTY()
 	TArray<AActor*> ActorsToIgnore;
+
+	/* Reference to the player that shot this bullet */
+	UPROPERTY()
+	ABSc3bCharacter* Player;
+
+	/* Holds the location of the Bullet from the previous frame, This is used to
+	 * determine where to spawn the linetrace
+	 */
+	UPROPERTY()
+	FVector CachedLocation;
+
+	/* Custom collision that overrides Unreal's default collision handling. Is designed to work
+	 * with smaller objects
+	 */
+	UFUNCTION()
+	void CustomCollision();
 	
 public:	
 	// Sets default values for this actor's properties
 	ABullet();
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Bullet")
-	USceneComponent* DefaultSceneRoot;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Bullet")
-	UStaticMeshComponent* BulletMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Particle")
-	UNiagaraComponent* BulletTrail;
-
+	/* Determines how strong of an impulse should be applied. This gets adjusted along with the range statistic of
+	 * a weapon
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
 	float BulletSpeed;
 
-	UPROPERTY()
-	ABSc3bCharacter* Player;
-
+	/* Add an impulse to our bullet given a specified direction vector*/
 	void AddImpulseToBullet(FVector Direction);
-
-	UPROPERTY()
-	FVector CachedLocation;
-	
-	UFUNCTION()
-	void CustomCollision();
 
 protected:
 	// Called when the game starts or when spawned
