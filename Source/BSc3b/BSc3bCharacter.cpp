@@ -82,7 +82,8 @@ ABSc3bCharacter::ABSc3bCharacter()
 	//default values
 	LaserDistance = 1000;
 	Health = 100;
-	OnRep_Health();
+	
+	//Animation Values
 	PlayerPitch = 0;
 	PlayerHorizontalVelocity = 0;
 	PlayerVerticalVelocity = 0;
@@ -95,8 +96,10 @@ ABSc3bCharacter::ABSc3bCharacter()
 	bHitByBullet = false;
 	bIsChangingAttachments = false;
 	bReloading = false;
+	
 	PlayerController = nullptr;
 	Ammo = 30;
+	bAimingWhileSprinting = false;
 	
 }
 
@@ -113,6 +116,7 @@ void ABSc3bCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+		//Hide the head bone of our mesh
 		Client_CustomBeginPlay();
 		
 		//Setting this here forces clients input to switch to the game on launch
@@ -123,15 +127,6 @@ void ABSc3bCharacter::BeginPlay()
 		PlayerController->SetInputMode(Input);
 		*/
 	}
-	/*if (HasAuthority())
-	{
-		Weapon->SpawnAttachment();
-	} else if (IsLocallyControlled())
-	{
-		Server_Spawn();	
-	}
-	*/
-	//Server_Spawn();
 	
 }
 
@@ -141,11 +136,16 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 
 	if (IsValid(Weapon))
 	{
+		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID WEAPON COMPONENT"));
+		//Spawn a line trace which our laser sight niagara system will follow
 		OrientLaserSight();
+		//Run our procedural weapon sway to move the weapon in the opposite direction the player is looking
 		PlayerController->WeaponSway(DeltaSeconds, LookAxisVector, Weapon);
 	}
 	
 	//Aim Offset replication code
+	//This controls our pitch offset animation blend space
+	//we separate the value our client sees as opposed to the server otherwise it would not be a smooth transition
 	if (HasAuthority())
 	{
 		SetPlayerPitchForOffset();
@@ -154,11 +154,14 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 		SetPlayerPitchForOffset();
 		Server_SetPlayerPitchForOffset();
 	}
+	//Would like to move this into a function that runs once
 	PlayerController = Cast<ABSc3bController>(Controller);
 	if (!PlayerController)
 	{
+		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
 		return;
 	}
+	//Again, would like to move this into a function that is only run when needed
 	if (IsValid(PlayerController->PlayerHUD))
 	{
 		PlayerController->PlayerHUD->HealthText = FString::SanitizeFloat(Health);
@@ -168,6 +171,10 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->RangeStatBar, Weapon->RangeStat);
 		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->MobilityStatBar, Weapon->MobilityStat);
 		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->StabilityStatBar, Weapon->StabilityStat);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("CONTROLLER DOES NOT HAVE A VALID PLAYERHUD REFERENCE"));
 	}
 }
 
@@ -201,6 +208,8 @@ FTransform ABSc3bCharacter::GetWeaponTransform(FName Socket, ERelativeTransformS
 {
 	if (IsValid(Weapon))
 	{
+		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID WEAPON COMPONENT"));
+		//Get the transform of a socket inside our weapon
 		return Weapon->GetSocketTransform(Socket, TransformSpace);
 	}
 	//return an identity transform
@@ -208,7 +217,7 @@ FTransform ABSc3bCharacter::GetWeaponTransform(FName Socket, ERelativeTransformS
 	
 }
 
-	bool ABSc3bCharacter::Server_Shoot_Validate(FVector Location, FRotator Rotation)
+bool ABSc3bCharacter::Server_Shoot_Validate(FVector Location, FRotator Rotation)
 {
 	//Currently inside the server
 	//Would be where cheat detection would be implemented.
@@ -218,6 +227,8 @@ FTransform ABSc3bCharacter::GetWeaponTransform(FName Socket, ERelativeTransformS
 
 void ABSc3bCharacter::Server_Shoot_Implementation(FVector Location, FRotator Rotation)
 {
+	//Spawn bullet along with playing the gunshot sound. Cannot pass FActorSpawnParameters as a parameter so have
+	//to declare it here
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnBullet(Location, Rotation);
@@ -274,8 +285,10 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{
+		//Amount to reduce health by which will become more in-depth 
 		Health -= 1;
-		
+
+		//Flip a boolean everytime we are hit which plays a new hit animation
 		if (bHitByBullet)
 		{
 			bHitByBullet = false;
@@ -284,22 +297,17 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 			bHitByBullet = true;
 		}
 		
-		
+		//If we have hit the head
 		if (Bone == "head")
 		{
 			Health = 0;
 			UE_LOG(LogTemp, Warning, TEXT("HeadShot"));
 		}
-		//temporary way to spawn in new player character
+		//Players health as reduced enough to be considered dead
 		if (Health < 95)
 		{
 			bIsDead = true;
 			Client_Respawn();
-			//const FVector t = GetActorLocation();
-			//const FRotator r = GetActorRotation();
-			//ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
-			//GetController()->Possess(NewPlayer);
-			//NewPlayer->Client_Respawn();
 		}
 		
 	}
@@ -307,13 +315,14 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 
 void ABSc3bCharacter::Server_EndHit_Implementation()
 {
+	//Called by Hit animation notify event that resets our value
 	bHitByBullet = false;
 }
 
 void ABSc3bCharacter::Client_FlipLaserVisibility_Implementation(bool Visible)
 {
 	//Make sure we only run this on the owning client
-	//This is especially import when running on the 
+	//This is especially import when running on the server
 	//Check has to run here, otherwise it does not work correctly
 	if (IsLocallyControlled())
 	{
@@ -325,12 +334,17 @@ void ABSc3bCharacter::Client_FlipLaserVisibility_Implementation(bool Visible)
 
 void ABSc3bCharacter::Server_Respawn_Implementation()
 {
+	//Hide the respawn button
 	Client_ResetInput();
+	//Temporarily location to decide where we should spawn a new character
 	const FVector t = GetActorLocation();
 	const FRotator r = GetActorRotation();
 	ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
 	GetController()->Possess(NewPlayer);
+	//delete old actor once we have possessed the new one
+	K2_DestroyActor();
 	//NewPlayer->Client_Respawn();
+	//Hides our head for the server as for some reason, BeginPlay does not work
 	NewPlayer->Client_CustomBeginPlay();
 }
 
@@ -338,6 +352,7 @@ void ABSc3bCharacter::Client_ResetInput_Implementation()
 {
 	if (IsValid(PlayerController))
 	{
+		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
 		PlayerController->ShowRespawnButton(false);
 	}
 
@@ -370,33 +385,45 @@ void ABSc3bCharacter::Multi_PlayFootstep_Implementation(FVector Location, USound
 	if (IsValid(Sound) && IsValid(Attenuation))
 	{
 		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Sound, Location, FRotator::ZeroRotator, 1, 1, 0, Attenuation);	
+	} else
+	{
+		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE VALID SOUND OR ATTENUATION POINTERS"));
 	}
 
 }
 
 void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 {
+	//if we have no more ammo, stop bullets from spawning
 	if (Ammo <= 0)
 	{
 		return;
 	}
+	//Spawn in bullet actor and pass through this as the owner
 	AActor* T = GetWorld()->SpawnActor<AActor>(PlayerController->SpawnObject, Location, Rotation);
 	T->SetInstigator(this);
+	//Add impulse to our bullet. Call this here as we need a reference to the weapon components right vector
 	if (ABullet* Bullet = Cast<ABullet>(T))
 	{
 		Bullet->AddImpulseToBullet(Weapon->GetRightVector());
 	}
+	//Decrement Ammo value
 	Ammo --;
+	
 	//adjust this as it is run on server, do not want this
 	if (IsValid(PlayerController->PlayerHUD))
 	{
 		PlayerController->PlayerHUD->AmmoCount = FString::FromInt(Ammo);	
+	} else
+	{
+		UE_LOG(LogTemp, Error, TEXT("CONTROLLER DOES NOT HAVE A VALID PLAYERHUD REFERENCE"));
 	}
 
 }
 
 void ABSc3bCharacter::Server_Spawn_Implementation()
 {
+	//Spawn our attachment actors on our weapon in begin play
 	Weapon->SpawnAttachment();
 }
 
@@ -429,10 +456,11 @@ void ABSc3bCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 
-		//Sprinting related code
+		//////SPRINTING RELATED CODE//////
 		//Are we sprinting or have we run through this code already?
 		if (!bIsSprinting || bStopSprinting)
 		{
+			//asking if we have run through this code already is just an optimization step
 			return;
 		}
 
@@ -441,7 +469,8 @@ void ABSc3bCharacter::Move(const FInputActionValue& Value)
 		{
 			return;
 		}
-		
+
+		//slow our movement speed if we are moving in a different direction while still holding down sprint
 		if (HasAuthority())
 		{
 			bStopSprinting = true;
@@ -471,7 +500,7 @@ void ABSc3bCharacter::Look(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 {
-	//If we are sprinting, do not allow the player to shoot	
+	//If we are sprinting or in our changing attachment pose, do not allow the player to shoot	
 	if (bIsSprinting || bIsChangingAttachments)
 	{
 		return;
@@ -491,18 +520,9 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 			bIsShooting = Value.Get<bool>();
 		}
 		
-		
-		if (GetOwner()->GetLocalRole() == ROLE_Authority)
-		{
-			//subtract health on server
-			//Health -= 1;
-			//OnRep_Health();
-		}
-		else
-		{
-			//call server function to subtract health
-			//Server_Health();
-		}
+	} else
+	{
+		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
 	}
 	
 	
@@ -510,6 +530,7 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 
 void ABSc3bCharacter::ShootComplete(const FInputActionValue& Value)
 {
+	//Same code at Shoot()
 	if (Controller != nullptr)
 	{
 		if (HasAuthority())
@@ -522,7 +543,13 @@ void ABSc3bCharacter::ShootComplete(const FInputActionValue& Value)
 			bIsShooting = Value.Get<bool>();
 			Server_PlayerShooting(Value.Get<bool>());
 		}
+	} else
+	{
+		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
 	}
+	//Code specific to release input which flips the visibility of our laser sight depending on whether we are aiming
+	//without this, Laser sight would have the wrong visibility if the player let go of the
+	//aiming input while still shooting
 	if (bIsPlayerAiming && !LaserSight->IsVisible())
 	{
 		Client_FlipLaserVisibility(true);
@@ -534,12 +561,27 @@ void ABSc3bCharacter::ShootComplete(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 {
+	//Logic checks are related to laser sight as we do not want the player to be able to toggle
+	//it without playing the animation
 	//If we are sprinting and moving forward, do not allow the player to aim
 	float Speed;
-	if (bIsSprinting || bIsChangingAttachments || bReloading)
+	if (bIsSprinting)
 	{
+		bAimingWhileSprinting = true;
 		return;	
 	}
+	//If we are changing attachments or reloading, do not allow player to aim
+	if (bIsChangingAttachments || bReloading)
+	{
+		return;
+	}
+	//If we have pressed the aim button while sprinting but not released if, run this
+	if (bAimingWhileSprinting)
+	{
+		bAimingWhileSprinting = false;
+		return;
+	}
+	//Lower movement speed if we are aiming down sights
 	if (!bIsPlayerAiming)
 	{
 		Speed = 150;
@@ -561,9 +603,12 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 		GetCharacterMovement()->MaxWalkSpeed = Speed;
 		Server_PlayerAiming(Value.Get<bool>(), Speed);
 	}
-	
+
+	//Spawn a client only cloth sound during the animation
 	SpawnClothSound(.3);
-	
+
+	//if we are not shooting, then toggle our laser sight visibility
+	//without this, laser sight would be toggled when aim input was released but we were still shooting
 	if (!bIsShooting)
 	{
 		//Toggle our laser sight visibility for our client only
@@ -575,6 +620,7 @@ void ABSc3bCharacter::SpawnClothSound(float Duration)
 {
 	if (!IsValid(PlayerController))
 	{
+		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
 		return;
 	}
 	if (IsValid(PlayerController->ClothSound))
@@ -587,17 +633,20 @@ void ABSc3bCharacter::SpawnClothSound(float Duration)
 			EAttachLocation::KeepRelativeOffset, false, 1, Pitch, StartTime);
 		//stop sound after 1 second
 		Sound->StopDelayed(Duration);
+	} else
+	{
+		UE_LOG(LogTemp, Error, TEXT("CONTROLLER DOES NOT HAVE A VALID PLAYERHUD REFERENCE"));
 	}
 }
 
 void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 {
-	//We need to check again in case the player stops aiming while holding down the sprint key
+	//If player is aiming or shooting, do not allow the player to start sprinting
 	if (bIsPlayerAiming  || bWasAimingCanceled || bIsShooting)
 	{
-		bWasAimingCanceled = Value.Get<bool>();
 		return;
 	}
+	
 	float Speed;
 	//Set speed based on whether we are already sprinting
 	if (bIsSprinting)
@@ -609,7 +658,7 @@ void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 		Speed = 500;
 	}
 
-	//Reset value this is used to optimise related code in Move()
+	//This is used to optimise related code in Move()
 	bStopSprinting = false;
 	
 	//Adjust walk speed that drives the animation and adjust the boolean that affects
@@ -628,6 +677,7 @@ void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 
 void ABSc3bCharacter::Reload(const FInputActionValue& Value)
 {
+	//Do not allow the player to reload while aiming as this would require a different animation
 	if (bIsPlayerAiming)
 	{
 		return;
@@ -645,6 +695,7 @@ void ABSc3bCharacter::Reload(const FInputActionValue& Value)
 
 void ABSc3bCharacter::OpenAttachments(const FInputActionValue& Value)
 {
+	//Do not allow player to open attachment menu while reloading
 	if (bIsPlayerAiming)
 	{
 		return;
@@ -675,66 +726,80 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 {
 	if (!IsValid(Weapon))
 	{
+		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID WEAPON COMPONENT"));
 		return;
 	}
 	//If we are sprinting, do not allow the player to shoot	
 	if (Controller != nullptr)
 	{
-		
+		//Values set later
 		FVector Location;
 		FRotator Rotation;
+
+		//Adjust our spawn location depending on whether we are aiming 
 		if (bAimingIn)
 		{
+			//if we are aiming, set spawn to laser sight
 			Location = LaserSight->GetComponentLocation();
 			Rotation = GetActorRotation();
 		}
 		else
 		{
+			//if we are hip-firing, set spawn to muzzle socket
 			const FName MuzzleSocket = TEXT("MuzzleSocket");
 			Location = Weapon->GetSocketLocation(MuzzleSocket);
 			Rotation = Weapon->GetSocketRotation(MuzzleSocket);
 		}
 		
 		//Call server function if we currently do no have ROLE_AUTHORITY
-		 //meaning we are currently on the server
-			if (HasAuthority())
-			{
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-				SpawnBullet(Location, Rotation);
-				Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);
-			}else
-			{
-				//UE_LOG(LogTemp, Warning, TEXT("WW"));
-				Server_Shoot(Location, Rotation);
-			}
+		//meaning we are currently on the server
+		if (HasAuthority())
+		{
+			//same as Server_Shoot()
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			SpawnBullet(Location, Rotation);
+			Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);
+		}else
+		{
+			Server_Shoot(Location, Rotation);
+		}
 		
+	} else
+	{
+		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
 	}
 }
 
 void ABSc3bCharacter::EquipWeaponAttachment(EAttachmentKey Attachment)
 {
+	//Equip attachment for owning client
 	Weapon->EquipAttachment(Attachment);
 }
 
 void ABSc3bCharacter::Server_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment)
 {
+	//Equip attachment for other clients
 	Multicast_EquipWeaponAttachment(Attachment);
 }
 
 void ABSc3bCharacter::Multicast_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment)
 {
+	//Equip attachment for other clients
 	Weapon->EquipAttachment(Attachment);
 }
 
 void ABSc3bCharacter::ToggleMagazineVisibility(bool Hide)
 {
+	//Toggle visibility of our magazine bone in weapon and spawn new magazine actor
 	if (Hide)
 	{
+		//Hide bone and spawn magazine actor
 		Weapon->SpawnMag(TEXT("b_gun_magSocket"));
 		Weapon->HideBoneByName(TEXT("b_gun_mag"), EPhysBodyOp::PBO_None);
 	} else
 	{
+		//unhide bone and destroy magazine actor
 		Weapon->UnHideBoneByName(TEXT("b_gun_mag"));
 		Weapon->MagActor->Destroy();
 	}
@@ -743,6 +808,7 @@ void ABSc3bCharacter::ToggleMagazineVisibility(bool Hide)
 
 void ABSc3bCharacter::UpdateMagazineTransform()
 {
+	//Wrapper function so it can be easily called through animation class
 	FTransform SocketT = GetMesh()->GetSocketTransform(TEXT("mag_socket"), RTS_World);
 	Weapon->UpdateMagTransform(SocketT);
 }
@@ -770,7 +836,7 @@ void ABSc3bCharacter::Server_Reload_Implementation(bool Reload)
 	Ammo = 30;
 }
 
-	void ABSc3bCharacter::OrientLaserSight()
+void ABSc3bCharacter::OrientLaserSight()
 {
 	// Start and End locations of Laser
 	FVector Start = LaserSight->GetComponentLocation();
@@ -808,6 +874,7 @@ void ABSc3bCharacter::SetPlayerPitchForOffset()
 
 void ABSc3bCharacter::Server_SetPlayerPitchForOffset_Implementation()
 {
+	//set this players pitch for other clients
 	SetPlayerPitchForOffset();
 }
 

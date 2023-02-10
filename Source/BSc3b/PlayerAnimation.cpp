@@ -18,12 +18,14 @@ void UPlayerAnimation::FootStep_Notify()
 	WalkAttenuation->Attenuation.FalloffDistance = 500;
 	if (OwningPlayer->IsLocallyControlled())
 	{
+		//multicast function that passes through our owners current location so it works correctly with attenuation
 		OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), WalkFootstep, WalkAttenuation);
 	}
 }
 
 void UPlayerAnimation::Shoot_Notify(bool bAiming)
 {
+	//Run all shooting logic ending with the bullet being spawned into the world with an impulse
 	OwningPlayer->ShootLogic(bAiming);
 }
 
@@ -38,6 +40,7 @@ void UPlayerAnimation::EndReload_Notify()
 	{
 		OwningPlayer->Server_Reload(false);
 	}
+	//Client only cloth sound
 	OwningPlayer->SpawnClothSound(.3);
 }
 
@@ -45,6 +48,7 @@ void UPlayerAnimation::AttachMag_Notify()
 {
 	if (IsValid(MagAttach))
 	{
+		//Do want to attenuate this later on in the project
 		UGameplayStatics::PlaySound2D(GetWorld(), MagAttach);
 	}
 	OwningPlayer->ToggleMagazineVisibility(false);
@@ -54,6 +58,7 @@ void UPlayerAnimation::DetachMag_Notify()
 {
 	if (IsValid(MagDetach))
 	{
+		//Do want to attenuate this later on in the project
 		UGameplayStatics::PlaySound2D(GetWorld(), MagDetach);
 	}
 	
@@ -65,6 +70,7 @@ void UPlayerAnimation::JogFootstep_Notify()
 	WalkAttenuation->Attenuation.FalloffDistance = 700;
 	if (OwningPlayer->IsLocallyControlled())
 	{
+		//multicast function that passes through our owners current location so it works correctly with attenuation
 		OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), JogFootstep, WalkAttenuation);	
 	}
 	
@@ -75,12 +81,14 @@ void UPlayerAnimation::RunFootstep_Notify()
 	WalkAttenuation->Attenuation.FalloffDistance = 900;
 	if (OwningPlayer->IsLocallyControlled())
 	{
+		//multicast function that passes through our owners current location so it works correctly with attenuation
 		OwningPlayer->Server_PlayFootstep(OwningPlayer->GetActorLocation(), RunFootstep, WalkAttenuation);	
 	}
 }
 
 void UPlayerAnimation::EndOfHit_Notify()
 {
+	//Tell our state machine to stop running our current hit animation
 	OwningPlayer->Server_EndHit();
 }
 
@@ -90,6 +98,7 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 	APawn* OwningPawn = TryGetPawnOwner();
 	if (IsValid(OwningPawn))
 	{
+		UE_LOG(LogTemp, Error, TEXT("ANIMATION DOES NOT HAVE AN OWNING PAWN"));
 		OwningPlayer = Cast<ABSc3bCharacter>(OwningPawn);
 		
 		//Setting animation values that handle state machine poses
@@ -104,6 +113,7 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		bHit = OwningPlayer->bHitByBullet;
 		bPlayerReload = OwningPlayer->bReloading;
 		bPlayerChangingAttachments = OwningPlayer->bIsChangingAttachments;
+		//End of state machine value setting
 		
 		//Has to be above maximum player velocity when walking
 		//Set sprinting animation to play based on player velocity and not a boolean from a players input
@@ -132,10 +142,12 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		//Values set in Transformation function
 		FVector OutPos;
 		FRotator OutRot;
+		//Get the location of our socket in relation to our right hand in bone space
 		OwningPlayer->GetMesh()->TransformToBoneSpace(TEXT("hand_r"), PlayerWeapon.GetLocation(), PlayerWeapon.GetRotation().Rotator(), OutPos, OutRot);
 		LeftHand_Transform.SetLocation(OutPos);
 		LeftHand_Transform.SetRotation(OutRot.Quaternion());
 
+		//Will be moved but updates the location of our separate magazine mesh for the reload animation
 		OwningPlayer->UpdateMagazineTransform();
 	}
 }

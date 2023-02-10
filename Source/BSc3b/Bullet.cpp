@@ -20,10 +20,12 @@ ABullet::ABullet()
 	BulletMesh->SetupAttachment(GetRootComponent());
 	//Set this mesh to ignore our line trace channel that is used for the laser sight
 	BulletMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-	//Will not block the players movement
+	//Do not want this bullet to block the collision channel of a player
 	BulletMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	
 	BulletMesh->SetRelativeRotation(FRotator(0.0, -90, -90));
 	BulletMesh->SetRelativeScale3D(FVector(0.1, 0.1, 0.1));
+	//Do not need this bullet to have its movement perfectly replicated among clients
 	BulletMesh->SetIsReplicated(true);
 
 	BulletTrail = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Trail"));
@@ -34,9 +36,13 @@ ABullet::ABullet()
 	InitialLifeSpan = 10;
 
 	BulletSpeed = 1000;
+	//Just in case SetIsReplicated() gets skipped
 	bReplicates = true;
+	
 	BulletMesh->SetSimulatePhysics(true);
 	Player = nullptr;
+	
+	//Do not want to listen for any hit events on the mesh as we use a line trace for collision instead
 	BulletMesh->SetNotifyRigidBodyCollision(false);
 	
 }
@@ -48,6 +54,7 @@ void ABullet::AddImpulseToBullet(FVector Direction)
 
 void ABullet::CustomCollision()
 {
+	//End of line trace is our bullets currently location
 	FVector End = BulletMesh->GetComponentLocation();
 	FHitResult OutHit;
 	UKismetSystemLibrary::LineTraceSingle(GetWorld(), CachedLocation, End, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::Persistent, OutHit, true);
@@ -61,7 +68,9 @@ void ABullet::CustomCollision()
 			//make sure we run this locally and only on the hit player
 			if (HitPlayer->IsPlayerControlled())
 			{
+				//pass through hit bone to adjust damage based on the bone hit
 				HitPlayer->Server_Health(HitBone);
+				//Add the hit actor to our ignore hit so we cannot hit the same player twice
 				ActorsToIgnore.Emplace(HitPlayer);
 				return;
 			}
@@ -70,6 +79,7 @@ void ABullet::CustomCollision()
 		BulletMesh->SetGenerateOverlapEvents(false);
 		//Stop hit events from being constantly outputted as we have no more need for them
 		BulletMesh->SetNotifyRigidBodyCollision(false);
+		//Stop our physics from simulating to save performance
 		BulletMesh->SetSimulatePhysics(false);
 	}
 	
@@ -79,9 +89,11 @@ void ABullet::CustomCollision()
 void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
+	//called again as Unreal likes to sometimes skip the function in our constructor
 	SetReplicateMovement(true);
 	
 	Player = Cast<ABSc3bCharacter>(GetInstigator());
+	//Used for the start location of our line trace
 	CachedLocation = GetActorLocation();
 	//Make sure we cannot hit the player that shot this bullet
 	ActorsToIgnore.Emplace(Player);

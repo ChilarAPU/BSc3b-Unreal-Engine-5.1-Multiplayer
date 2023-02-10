@@ -21,7 +21,7 @@ AAttachment::AAttachment()
 
 void AAttachment::GetOwningWeapon(UWeapon* Weapon, FName Socket)
 {
-	//Attach attachment to a socket on the owning weapon
+	//Attach this actor to a socket on the owning weapon
 	const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::KeepRelative, true);
 	Attachment->AttachToComponent(Weapon, Rules, Socket);
 }

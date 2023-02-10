@@ -91,6 +91,12 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY()
 	bool bWasAimingCanceled;
 
+	/* Used to determine whether or the aim input was pressed during input. This is processed during the aim
+	 * event to stop unwanted movement changes from occuring.
+	 */
+	UPROPERTY()
+	bool bAimingWhileSprinting;
+
 public:
 	ABSc3bCharacter();
 

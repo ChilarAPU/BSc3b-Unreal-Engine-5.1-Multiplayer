@@ -15,6 +15,7 @@
 void UPlayerHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
+	////// BUTTON DELEGATES //////
 	ScopeButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnScopeClicked);
 	ScopeButton->IsFocusable = false;
 	
@@ -35,9 +36,11 @@ void UPlayerHUD::NativeConstruct()
 void UPlayerHUD::OnScopeClicked()
 {
 	//Set our owning player
-	//Need to do this on click otherwise we could be pointing to a previous player pawn
+	//Need to do this on click otherwise we could be pointing to a previous player pawn that has since been
+	//destroyed
 	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 
+	// Separate attachments for owner and other clients
 	OwningPlayer->EquipWeaponAttachment(RedDot);
 	OwningPlayer->Server_EquipWeaponAttachment(RedDot);
 }
@@ -46,6 +49,7 @@ void UPlayerHUD::OnLongScopeClicked()
 {
 	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 
+	// Separate attachments for owner and other clients
 	OwningPlayer->EquipWeaponAttachment(LongRange);
 	OwningPlayer->Server_EquipWeaponAttachment(LongRange);
 }
@@ -54,6 +58,7 @@ void UPlayerHUD::OnSilencerClicked()
 {
 	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 
+	// Separate attachments for owner and other clients
 	OwningPlayer->EquipWeaponAttachment(Silencer);
 	OwningPlayer->Server_EquipWeaponAttachment(Silencer);
 }
@@ -62,6 +67,7 @@ void UPlayerHUD::OnForegripClicked()
 {
 	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 
+	// Separate attachments for owner and other clients
 	OwningPlayer->EquipWeaponAttachment(ForeGrip);
 	OwningPlayer->Server_EquipWeaponAttachment(ForeGrip);
 }
@@ -81,6 +87,8 @@ void UPlayerHUD::AdjustStatPercentage(UProgressBar* Bar, float value)
 
 void UPlayerHUD::SetButtonVisibility(bool bVisible)
 {
+	//Toggle visibility of attachment related widgets on input. Copy and Paste way of doing it but unless we
+	//can group up the appropriate buttons through something, this is the only way to do it.
 	if (bVisible)
 	{
 		ScopeButton->SetVisibility(ESlateVisibility::Visible);

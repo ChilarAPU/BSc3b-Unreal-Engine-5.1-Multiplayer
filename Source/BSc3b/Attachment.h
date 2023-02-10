@@ -27,9 +27,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attachment, meta = (AllowPrivateAccess = true))
 	UStaticMeshComponent* Attachment;
 
-	UPROPERTY()
-	FTransform TargetTransform;
-
 	/* Attach this actor to a socket on the owning weapon */
 	UFUNCTION()
 	void GetOwningWeapon(UWeapon* Weapon, FName Socket);

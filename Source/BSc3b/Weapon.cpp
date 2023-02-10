@@ -24,6 +24,7 @@ void UWeapon::SetAttachmentMesh(AAttachment* Actor, EAttachmentKey Attachment, T
 {
 	if (IsValid(Actor))
 	{
+		UE_LOG(LogTemp, Error, TEXT("WEAPON COMPONENT HAS NOT BEEN PASSED A VALID ATTACHMENT ACTOR"));
 		if (Actor->Attachment->GetStaticMesh() == Attachments.Find(Attachment)->Mesh)
 		{
 			//We have clicked the button for the same mesh so do nothing
@@ -45,12 +46,14 @@ void UWeapon::SetAttachmentMesh(AAttachment* Actor, EAttachmentKey Attachment, T
 		RangeStat += Attachments.Find(Attachment)->Range;
 		StabilityStat += Attachments.Find(Attachment)->Stability;
 		MobilityStat += Attachments.Find(Attachment)->Mobility;
+		//Cache our attachment so we can remove the stats on the next attachment change
 		CachedAttachment = Attachment;
 	}
 }
 
 void UWeapon::EquipAttachment(EAttachmentKey Attachment)
 {
+	// Set the static mesh of the correct type
 	if (Attachments.Find(Attachment)->Type == Scope)
 	{
 		SetAttachmentMesh(ScopeActor, Attachment, CachedScopeKey);
@@ -68,6 +71,7 @@ void UWeapon::EquipAttachment(EAttachmentKey Attachment)
 
 void UWeapon::SpawnMag(FName SocketName)
 {
+	//Spawns magazine actor at our associate left hand socket. Called by reload notify event
 	FTransform SocketT = GetSocketTransform(SocketName, RTS_World);
 	MagActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
 	if (IsValid(MagazineMesh))
@@ -81,6 +85,7 @@ void UWeapon::UpdateMagTransform(FTransform Transform)
 {
 	if (IsValid(MagActor))
 	{
+		UE_LOG(LogTemp, Error, TEXT("WEAPON COMPONENT DOES NOT HAVE A VALID MAGAZINE ACTOR"));
 		MagActor->SetActorTransform(Transform);
 	}
 	
@@ -88,16 +93,19 @@ void UWeapon::UpdateMagTransform(FTransform Transform)
 
 void UWeapon::SpawnAttachment()
 {
+	//Spawn sight actor
 	FTransform SocketT = GetSocketTransform(TEXT("SightSocket"), RTS_World);
 	ScopeActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
 	//Attach attachment to a socket on this weapon
 	ScopeActor->GetOwningWeapon(this, TEXT("SightSocket"));
 
+	//spawn muzzle actor
 	SocketT = GetSocketTransform(TEXT("MuzzleSocket"), RTS_World);
 	MuzzleActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
 	//Attach attachment to a socket on this weapon
 	MuzzleActor->GetOwningWeapon(this, TEXT("MuzzleSocket"));
 
+	//spawn grip actor
 	SocketT = GetSocketTransform(TEXT("GripSocket"), RTS_World);
 	GripActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
 	//Attach attachment to a socket on this weapon
@@ -107,7 +115,8 @@ void UWeapon::SpawnAttachment()
 void UWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	//Spawn all attachment actors at the beginning with empty static mesh values
 	SpawnAttachment();
 	
 }

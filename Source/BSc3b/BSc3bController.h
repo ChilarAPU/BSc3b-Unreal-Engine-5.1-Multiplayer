@@ -35,7 +35,8 @@ public:
 	ABSc3bController();
 
 	virtual void BeginPlay() override;
-	
+
+	////// BELOW VARIABLES CALLED AND USED IN ABSC3BCHARACTER //////
 	UPROPERTY()
 	UPlayerHUD* PlayerHUD;
 
@@ -43,9 +44,12 @@ public:
 	UPROPERTY()
 	UPlayerAnimation* PlayerAnim;
 
+	/* Flip the visibility of our respawn button as well as showing/hiding the mouse cursor. This is called upon
+	 * player death */
 	UFUNCTION()
 	void ShowRespawnButton(bool Visible);
 
+	////// AUDIO VARIABLES //////
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* ClothSound;
 

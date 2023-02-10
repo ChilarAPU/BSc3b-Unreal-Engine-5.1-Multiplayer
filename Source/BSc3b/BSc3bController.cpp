@@ -19,12 +19,13 @@ ABSc3bController::ABSc3bController()
 void ABSc3bController::BeginPlay()
 {
 	Super::BeginPlay();
-	//Cast to our character just in case we ever need it
+	//Cast to our character in case we ever need it
 	PlayerClass = Cast<ABSc3bCharacter>(GetCharacter());
 
 	//Set and spawn our HUD onto the client
 	if (!IsValid(PlayerHUDClass))
 	{
+		UE_LOG(LogTemp, Error, TEXT("CONTROLLER DOES NOT HAVE PLAYERHUD CLASS SETUP"));
 		return;
 	}
 	if (IsLocalPlayerController())
@@ -35,6 +36,7 @@ void ABSc3bController::BeginPlay()
 	//Set our player animation class so we can adjust the values inside of it directly from our character
 	if (!IsValid(PlayerAnimClass))
 	{
+		UE_LOG(LogTemp, Error, TEXT("CONTROLLER DOES NOT HAVE PLAYER ANIMATION CLASS SETUP"));
 		return;
 	}
 	PlayerAnim = PlayerAnimClass.GetDefaultObject();
@@ -45,6 +47,7 @@ void ABSc3bController::ShowRespawnButton(bool Visible)
 {
 	if (IsValid(PlayerHUD))
 	{
+		//Toggle mouse cursor and look input on controller
 		SetShowMouseCursor(Visible);
 		SetIgnoreLookInput(Visible);
 		if (Visible)
@@ -68,6 +71,7 @@ void ABSc3bController::WeaponSway(float DeltaTime, FVector2D LookAxis, UWeapon* 
 {
 	if (!IsValid(Weapon))
 	{
+		UE_LOG(LogTemp, Error, TEXT("CONTROLLER DOES NOT HAVE WEAPON CLASS SETUP"));
 		return;
 	}
 	//Values the gun will be interpolating between
