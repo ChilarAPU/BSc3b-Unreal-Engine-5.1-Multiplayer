@@ -136,7 +136,6 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 
 	if (IsValid(Weapon))
 	{
-		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID WEAPON COMPONENT"));
 		//Spawn a line trace which our laser sight niagara system will follow
 		OrientLaserSight();
 		//Run our procedural weapon sway to move the weapon in the opposite direction the player is looking
@@ -158,7 +157,6 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 	PlayerController = Cast<ABSc3bController>(Controller);
 	if (!PlayerController)
 	{
-		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
 		return;
 	}
 	//Again, would like to move this into a function that is only run when needed
@@ -171,10 +169,6 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->RangeStatBar, Weapon->RangeStat);
 		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->MobilityStatBar, Weapon->MobilityStat);
 		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->StabilityStatBar, Weapon->StabilityStat);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("CONTROLLER DOES NOT HAVE A VALID PLAYERHUD REFERENCE"));
 	}
 }
 
@@ -208,7 +202,6 @@ FTransform ABSc3bCharacter::GetWeaponTransform(FName Socket, ERelativeTransformS
 {
 	if (IsValid(Weapon))
 	{
-		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID WEAPON COMPONENT"));
 		//Get the transform of a socket inside our weapon
 		return Weapon->GetSocketTransform(Socket, TransformSpace);
 	}
@@ -352,7 +345,6 @@ void ABSc3bCharacter::Client_ResetInput_Implementation()
 {
 	if (IsValid(PlayerController))
 	{
-		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
 		PlayerController->ShowRespawnButton(false);
 	}
 
@@ -385,9 +377,6 @@ void ABSc3bCharacter::Multi_PlayFootstep_Implementation(FVector Location, USound
 	if (IsValid(Sound) && IsValid(Attenuation))
 	{
 		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Sound, Location, FRotator::ZeroRotator, 1, 1, 0, Attenuation);	
-	} else
-	{
-		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE VALID SOUND OR ATTENUATION POINTERS"));
 	}
 
 }
@@ -414,9 +403,6 @@ void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 	if (IsValid(PlayerController->PlayerHUD))
 	{
 		PlayerController->PlayerHUD->AmmoCount = FString::FromInt(Ammo);	
-	} else
-	{
-		UE_LOG(LogTemp, Error, TEXT("CONTROLLER DOES NOT HAVE A VALID PLAYERHUD REFERENCE"));
 	}
 
 }
@@ -520,9 +506,6 @@ void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 			bIsShooting = Value.Get<bool>();
 		}
 		
-	} else
-	{
-		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
 	}
 	
 	
@@ -543,10 +526,7 @@ void ABSc3bCharacter::ShootComplete(const FInputActionValue& Value)
 			bIsShooting = Value.Get<bool>();
 			Server_PlayerShooting(Value.Get<bool>());
 		}
-	} else
-	{
-		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
-	}
+	} 
 	//Code specific to release input which flips the visibility of our laser sight depending on whether we are aiming
 	//without this, Laser sight would have the wrong visibility if the player let go of the
 	//aiming input while still shooting
@@ -620,7 +600,6 @@ void ABSc3bCharacter::SpawnClothSound(float Duration)
 {
 	if (!IsValid(PlayerController))
 	{
-		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
 		return;
 	}
 	if (IsValid(PlayerController->ClothSound))
@@ -633,9 +612,6 @@ void ABSc3bCharacter::SpawnClothSound(float Duration)
 			EAttachLocation::KeepRelativeOffset, false, 1, Pitch, StartTime);
 		//stop sound after 1 second
 		Sound->StopDelayed(Duration);
-	} else
-	{
-		UE_LOG(LogTemp, Error, TEXT("CONTROLLER DOES NOT HAVE A VALID PLAYERHUD REFERENCE"));
 	}
 }
 
@@ -726,7 +702,6 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 {
 	if (!IsValid(Weapon))
 	{
-		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID WEAPON COMPONENT"));
 		return;
 	}
 	//If we are sprinting, do not allow the player to shoot	
@@ -765,9 +740,6 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 			Server_Shoot(Location, Rotation);
 		}
 		
-	} else
-	{
-		UE_LOG(LogTemp, Error, TEXT("CHARACTER DOES NOT HAVE A VALID CONTROLLER REFERENCE"));
 	}
 }
 

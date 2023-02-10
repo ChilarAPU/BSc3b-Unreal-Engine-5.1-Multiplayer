@@ -94,6 +94,7 @@ void ABullet::BeginPlay()
 	
 	Player = Cast<ABSc3bCharacter>(GetInstigator());
 	//Used for the start location of our line trace
+	//Used for the start location of our line trace
 	CachedLocation = GetActorLocation();
 	//Make sure we cannot hit the player that shot this bullet
 	ActorsToIgnore.Emplace(Player);

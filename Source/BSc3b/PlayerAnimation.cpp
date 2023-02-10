@@ -98,7 +98,6 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 	APawn* OwningPawn = TryGetPawnOwner();
 	if (IsValid(OwningPawn))
 	{
-		UE_LOG(LogTemp, Error, TEXT("ANIMATION DOES NOT HAVE AN OWNING PAWN"));
 		OwningPlayer = Cast<ABSc3bCharacter>(OwningPawn);
 		
 		//Setting animation values that handle state machine poses

@@ -24,7 +24,6 @@ void UWeapon::SetAttachmentMesh(AAttachment* Actor, EAttachmentKey Attachment, T
 {
 	if (IsValid(Actor))
 	{
-		UE_LOG(LogTemp, Error, TEXT("WEAPON COMPONENT HAS NOT BEEN PASSED A VALID ATTACHMENT ACTOR"));
 		if (Actor->Attachment->GetStaticMesh() == Attachments.Find(Attachment)->Mesh)
 		{
 			//We have clicked the button for the same mesh so do nothing
@@ -85,7 +84,6 @@ void UWeapon::UpdateMagTransform(FTransform Transform)
 {
 	if (IsValid(MagActor))
 	{
-		UE_LOG(LogTemp, Error, TEXT("WEAPON COMPONENT DOES NOT HAVE A VALID MAGAZINE ACTOR"));
 		MagActor->SetActorTransform(Transform);
 	}
 	
