@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "BSc3bController.generated.h"
 
+class UInGameMenu;
 class UPlayerAnimation;
 class UPlayerHUD;
 class ABSc3bCharacter;
@@ -39,6 +40,15 @@ public:
 	////// BELOW VARIABLES CALLED AND USED IN ABSC3BCHARACTER //////
 	UPROPERTY()
 	UPlayerHUD* PlayerHUD;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
+	TSubclassOf<UInGameMenu> InGameMenuClass;
+	
+	UPROPERTY()
+	UInGameMenu* InGameMenuWidget;
+
+	UPROPERTY()
+	float Sensitivity;
 
 	/* Encapsulate the TSubclassOf variable into an easier to access and read value */
 	UPROPERTY()

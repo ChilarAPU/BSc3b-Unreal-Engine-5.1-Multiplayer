@@ -147,6 +147,6 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		LeftHand_Transform.SetRotation(OutRot.Quaternion());
 
 		//Will be moved but updates the location of our separate magazine mesh for the reload animation
-		OwningPlayer->UpdateMagazineTransform();
+		//OwningPlayer->UpdateMagazineTransform();
 	}
 }

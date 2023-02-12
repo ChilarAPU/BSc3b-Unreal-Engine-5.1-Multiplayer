@@ -10,6 +10,7 @@
  * 
  */
 
+class ABSc3bCharacter;
 /* Holds all available attachments that can be placed on the weapon*/
 UENUM(BlueprintType)
 enum EAttachmentKey : int
@@ -153,7 +154,7 @@ public:
 
 	/* Spawn our magazine mesh at the players left hand. Called by reload notify event*/
 	UFUNCTION()
-	void SpawnMag(FName SocketName);
+	void SpawnMag(FName SocketName, FName SocketAttachName, ABSc3bCharacter* Player);
 
 	/* Updates our magazine transform. NOTE: SHOULD BE DEPRECATE WHEN ATTACH TO SOCKET IS IMPLEMENTED*/
 	UFUNCTION()

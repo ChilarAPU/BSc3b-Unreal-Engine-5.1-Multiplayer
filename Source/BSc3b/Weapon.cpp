@@ -2,7 +2,7 @@
 
 
 #include "Weapon.h"
-
+#include "BSc3bCharacter.h"
 #include "Attachment.h"
 
 UWeapon::UWeapon()
@@ -68,7 +68,7 @@ void UWeapon::EquipAttachment(EAttachmentKey Attachment)
 	
 }
 
-void UWeapon::SpawnMag(FName SocketName)
+void UWeapon::SpawnMag(FName SocketName, FName SocketAttachName, ABSc3bCharacter* Player)
 {
 	//Spawns magazine actor at our associate left hand socket. Called by reload notify event
 	FTransform SocketT = GetSocketTransform(SocketName, RTS_World);
@@ -76,6 +76,8 @@ void UWeapon::SpawnMag(FName SocketName)
 	if (IsValid(MagazineMesh))
 	{
 		MagActor->Attachment->SetStaticMesh(MagazineMesh);
+		const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::KeepRelative, true);
+		MagActor->AttachToActor(Player, Rules, SocketAttachName);
 	}
 	
 }

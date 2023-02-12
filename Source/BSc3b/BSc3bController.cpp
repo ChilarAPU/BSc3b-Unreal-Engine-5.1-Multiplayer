@@ -4,6 +4,7 @@
 #include "BSc3bController.h"
 
 #include "BSc3bCharacter.h"
+#include "InGameMenu.h"
 #include "PlayerAnimation.h"
 #include "PlayerHUD.h"
 #include "Weapon.h"
@@ -14,6 +15,7 @@
 ABSc3bController::ABSc3bController()
 {
 	Player = nullptr;
+	Sensitivity = 1;
 }
 
 void ABSc3bController::BeginPlay()
@@ -38,7 +40,6 @@ void ABSc3bController::BeginPlay()
 		return;
 	}
 	PlayerAnim = PlayerAnimClass.GetDefaultObject();
-	
 }
 
 void ABSc3bController::ShowRespawnButton(bool Visible)

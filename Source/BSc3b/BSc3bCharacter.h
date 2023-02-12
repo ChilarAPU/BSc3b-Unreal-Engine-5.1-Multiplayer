@@ -74,6 +74,10 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* AttachmentAction;
 
+	/** Menu Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* MenuAction;
+
 	////// PRIVATE VARIABLES //////
 
 	/* Easily adjust how long the laser should travel */
@@ -277,7 +281,14 @@ protected:
 	/** Called for Reloading input*/
 	UFUNCTION()
 	void OpenAttachments(const FInputActionValue& Value);
-	
+
+	/** Called for Menu input*/
+	UFUNCTION()
+	void OpenInGameMenu(const FInputActionValue& Value);
+
+	/* Used inside menu input event to dictate whether we need to open or close the widget */
+	UPROPERTY()
+	bool IsMenuOpen;
 	
 	////// PROTECTED LOGIC FUNCTIONS //////
 	/*Create line trace for laser sight which acts as the collider. Spawn in

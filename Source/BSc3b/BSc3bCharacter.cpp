@@ -11,6 +11,7 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "InGameMenu.h"
 #include "PlayerAnimation.h"
 #include "PlayerHUD.h"
 #include "Weapon.h"
@@ -100,6 +101,7 @@ ABSc3bCharacter::ABSc3bCharacter()
 	PlayerController = nullptr;
 	Ammo = 30;
 	bAimingWhileSprinting = false;
+	IsMenuOpen = false;
 	
 }
 
@@ -107,7 +109,6 @@ void ABSc3bCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-
 	//Add Input Mapping Context
 	PlayerController = Cast<ABSc3bController>(Controller);
 	if (PlayerController)
@@ -265,6 +266,9 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 		EnhancedInputComponent->BindAction(AttachmentAction, ETriggerEvent::Started, this, &ABSc3bCharacter::OpenAttachments);
 		EnhancedInputComponent->BindAction(AttachmentAction, ETriggerEvent::Completed, this, &ABSc3bCharacter::OpenAttachments);
 
+		//In Game Menu
+		EnhancedInputComponent->BindAction(MenuAction, ETriggerEvent::Started, this, &ABSc3bCharacter::OpenInGameMenu);
+
 	}
 
 }
@@ -357,6 +361,11 @@ void ABSc3bCharacter::Client_CustomBeginPlay_Implementation()
 		//Hide the head from our newly spawned player
 		FName Head = TEXT("head");
 		GetMesh()->HideBoneByName(Head, PBO_None);
+		PlayerController = Cast<ABSc3bController>(Controller);
+		if (IsValid(PlayerController))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("BEGIN PLAY"));
+		}
 	}
 }
 
@@ -479,15 +488,15 @@ void ABSc3bCharacter::Look(const FInputActionValue& Value)
 	if (Controller != nullptr)
 	{
 		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		AddControllerYawInput(LookAxisVector.X * PlayerController->Sensitivity);
+		AddControllerPitchInput(LookAxisVector.Y * PlayerController->Sensitivity);
 	}
 }
 
 void ABSc3bCharacter::Shoot(const FInputActionValue& Value)
 {
 	//If we are sprinting or in our changing attachment pose, do not allow the player to shoot	
-	if (bIsSprinting || bIsChangingAttachments)
+	if (bIsSprinting || bIsChangingAttachments || IsMenuOpen)
 	{
 		return;
 	}
@@ -698,6 +707,33 @@ void ABSc3bCharacter::OpenAttachments(const FInputActionValue& Value)
 	SpawnClothSound(.3);
 }
 
+void ABSc3bCharacter::OpenInGameMenu(const FInputActionValue& Value)
+{
+	if (!IsValid(PlayerController->InGameMenuClass))
+	{
+		return;
+	}
+	if (!IsMenuOpen)
+	{
+		PlayerController->SetShowMouseCursor(true);
+		PlayerController->SetIgnoreLookInput(true);
+		PlayerController->InGameMenuWidget = CreateWidget<UInGameMenu>(GetWorld(), PlayerController->InGameMenuClass);
+        PlayerController->InGameMenuWidget->AddToViewport();
+		const FInputModeGameAndUI Input;
+		PlayerController->SetInputMode(Input);
+		IsMenuOpen = true;
+	} else
+	{
+		PlayerController->SetShowMouseCursor(false);
+		PlayerController->SetIgnoreLookInput(false);
+		PlayerController->InGameMenuWidget->RemoveFromParent();
+		const FInputModeGameOnly Input;
+		PlayerController->SetInputMode(Input);
+		IsMenuOpen = false;
+	}
+	
+}
+
 void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 {
 	if (!IsValid(Weapon))
@@ -767,7 +803,7 @@ void ABSc3bCharacter::ToggleMagazineVisibility(bool Hide)
 	if (Hide)
 	{
 		//Hide bone and spawn magazine actor
-		Weapon->SpawnMag(TEXT("b_gun_magSocket"));
+		Weapon->SpawnMag(TEXT("b_gun_magSocket"), TEXT("mag_socket"), this);
 		Weapon->HideBoneByName(TEXT("b_gun_mag"), EPhysBodyOp::PBO_None);
 	} else
 	{
