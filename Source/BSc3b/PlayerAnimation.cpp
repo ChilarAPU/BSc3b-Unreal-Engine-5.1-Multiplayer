@@ -102,51 +102,55 @@ void UPlayerAnimation::NativeUpdateAnimation(float DeltaSeconds)
 		
 		//Setting animation values that handle state machine poses
 		//Have to do this as animation values are not automatically replicated
-		Pitch = OwningPlayer->PlayerPitch;
-		PlayerSpeed = OwningPlayer->GetVelocity().Length();
-		bPlayerAiming = OwningPlayer->bIsPlayerAiming;
-		PlayerXVelocity = OwningPlayer->PlayerVerticalVelocity;
-		PlayerYVelocity = OwningPlayer->PlayerHorizontalVelocity;
-		bIsPlayerDead = OwningPlayer->bIsDead;
-		bPlayerShoot = OwningPlayer->bIsShooting;
-		bHit = OwningPlayer->bHitByBullet;
-		bPlayerReload = OwningPlayer->bReloading;
-		bPlayerChangingAttachments = OwningPlayer->bIsChangingAttachments;
-		//End of state machine value setting
+		if (IsValid(OwningPlayer))
+		{
+			Pitch = OwningPlayer->PlayerPitch;
+			PlayerSpeed = OwningPlayer->GetVelocity().Length();
+			bPlayerAiming = OwningPlayer->bIsPlayerAiming;
+			PlayerXVelocity = OwningPlayer->PlayerVerticalVelocity;
+			PlayerYVelocity = OwningPlayer->PlayerHorizontalVelocity;
+			bIsPlayerDead = OwningPlayer->bIsDead;
+			bPlayerShoot = OwningPlayer->bIsShooting;
+			bHit = OwningPlayer->bHitByBullet;
+			bPlayerReload = OwningPlayer->bReloading;
+			bPlayerChangingAttachments = OwningPlayer->bIsChangingAttachments;
+			//End of state machine value setting
+            		
+			//Has to be above maximum player velocity when walking
+			//Set sprinting animation to play based on player velocity and not a boolean from a players input
+			if (OwningPlayer->GetVelocity().Length() > 350 && PlayerXVelocity > 0)
+			{
+				bPlayerSprinting = true;
+            	}
+			else
+			{
+				bPlayerSprinting = false;
+			}
+            
+			//Stop our Left hand IK temporarily when playing the reload animation
+			if (bPlayerReload)
+			{
+				LeftHand_FABRIK_Alpha = 0;
+			}
+			else
+			{
+				LeftHand_FABRIK_Alpha = 1;
+			}
+            		
+            
+			//Setup LeftHand_Transform to work with FABRIK
+			FTransform PlayerWeapon = OwningPlayer->GetWeaponTransform(TEXT("LeftHandSocket"), RTS_World);
+			//Values set in Transformation function
+			FVector OutPos;
+			FRotator OutRot;
+			//Get the location of our socket in relation to our right hand in bone space
+			OwningPlayer->GetMesh()->TransformToBoneSpace(TEXT("hand_r"), PlayerWeapon.GetLocation(), PlayerWeapon.GetRotation().Rotator(), OutPos, OutRot);
+            	LeftHand_Transform.SetLocation(OutPos);
+			LeftHand_Transform.SetRotation(OutRot.Quaternion());
+            
+			//Will be moved but updates the location of our separate magazine mesh for the reload animation
+			//OwningPlayer->UpdateMagazineTransform();
+		}
 		
-		//Has to be above maximum player velocity when walking
-		//Set sprinting animation to play based on player velocity and not a boolean from a players input
-		if (OwningPlayer->GetVelocity().Length() > 350 && PlayerXVelocity > 0)
-		{
-			bPlayerSprinting = true;
-		}
-		else
-		{
-			bPlayerSprinting = false;
-		}
-
-		//Stop our Left hand IK temporarily when playing the reload animation
-		if (bPlayerReload)
-		{
-			LeftHand_FABRIK_Alpha = 0;
-		}
-		else
-		{
-			LeftHand_FABRIK_Alpha = 1;
-		}
-		
-
-		//Setup LeftHand_Transform to work with FABRIK
-		FTransform PlayerWeapon = OwningPlayer->GetWeaponTransform(TEXT("LeftHandSocket"), RTS_World);
-		//Values set in Transformation function
-		FVector OutPos;
-		FRotator OutRot;
-		//Get the location of our socket in relation to our right hand in bone space
-		OwningPlayer->GetMesh()->TransformToBoneSpace(TEXT("hand_r"), PlayerWeapon.GetLocation(), PlayerWeapon.GetRotation().Rotator(), OutPos, OutRot);
-		LeftHand_Transform.SetLocation(OutPos);
-		LeftHand_Transform.SetRotation(OutRot.Quaternion());
-
-		//Will be moved but updates the location of our separate magazine mesh for the reload animation
-		//OwningPlayer->UpdateMagazineTransform();
 	}
 }
