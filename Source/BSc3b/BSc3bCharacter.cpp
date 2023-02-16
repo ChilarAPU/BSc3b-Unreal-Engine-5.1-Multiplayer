@@ -212,7 +212,7 @@ FTransform ABSc3bCharacter::GetWeaponTransform(FName Socket, ERelativeTransformS
 	
 }
 
-bool ABSc3bCharacter::Server_Shoot_Validate(FVector Location, FRotator Rotation)
+bool ABSc3bCharacter::Server_Shoot_Validate(FVector Location, FRotator Rotation, FVector Direction)
 {
 	//Currently inside the server
 	//Would be where cheat detection would be implemented.
@@ -220,13 +220,13 @@ bool ABSc3bCharacter::Server_Shoot_Validate(FVector Location, FRotator Rotation)
 	//If this returns false, client who sent this RPC will be kicked out of the game
 }
 
-void ABSc3bCharacter::Server_Shoot_Implementation(FVector Location, FRotator Rotation)
+void ABSc3bCharacter::Server_Shoot_Implementation(FVector Location, FRotator Rotation, FVector Direction)
 {
 	//Spawn bullet along with playing the gunshot sound. Cannot pass FActorSpawnParameters as a parameter so have
 	//to declare it here
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	SpawnBullet(Location, Rotation);
+	SpawnBullet(Location, Rotation, Direction);
 	Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);
 }
 
@@ -391,7 +391,7 @@ void ABSc3bCharacter::Multi_PlayFootstep_Implementation(FVector Location, USound
 
 }
 
-void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
+void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation, FVector Direction)
 {
 	//if we have no more ammo, stop bullets from spawning
 	if (Ammo <= 0)
@@ -404,7 +404,7 @@ void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation)
 	//Add impulse to our bullet. Call this here as we need a reference to the weapon components right vector
 	if (ABullet* Bullet = Cast<ABullet>(T))
 	{
-		Bullet->AddImpulseToBullet(Weapon->GetRightVector());
+		Bullet->AddImpulseToBullet(Direction);
 	}
 	//Decrement Ammo value
 	Ammo --;
@@ -763,6 +763,7 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 			Rotation = Weapon->GetSocketRotation(MuzzleSocket);
 		}
 		
+		
 		//Call server function if we currently do no have ROLE_AUTHORITY
 		//meaning we are currently on the server
 		if (HasAuthority())
@@ -770,11 +771,11 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 			//same as Server_Shoot()
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			SpawnBullet(Location, Rotation);
+			SpawnBullet(Location, Rotation, Weapon->GetRightVector());
 			Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);
 		}else
 		{
-			Server_Shoot(Location, Rotation);
+			Server_Shoot(Location, Rotation, Weapon->GetRightVector());
 		}
 		
 	}

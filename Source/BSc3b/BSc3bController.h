@@ -79,6 +79,10 @@ public:
 	UFUNCTION()
 	void WeaponSway(float DeltaTime, FVector2D LookAxis, UWeapon* Weapon);
 
+	UFUNCTION(Client, Unreliable)
+	void Client_ShowHitmarker();
+	void Client_ShowHitmarker_Implementation();
+
 protected:
 	virtual void OnNetCleanup(UNetConnection* Connection) override;
 	

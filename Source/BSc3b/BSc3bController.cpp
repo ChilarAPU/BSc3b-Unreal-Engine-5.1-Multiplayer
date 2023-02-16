@@ -94,6 +94,14 @@ void ABSc3bController::WeaponSway(float DeltaTime, FVector2D LookAxis, UWeapon* 
 	Weapon->SetRelativeRotation(InterpDifference);
 }
 
+void ABSc3bController::Client_ShowHitmarker_Implementation()
+{
+	if (PlayerHUD)
+	{
+		PlayerHUD->ShowHitmarker();
+	}
+}
+
 void ABSc3bController::OnNetCleanup(UNetConnection* Connection)
 {
 	UEOS_GameInstance* GameInstanceRef = Cast<UEOS_GameInstance>(GetWorld()->GetGameInstance());

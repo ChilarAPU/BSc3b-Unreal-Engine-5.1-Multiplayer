@@ -309,15 +309,15 @@ protected:
 	/* Logic function for spawning in a bullet at any location/rotation we pass through assigning
 	* the correct owner for the actor, as well as adding an impulse to the bullet */
 	UFUNCTION()
-	void SpawnBullet(FVector Location, FRotator Rotation);
+	void SpawnBullet(FVector Location, FRotator Rotation, FVector Direction);
 
 	////// PROTECTED SERVER RPCS //////
 
 	//RPC for Shoot
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_Shoot(FVector Location, FRotator Rotation);
-	bool Server_Shoot_Validate(FVector Location, FRotator Rotation);
-	void Server_Shoot_Implementation(FVector Location, FRotator Rotation);
+	void Server_Shoot(FVector Location, FRotator Rotation, FVector Direction);
+	bool Server_Shoot_Validate(FVector Location, FRotator Rotation, FVector Direction);
+	void Server_Shoot_Implementation(FVector Location, FRotator Rotation, FVector Direction);
 
 	////// ANIMATION REPLICATION SERVER RPCS //////
 	/*Server RPC for calling SetPlayerPitchForOffset().

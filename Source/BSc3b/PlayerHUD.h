@@ -13,6 +13,7 @@
 class UButton;
 class UTextBlock;
 class UProgressBar;
+class UImage;
 
 class ABSc3bCharacter;
 
@@ -94,6 +95,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UProgressBar* MobilityStatBar;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UImage* HitMarker;
+	
 	/* Divide our statistic values so they work in the 0 - 1 value range which is required for
 	 * progress bars to function correctly
 	 */
@@ -103,4 +107,13 @@ public:
 	/* Adjust the visibility of everything relates to attachments in the widget */
 	UFUNCTION()
 	void SetButtonVisibility(bool bVisible);
+
+	UFUNCTION()
+	void ShowHitmarker();
+
+	UFUNCTION()
+	void HideHitmarker();
+
+	UPROPERTY()
+	FTimerHandle VisibilityHandler;
 };

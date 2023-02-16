@@ -9,6 +9,7 @@
 //Include weapons header file so we can access the enums
 #include "Weapon.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 
@@ -118,4 +119,24 @@ void UPlayerHUD::SetButtonVisibility(bool bVisible)
 		MobilityStatBar->SetVisibility(ESlateVisibility::Hidden);
 		MobilityText->SetVisibility(ESlateVisibility::Hidden);
 	}
+}
+
+void UPlayerHUD::ShowHitmarker()
+{
+	HitMarker->SetRenderOpacity(1);
+	HitMarker->SetVisibility(ESlateVisibility::Visible);
+	FTimerDelegate TimerDelgate;
+	TimerDelgate.BindUFunction(this, "HideHitmarker");
+	GetWorld()->GetTimerManager().SetTimer(VisibilityHandler, TimerDelgate, .1, true);
+}
+
+void UPlayerHUD::HideHitmarker()
+{
+	HitMarker->SetRenderOpacity(HitMarker->GetRenderOpacity() - .2);
+	if (HitMarker->GetRenderOpacity() <= 0)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(VisibilityHandler);
+		HitMarker->SetVisibility(ESlateVisibility::Hidden);
+	}
+	
 }

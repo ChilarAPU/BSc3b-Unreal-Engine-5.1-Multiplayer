@@ -4,6 +4,7 @@
 #include "Bullet.h"
 
 #include "BSc3bCharacter.h"
+#include "BSc3bController.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -65,6 +66,12 @@ void ABullet::CustomCollision()
 		//If we have hit a player
 		if (HitPlayer)
 		{
+			Player = Cast<ABSc3bCharacter>(GetInstigator());
+			if (Player->IsPlayerControlled())
+			{
+				Player->PlayerController->Client_ShowHitmarker();
+			}
+				
 			//make sure we run this locally and only on the hit player
 			if (HitPlayer->IsPlayerControlled())
 			{
