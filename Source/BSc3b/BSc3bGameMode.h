@@ -13,6 +13,8 @@ class ABSc3bGameMode : public AGameModeBase
 
 public:
 	ABSc3bGameMode();
+	
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 };
 
 

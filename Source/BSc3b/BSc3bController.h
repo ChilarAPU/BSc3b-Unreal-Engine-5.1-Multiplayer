@@ -78,5 +78,8 @@ public:
 	* object space so at to avoid any unaccounted negative world space values */
 	UFUNCTION()
 	void WeaponSway(float DeltaTime, FVector2D LookAxis, UWeapon* Weapon);
+
+protected:
+	virtual void OnNetCleanup(UNetConnection* Connection) override;
 	
 };

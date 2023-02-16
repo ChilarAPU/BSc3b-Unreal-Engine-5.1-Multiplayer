@@ -4,6 +4,7 @@
 #include "BSc3bController.h"
 
 #include "BSc3bCharacter.h"
+#include "EOS_GameInstance.h"
 #include "InGameMenu.h"
 #include "PlayerAnimation.h"
 #include "PlayerHUD.h"
@@ -91,5 +92,15 @@ void ABSc3bController::WeaponSway(float DeltaTime, FVector2D LookAxis, UWeapon* 
 	InterpDifference = UKismetMathLibrary::MakeRotator(UKismetMathLibrary::FClamp(Roll, MaxSwayDegree * -1, MaxSwayDegree),
 		UKismetMathLibrary::FClamp(Pitch, MaxSwayDegree * -1, MaxSwayDegree), UKismetMathLibrary::FClamp(Yaw, MaxSwayDegree * -1, MaxSwayDegree));
 	Weapon->SetRelativeRotation(InterpDifference);
+}
+
+void ABSc3bController::OnNetCleanup(UNetConnection* Connection)
+{
+	UEOS_GameInstance* GameInstanceRef = Cast<UEOS_GameInstance>(GetWorld()->GetGameInstance());
+	if (GameInstanceRef)
+	{
+		GameInstanceRef->DestroySession();
+	}
+	Super::OnNetCleanup(Connection);
 }
 

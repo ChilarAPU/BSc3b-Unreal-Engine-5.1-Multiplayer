@@ -171,6 +171,7 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->MobilityStatBar, Weapon->MobilityStat);
 		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->StabilityStatBar, Weapon->StabilityStat);
 	}
+	DeltaTime = DeltaSeconds;
 }
 
 void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

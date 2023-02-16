@@ -101,6 +101,10 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY()
 	bool bAimingWhileSprinting;
 
+	/* Holds our DeltaTime from tick so we can use it in other functions */
+	UPROPERTY()
+	float DeltaTime;
+
 public:
 	ABSc3bCharacter();
 
