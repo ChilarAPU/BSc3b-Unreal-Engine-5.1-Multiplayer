@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "InGameMenu.generated.h"
 
+class UCustom_GameUserSettings;
 /**
  * 
  */
@@ -13,5 +14,8 @@ UCLASS()
 class BSC3B_API UInGameMenu : public UUserWidget
 {
 	GENERATED_BODY()
+
+public:
+	
 	
 };

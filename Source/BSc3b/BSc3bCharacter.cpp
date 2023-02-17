@@ -4,6 +4,7 @@
 
 #include "Attachment.h"
 #include "BSc3bController.h"
+#include "Custom_GameUserSettings.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -489,8 +490,8 @@ void ABSc3bCharacter::Look(const FInputActionValue& Value)
 	if (Controller != nullptr)
 	{
 		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X * PlayerController->Sensitivity);
-		AddControllerPitchInput(LookAxisVector.Y * PlayerController->Sensitivity);
+		AddControllerYawInput(LookAxisVector.X * PlayerController->UserSettings->GetPlayerSensitivity());
+		AddControllerPitchInput(LookAxisVector.Y * PlayerController->UserSettings->GetPlayerSensitivity());
 	}
 }
 

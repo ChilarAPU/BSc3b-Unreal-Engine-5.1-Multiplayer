@@ -4,6 +4,7 @@
 #include "BSc3bController.h"
 
 #include "BSc3bCharacter.h"
+#include "Custom_GameUserSettings.h"
 #include "EOS_GameInstance.h"
 #include "InGameMenu.h"
 #include "PlayerAnimation.h"
@@ -33,7 +34,7 @@ void ABSc3bController::BeginPlay()
 	if (IsLocalPlayerController())
 	{
 		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), PlayerHUDClass);
-    	PlayerHUD->AddToViewport();	
+		PlayerHUD->AddToViewport();	
 	}
 	//Set our player animation class so we can adjust the values inside of it directly from our character
 	if (!IsValid(PlayerAnimClass))
@@ -41,6 +42,9 @@ void ABSc3bController::BeginPlay()
 		return;
 	}
 	PlayerAnim = PlayerAnimClass.GetDefaultObject();
+
+	//Get our custom Game settings class so we can access and set its values
+	UserSettings = Cast<UCustom_GameUserSettings>(UserSettings->GetGameUserSettings());
 }
 
 void ABSc3bController::ShowRespawnButton(bool Visible)

@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "BSc3bController.generated.h"
 
+class UCustom_GameUserSettings;
 class UInGameMenu;
 class UPlayerAnimation;
 class UPlayerHUD;
@@ -72,6 +73,9 @@ public:
 	/* Actor which should spawn when the player shoot a weapon */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Bullet, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<ABullet> SpawnObject;
+
+	UPROPERTY()
+	UCustom_GameUserSettings* UserSettings;
 
 	/*Procedurally interpolate the weapon rotation when the player moves the camera
 	* to give the effect of the weapon swaying around. ALl rotation is done in
