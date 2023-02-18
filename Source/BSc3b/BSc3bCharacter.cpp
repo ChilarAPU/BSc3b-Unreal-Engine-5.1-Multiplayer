@@ -123,11 +123,11 @@ void ABSc3bCharacter::BeginPlay()
 		
 		//Setting this here forces clients input to switch to the game on launch
 		//not sure if this is a good feature or not
-		/*PlayerController->SetShowMouseCursor(false);
+		PlayerController->SetShowMouseCursor(false);
 		PlayerController->SetIgnoreLookInput(false);
 		const FInputModeGameOnly Input;
 		PlayerController->SetInputMode(Input);
-		*/
+		
 	}
 	
 }
