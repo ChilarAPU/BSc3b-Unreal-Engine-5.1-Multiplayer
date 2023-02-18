@@ -18,6 +18,7 @@ ABSc3bController::ABSc3bController()
 {
 	Player = nullptr;
 	Sensitivity = 1;
+	PlayerDisplayName = TEXT("PlayerIdentifier");
 }
 
 void ABSc3bController::BeginPlay()

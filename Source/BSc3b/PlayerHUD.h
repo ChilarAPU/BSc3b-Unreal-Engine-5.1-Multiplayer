@@ -56,17 +56,14 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UTextBlock* DamageText;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UProgressBar* PlayerHealth;
+
 public:
 
 	////// UMG WIDGETS BOUND TO BLUEPRINT VALUES //////
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString HealthText;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString AmmoCount;
-	
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* Health;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* ScopeButton;
@@ -113,6 +110,9 @@ public:
 
 	UFUNCTION()
 	void HideHitmarker();
+
+	UFUNCTION()
+	void AdjustPlayerHealthBar(float Value);
 
 	UPROPERTY()
 	FTimerHandle VisibilityHandler;

@@ -24,6 +24,9 @@ class BSC3B_API ABullet : public AActor
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Bullet", meta = (AllowPrivateAccess))
 	UStaticMeshComponent* BulletMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet", meta = (AllowPrivateAccess))
+	UMaterialInterface* BulletHoleDecal;
+
 	/* Used in line trace to specify what actors it should ignore */
 	UPROPERTY()
 	TArray<AActor*> ActorsToIgnore;

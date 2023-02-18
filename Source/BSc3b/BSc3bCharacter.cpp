@@ -164,8 +164,8 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 	//Again, would like to move this into a function that is only run when needed
 	if (IsValid(PlayerController->PlayerHUD))
 	{
-		PlayerController->PlayerHUD->HealthText = FString::SanitizeFloat(Health);
-		PlayerController->PlayerHUD->AmmoCount = FString::SanitizeFloat(Ammo);
+		PlayerController->PlayerHUD->AdjustPlayerHealthBar(Health);
+		PlayerController->PlayerHUD->AmmoCount = FString::SanitizeFloat(Ammo, 0);
 		//Call this function so we dont have to include the progress bar file
 		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->DamageStatBar, Weapon->DamageStat);
 		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->RangeStatBar, Weapon->RangeStat);
@@ -293,7 +293,7 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		//Amount to reduce health by which will become more in-depth 
-		Health -= 1;
+		Health -= 25;
 		//Flip a boolean everytime we are hit which plays a new hit animation
 		if (bHitByBullet)
 		{
@@ -310,7 +310,7 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 			UE_LOG(LogTemp, Warning, TEXT("HeadShot"));
 		}
 		//Players health as reduced enough to be considered dead
-		if (Health < 95)
+		if (Health <= 0)
 		{
 			bIsDead = true;
 			Client_Respawn();
@@ -334,6 +334,13 @@ void ABSc3bCharacter::Client_FlipLaserVisibility_Implementation(bool Visible)
 	{
 		LaserSight->SetVisibility(Visible);
 		LaserImpact->SetVisibility(Visible);
+		if (Visible)
+		{
+			UGameplayStatics::PlaySound2D(GetWorld(), PlayerController->LaserSightOff);
+		} else
+		{
+			UGameplayStatics::PlaySound2D(GetWorld(), PlayerController->LaserSightOn);
+		}
 	}
 	
 }

@@ -140,3 +140,10 @@ void UPlayerHUD::HideHitmarker()
 	}
 	
 }
+
+void UPlayerHUD::AdjustPlayerHealthBar(float Value)
+{
+	//divide our value by 10 as the max it can be is 10, but needs to be between 0-1 in the progress bar
+	Value = Value / 100;
+	PlayerHealth->SetPercent(Value);
+}

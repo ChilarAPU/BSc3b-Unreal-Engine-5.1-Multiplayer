@@ -75,6 +75,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* PlayerHit;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* LaserSightOn;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* LaserSightOff;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundAttenuation* GunshotAttenuation;
@@ -95,6 +101,12 @@ public:
 	UFUNCTION(Client, Unreliable)
 	void Client_ShowHitmarker();
 	void Client_ShowHitmarker_Implementation();
+
+	/* During load, we set this value from our Epic Online Service GetPlayerUsername() call and allows
+	 * each player to be easily identifiable in the kill-feed and scoreboard.
+	 */
+	UPROPERTY()
+	FString PlayerDisplayName;
 
 protected:
 	virtual void OnNetCleanup(UNetConnection* Connection) override;
