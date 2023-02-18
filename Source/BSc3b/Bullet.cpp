@@ -77,6 +77,8 @@ void ABullet::CustomCollision()
 			{
 				//pass through hit bone to adjust damage based on the bone hit
 				HitPlayer->Server_Health(HitBone);
+				//Play client specific functionality from getting hit
+				HitPlayer->Client_PlayHit();
 				//Add the hit actor to our ignore hit so we cannot hit the same player twice
 				ActorsToIgnore.Emplace(HitPlayer);
 				return;

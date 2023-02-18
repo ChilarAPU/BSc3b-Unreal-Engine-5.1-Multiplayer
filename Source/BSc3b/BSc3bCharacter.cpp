@@ -228,7 +228,15 @@ void ABSc3bCharacter::Server_Shoot_Implementation(FVector Location, FRotator Rot
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnBullet(Location, Rotation, Direction);
-	Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);
+	//Play sound based on if we have ammo
+	if (Ammo > 0)
+	{
+		Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);	
+	}
+	else
+	{
+		Multi_PlayFootstep(Location, PlayerController->EmptyGunshot, PlayerController->GunshotAttenuation);	
+	}
 }
 
 void ABSc3bCharacter::Server_PlayerVelocity_Implementation(FVector2D MovementVector)
@@ -286,7 +294,6 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 	{
 		//Amount to reduce health by which will become more in-depth 
 		Health -= 1;
-
 		//Flip a boolean everytime we are hit which plays a new hit animation
 		if (bHitByBullet)
 		{
@@ -422,6 +429,14 @@ void ABSc3bCharacter::Server_Spawn_Implementation()
 {
 	//Spawn our attachment actors on our weapon in begin play
 	Weapon->SpawnAttachment();
+}
+
+void ABSc3bCharacter::Client_PlayHit_Implementation()
+{
+	if (IsLocallyControlled())
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), PlayerController->PlayerHit);
+	}
 }
 
 void ABSc3bCharacter::Move(const FInputActionValue& Value)
@@ -773,7 +788,16 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			SpawnBullet(Location, Rotation, Weapon->GetRightVector());
-			Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);
+			//Play sound based on if we have ammo
+			if (Ammo > 0)
+			{
+				Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);	
+			}
+			else
+			{
+				Multi_PlayFootstep(Location, PlayerController->EmptyGunshot, PlayerController->GunshotAttenuation);	
+			}
+			
 		}else
 		{
 			Server_Shoot(Location, Rotation, Weapon->GetRightVector());

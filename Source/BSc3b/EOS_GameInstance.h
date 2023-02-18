@@ -47,6 +47,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EOS Variables")
 	FString OpenLevelText;
 
+	UPROPERTY(BlueprintReadOnly)
+	FName ServerName;
+
 	////// ON COMPLETE DELGATES //////
 	void LoginWithEOS_Return(int32 LocalUserNum, bool bWasSuccess, const FUniqueNetId& UserID, const FString& Error);
 	void OnCreateSessionCompleted(FName SessionName, bool bWasSuccessful);

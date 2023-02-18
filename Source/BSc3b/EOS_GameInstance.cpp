@@ -85,7 +85,8 @@ void UEOS_GameInstance::OnCreateSessionCompleted(FName SessionName, bool bWasSuc
 {
 	if (bWasSuccessful)
 	{
-		GetWorld()->ServerTravel(FString("/Game/ThirdPerson/Maps/MainSessionMap?listen"));
+		//GetWorld()->ServerTravel(FString("/Game/ThirdPerson/Maps/MainSessionMap?listen"));
+		ServerName = SessionName;
 	}
 }
 

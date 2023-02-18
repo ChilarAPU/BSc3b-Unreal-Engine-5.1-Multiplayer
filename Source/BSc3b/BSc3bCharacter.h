@@ -253,6 +253,13 @@ public:
 	UPROPERTY()
 	ABSc3bController* PlayerController;
 
+	/* Called from bullet class and runs any client specific functionality for when a player gets hit.
+	 * For example, playing a hit sound or spawning blood on widget
+	 */
+	UFUNCTION(Client, Reliable)
+	void Client_PlayHit();
+	void Client_PlayHit_Implementation();
+
 protected:
 
 	////// INPUT FUNCTIONS //////

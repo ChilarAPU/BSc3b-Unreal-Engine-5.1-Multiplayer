@@ -66,6 +66,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* Gunshot;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* EmptyGunshot;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* PlayerHit;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundAttenuation* GunshotAttenuation;

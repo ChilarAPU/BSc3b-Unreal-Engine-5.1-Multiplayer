@@ -19,10 +19,10 @@ public:
 	// Sets default values for this pawn's properties
 	AMenuPawn();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 	UCameraComponent* Camera;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 	TSubclassOf<UUserWidget> MainMenuWidget;
 
 	UPROPERTY()
