@@ -31,6 +31,9 @@ class BSC3B_API ABSc3bController : public APlayerController
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UPlayerAnimation> PlayerAnimClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess))
+	USoundBase* PlayerHitmarkerSound;
+
 
 public:
 	

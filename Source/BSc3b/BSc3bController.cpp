@@ -103,6 +103,10 @@ void ABSc3bController::Client_ShowHitmarker_Implementation()
 	if (PlayerHUD)
 	{
 		PlayerHUD->ShowHitmarker();
+		if (PlayerHitmarkerSound)
+		{
+			UGameplayStatics::PlaySound2D(GetWorld(), PlayerHitmarkerSound);
+		}
 	}
 }
 

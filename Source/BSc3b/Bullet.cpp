@@ -21,6 +21,7 @@ ABullet::ABullet()
 	BulletMesh->SetupAttachment(GetRootComponent());
 	//Set this mesh to ignore our line trace channel that is used for the laser sight
 	BulletMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	BulletMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	//Do not want this bullet to block the collision channel of a player
 	BulletMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	
