@@ -42,6 +42,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "EOS Functions")
 	void DestroySession();
 
+	UFUNCTION(BlueprintCallable, Category = "EOS Functions")
+	virtual void ReturnToMainMenu() override;
+
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EOS Variables")
@@ -49,6 +52,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	FName ServerName;
+
+	UPROPERTY(BlueprintReadOnly)
+	FString UserFeedback;
 
 	////// ON COMPLETE DELGATES //////
 	void LoginWithEOS_Return(int32 LocalUserNum, bool bWasSuccess, const FUniqueNetId& UserID, const FString& Error);

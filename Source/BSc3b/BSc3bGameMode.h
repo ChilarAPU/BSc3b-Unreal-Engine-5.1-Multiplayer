@@ -15,6 +15,8 @@ public:
 	ABSc3bGameMode();
 	
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+	void PreLogout(APlayerController* InPlayerController);
 };
 
 

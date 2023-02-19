@@ -46,6 +46,9 @@ class BSC3B_API ABullet : public AActor
 	 */
 	UFUNCTION()
 	void CustomCollision();
+
+	UPROPERTY()
+	int ShouldWeCheckCollision;
 	
 public:	
 	// Sets default values for this actor's properties

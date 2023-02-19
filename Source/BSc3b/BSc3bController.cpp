@@ -4,6 +4,7 @@
 #include "BSc3bController.h"
 
 #include "BSc3bCharacter.h"
+#include "BSc3bGameMode.h"
 #include "Custom_GameUserSettings.h"
 #include "EOS_GameInstance.h"
 #include "InGameMenu.h"
@@ -11,13 +12,13 @@
 #include "PlayerHUD.h"
 #include "Weapon.h"
 #include "Components/Button.h"
+#include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
 ABSc3bController::ABSc3bController()
 {
 	Player = nullptr;
-	Sensitivity = 1;
 	PlayerDisplayName = TEXT("PlayerIdentifier");
 }
 
@@ -117,6 +118,15 @@ void ABSc3bController::OnNetCleanup(UNetConnection* Connection)
 	if (GameInstanceRef)
 	{
 		GameInstanceRef->DestroySession();
+	}
+	
+	if (GetLocalRole() == ROLE_Authority && PlayerState != NULL)
+	{
+		ABSc3bGameMode* GameMode = Cast<ABSc3bGameMode>(GetWorld()->GetAuthGameMode());
+		if (GameMode)
+		{
+			GameMode->PreLogout(this);
+		}
 	}
 	Super::OnNetCleanup(Connection);
 }

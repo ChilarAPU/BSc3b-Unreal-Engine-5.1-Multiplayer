@@ -51,9 +51,6 @@ public:
 	UPROPERTY()
 	UInGameMenu* InGameMenuWidget;
 
-	UPROPERTY()
-	float Sensitivity;
-
 	/* Encapsulate the TSubclassOf variable into an easier to access and read value */
 	UPROPERTY()
 	UPlayerAnimation* PlayerAnim;

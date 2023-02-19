@@ -18,6 +18,7 @@ UWeapon::UWeapon()
 	RangeStat = 5.7;
 	StabilityStat = 4.3;
 	MobilityStat = 4;
+
 }
 
 void UWeapon::SetAttachmentMesh(AAttachment* Actor, EAttachmentKey Attachment, TEnumAsByte<EAttachmentKey>& CachedAttachment)

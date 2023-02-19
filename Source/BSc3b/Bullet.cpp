@@ -44,6 +44,7 @@ ABullet::ABullet()
 	
 	BulletMesh->SetSimulatePhysics(true);
 	Player = nullptr;
+	ShouldWeCheckCollision = 0;
 	
 	//Do not want to listen for any hit events on the mesh as we use a line trace for collision instead
 	BulletMesh->SetNotifyRigidBodyCollision(false);
@@ -122,9 +123,18 @@ void ABullet::Tick(float DeltaTime)
 
 	if (HasAuthority())
 	{
+		/*if (ShouldWeCheckCollision > 3)
+		{
+			CustomCollision();
+			//Storing our current location, ready for the next tick
+			CachedLocation = BulletMesh->GetComponentLocation();
+			ShouldWeCheckCollision = 0;
+		}
+		*/
 		CustomCollision();
 		//Storing our current location, ready for the next tick
 		CachedLocation = BulletMesh->GetComponentLocation();
+		
 	}
 
 }

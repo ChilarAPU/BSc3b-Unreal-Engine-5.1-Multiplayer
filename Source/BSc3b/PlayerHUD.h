@@ -94,6 +94,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UImage* HitMarker;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* KillFeed;
 	
 	/* Divide our statistic values so they work in the 0 - 1 value range which is required for
 	 * progress bars to function correctly

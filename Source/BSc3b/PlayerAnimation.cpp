@@ -50,6 +50,7 @@ void UPlayerAnimation::AttachMag_Notify()
 	{
 		//Do want to attenuate this later on in the project
 		UGameplayStatics::PlaySound2D(GetWorld(), MagAttach);
+		
 	}
 	OwningPlayer->ToggleMagazineVisibility(false);
 }

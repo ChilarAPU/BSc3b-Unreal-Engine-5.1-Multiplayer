@@ -74,10 +74,14 @@ void UEOS_GameInstance::LoginWithEOS_Return(int32 LocalUserNum, bool bWasSuccess
 	if (bWasSuccess)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Login Success"));
+		IOnlineSubsystem*  Subsystem = Online::GetSubsystem(this->GetWorld());
+		IOnlineExternalUIPtr ExternalUI = Subsystem->GetExternalUIInterface();
+		ExternalUI->ShowFriendsUI(0);
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("Login Failed: %s"), *Error);
+		UserFeedback = TEXT("Login Failed, Please See Output Log for Further Details");
 	}
 }
 
@@ -85,7 +89,8 @@ void UEOS_GameInstance::OnCreateSessionCompleted(FName SessionName, bool bWasSuc
 {
 	if (bWasSuccessful)
 	{
-		//GetWorld()->ServerTravel(FString("/Game/ThirdPerson/Maps/MainSessionMap?listen"));
+		UserFeedback = TEXT("Loading into Server...");
+		GetWorld()->ServerTravel(FString("/Game/ThirdPerson/Maps/MainSessionMap?listen"));
 		ServerName = SessionName;
 	}
 }
@@ -108,22 +113,16 @@ void UEOS_GameInstance::OnFindSessionCompleted(bool bWasSuccess)
 				//Join the first available session
 				if (SessionSearch->SearchResults.Num()>0)
 				{
+					SessionPtrRef->ClearOnJoinSessionCompleteDelegates(this);
 					SessionPtrRef->OnJoinSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnJoinSessionCompleted);
 					SessionPtrRef->JoinSession(0, FName("Main Session"), SessionSearch->SearchResults[0]);
 				}
-				else
-				{
-					//If there was no available session, create a new one
-					CreateEOSSession(false, false, 10);
-				}
-				
 			}
 		}
 	}
-	else
-	{
-		CreateEOSSession(false, false, 10);
-	}
+	//If we have got here, it means that the player was not logged in
+	UserFeedback = TEXT("Please Login Before trying to Find A Session");
+	
 }
 
 void UEOS_GameInstance::OnJoinSessionCompleted(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
@@ -168,9 +167,12 @@ void UEOS_GameInstance::CreateEOSSession(bool bIsDedicated, bool bIsLanServer, i
 			SessionCreationInfo.bUseLobbiesIfAvailable = false;
 			SessionCreationInfo.bUsesPresence = false;
 			SessionCreationInfo.bShouldAdvertise = true;
+			SessionCreationInfo.bAllowJoinInProgress = true;
+			
 			SessionCreationInfo.Set(SEARCH_KEYWORDS, FString("RandomHi"), EOnlineDataAdvertisementType::ViaOnlineService);
 			SessionPtrRef->OnCreateSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnCreateSessionCompleted);
 			SessionPtrRef->CreateSession(0, FName("Main Session"), SessionCreationInfo);
+			SessionPtrRef->StartSession(FName("Main Session"));
 		}
 	}
 }
@@ -201,14 +203,22 @@ void UEOS_GameInstance::JoinSession()
 void UEOS_GameInstance::DestroySession()
 {
 	IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(this->GetWorld());
+	UE_LOG(LogTemp, Warning, TEXT("Session Destroyed 1"));
 	if (SubsystemRef)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Session Destroyed 2"));
 		IOnlineSessionPtr SessionPtrRef = SubsystemRef->GetSessionInterface();
 		if (SessionPtrRef)
 		{
 			SessionPtrRef->OnDestroySessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnDestroySessionCompleted);
 			SessionPtrRef->DestroySession(FName("Main Session"));
+			UE_LOG(LogTemp, Warning, TEXT("Session Destroyed 3"));
 		}
 	}
 	
+}
+
+void UEOS_GameInstance::ReturnToMainMenu()
+{
+	Super::ReturnToMainMenu();
 }
