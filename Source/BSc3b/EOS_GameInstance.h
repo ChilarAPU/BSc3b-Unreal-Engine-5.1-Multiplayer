@@ -51,7 +51,7 @@ public:
 	FString OpenLevelText;
 
 	UPROPERTY(BlueprintReadOnly)
-	FName ServerName;
+	FString PlayerName;
 
 	UPROPERTY(BlueprintReadOnly)
 	FString UserFeedback;
@@ -62,5 +62,6 @@ public:
 	void OnDestroySessionCompleted(FName SessionName, bool bWasSuccessful);
 	void OnFindSessionCompleted(bool bWasSuccess);
 	void OnJoinSessionCompleted(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
+
 	
 };

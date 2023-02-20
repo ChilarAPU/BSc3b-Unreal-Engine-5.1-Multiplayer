@@ -12,12 +12,15 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GlobalHUD.h"
 #include "InGameMenu.h"
+#include "MenuGameState.h"
 #include "PlayerAnimation.h"
 #include "PlayerHUD.h"
 #include "Weapon.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/AudioComponent.h"
+#include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -446,7 +449,37 @@ void ABSc3bCharacter::Client_PlayHit_Implementation()
 	}
 }
 
-void ABSc3bCharacter::Move(const FInputActionValue& Value)
+void ABSc3bCharacter::Server_PlaySpawnMessage_Implementation(const FString& PlayerName)
+{
+	Multicast_PlaySpawnMessage(PlayerName);
+}
+
+void ABSc3bCharacter::Multicast_PlaySpawnMessage_Implementation(const FString& PlayerName)
+{
+	ABSc3bController* PC = Cast<ABSc3bController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	/*if (PC->PlayerHUD)
+	{
+		TArray<FStringFormatArg> args;
+		args.Add(FStringFormatArg(PlayerName));
+		FString s = FString::Format(TEXT("{0} Has Spawned in"), args);
+		PC->PlayerHUD->MessageTextBox->SetText(FText::FromString(s));
+		PC->PlayerHUD->SetVisibility(ESlateVisibility::Visible);
+	}
+	*/
+	if (!IsValid(ClientOnlyWidgetClass))
+	{
+		return;
+	}
+		ClientOnlyWidget = CreateWidget<UGlobalHUD>(GetWorld(), ClientOnlyWidgetClass);
+		ClientOnlyWidget->AddToViewport();
+		TArray<FStringFormatArg> args;
+		args.Add(FStringFormatArg(PlayerName));
+		FString s = FString::Format(TEXT("{0} Has Spawned in"), args);
+		ClientOnlyWidget->MessageTextBox->SetText(FText::FromString(s));
+		ClientOnlyWidget->MessageTextBox->SetVisibility(ESlateVisibility::Visible);
+}
+
+	void ABSc3bCharacter::Move(const FInputActionValue& Value)
 {
 	// Replicate our move axis vector to be used in player state machine
 	FVector2D MovementVector = Value.Get<FVector2D>();

@@ -97,6 +97,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* KillFeed;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UTextBlock* MessageTextBox;
 	
 	/* Divide our statistic values so they work in the 0 - 1 value range which is required for
 	 * progress bars to function correctly

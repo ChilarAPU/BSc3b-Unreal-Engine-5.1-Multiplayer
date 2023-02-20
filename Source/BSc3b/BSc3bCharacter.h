@@ -9,6 +9,7 @@
 #include "NiagaraComponent.h"
 #include "BSc3bCharacter.generated.h"
 
+class UGlobalHUD;
 enum EAttachmentKey : int;
 class ABSc3bController;
 //Forward Declarations
@@ -104,6 +105,12 @@ class ABSc3bCharacter : public ACharacter
 	/* Holds our DeltaTime from tick so we can use it in other functions */
 	UPROPERTY()
 	float DeltaTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess))
+	TSubclassOf<UGlobalHUD> ClientOnlyWidgetClass;
+	
+	UPROPERTY()
+	UGlobalHUD* ClientOnlyWidget;
 
 public:
 	ABSc3bCharacter();
@@ -259,6 +266,14 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_PlayHit();
 	void Client_PlayHit_Implementation();
+
+	UFUNCTION(Server, Unreliable)
+	void Server_PlaySpawnMessage(const FString& PlayerName);
+	void Server_PlaySpawnMessage_Implementation(const FString& PlayerName);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlaySpawnMessage(const FString& PlayerName);
+	void Multicast_PlaySpawnMessage_Implementation(const FString& PlayerName);
 
 protected:
 

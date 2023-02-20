@@ -8,6 +8,7 @@
 #include "Custom_GameUserSettings.h"
 #include "EOS_GameInstance.h"
 #include "InGameMenu.h"
+#include "MenuGameState.h"
 #include "PlayerAnimation.h"
 #include "PlayerHUD.h"
 #include "Weapon.h"
@@ -47,6 +48,21 @@ void ABSc3bController::BeginPlay()
 
 	//Get our custom Game settings class so we can access and set its values
 	UserSettings = Cast<UCustom_GameUserSettings>(UserSettings->GetGameUserSettings());
+	/*UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (PlayerHUD)
+	{
+		TArray<FStringFormatArg> args;
+		args.Add(FStringFormatArg(GI->PlayerName));
+		FString s = FString::Format(TEXT("{0} Has Spawned in"), args);
+		PlayerHUD->MessageTextBox->SetText(FText::FromString(s));
+		PlayerHUD->SetVisibility(ESlateVisibility::Visible);
+	}
+	*/
+	if (PlayerClass)
+	{
+		UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		PlayerClass->Server_PlaySpawnMessage(GI->PlayerName);
+	}
 }
 
 void ABSc3bController::ShowRespawnButton(bool Visible)

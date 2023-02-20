@@ -2,10 +2,14 @@
 
 
 #include "EOS_GameInstance.h"
+
+#include "BSc3bController.h"
+#include "MenuGameState.h"
 #include "OnlineSubsystemUtils.h"
 #include "OnlineSubsystem.h"
 #include "Interfaces/OnlineIdentityInterface.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 void UEOS_GameInstance::LoginWithEOS(FString ID, FString Token, FString LoginType)
 {
@@ -38,6 +42,7 @@ FString UEOS_GameInstance::GetPlayerUsername()
 			//If user is logged in
 			if (IdentityPointerRef->GetLoginStatus(0) == ELoginStatus::LoggedIn)
 			{
+				PlayerName = IdentityPointerRef->GetPlayerNickname(0);
 				return IdentityPointerRef->GetPlayerNickname(0);
 			}
 		}
@@ -91,7 +96,6 @@ void UEOS_GameInstance::OnCreateSessionCompleted(FName SessionName, bool bWasSuc
 	{
 		UserFeedback = TEXT("Loading into Server...");
 		GetWorld()->ServerTravel(FString("/Game/ThirdPerson/Maps/MainSessionMap?listen"));
-		ServerName = SessionName;
 	}
 }
 
@@ -116,6 +120,7 @@ void UEOS_GameInstance::OnFindSessionCompleted(bool bWasSuccess)
 					SessionPtrRef->ClearOnJoinSessionCompleteDelegates(this);
 					SessionPtrRef->OnJoinSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnJoinSessionCompleted);
 					SessionPtrRef->JoinSession(0, FName("Main Session"), SessionSearch->SearchResults[0]);
+					UE_LOG(LogTemp, Warning, TEXT("%s"), *SessionSearch->SearchResults[0].GetSessionIdStr());
 				}
 			}
 		}
@@ -167,12 +172,12 @@ void UEOS_GameInstance::CreateEOSSession(bool bIsDedicated, bool bIsLanServer, i
 			SessionCreationInfo.bUseLobbiesIfAvailable = false;
 			SessionCreationInfo.bUsesPresence = false;
 			SessionCreationInfo.bShouldAdvertise = true;
-			SessionCreationInfo.bAllowJoinInProgress = true;
+			//SessionCreationInfo.bAllowJoinInProgress = true;
 			
 			SessionCreationInfo.Set(SEARCH_KEYWORDS, FString("RandomHi"), EOnlineDataAdvertisementType::ViaOnlineService);
 			SessionPtrRef->OnCreateSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnCreateSessionCompleted);
 			SessionPtrRef->CreateSession(0, FName("Main Session"), SessionCreationInfo);
-			SessionPtrRef->StartSession(FName("Main Session"));
+			//SessionPtrRef->StartSession(FName("Main Session"));
 		}
 	}
 }
@@ -203,7 +208,6 @@ void UEOS_GameInstance::JoinSession()
 void UEOS_GameInstance::DestroySession()
 {
 	IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(this->GetWorld());
-	UE_LOG(LogTemp, Warning, TEXT("Session Destroyed 1"));
 	if (SubsystemRef)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Session Destroyed 2"));
