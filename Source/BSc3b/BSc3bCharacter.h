@@ -106,11 +106,9 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY()
 	float DeltaTime;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess))
-	TSubclassOf<UGlobalHUD> ClientOnlyWidgetClass;
-	
-	UPROPERTY()
-	UGlobalHUD* ClientOnlyWidget;
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_AddToKillFeed(const FString& HitPlayerName, const FString& ShootingPlayerName);
+	void Multicast_AddToKillFeed_Implementation(const FString& HitPlayerName, const FString& ShootingPlayerName);
 
 public:
 	ABSc3bCharacter();
@@ -162,9 +160,9 @@ public:
 	 * change their health client side
 	 */
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_Health(FName Bone);
-	bool Server_Health_Validate(FName Bone);
-	void Server_Health_Implementation(FName Bone);
+	void Server_Health(FName Bone, const FString& HitPlayerName, const FString& ShootingPlayerName);
+	bool Server_Health_Validate(FName Bone, const FString& HitPlayerName, const FString& ShootingPlayerName);
+	void Server_Health_Implementation(FName Bone, const FString& HitPlayerName, const FString& ShootingPlayerName);
 
 	/* The only logic of this function is to move ourselves to the
 	 * server so we can then successfully call a multicast RPC. Location
@@ -274,6 +272,22 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_PlaySpawnMessage(const FString& PlayerName);
 	void Multicast_PlaySpawnMessage_Implementation(const FString& PlayerName);
+	
+	UPROPERTY()
+	UGlobalHUD* ClientOnlyWidget;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess))
+	TSubclassOf<UGlobalHUD> ClientOnlyWidgetClass;
+
+	UPROPERTY()
+	class UEOS_GameInstance* GameInstanceRef;
+
+	UPROPERTY(Replicated)
+	FString OwnName;
+
+	UFUNCTION(Server, Unreliable)
+	void Server_SetPlayerName(const FString& PlayerName);
+	void Server_SetPlayerName_Implementation(const FString& PlayerName);
 
 protected:
 

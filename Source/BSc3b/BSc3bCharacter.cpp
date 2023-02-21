@@ -12,6 +12,7 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "EOS_GameInstance.h"
 #include "GlobalHUD.h"
 #include "InGameMenu.h"
 #include "MenuGameState.h"
@@ -21,6 +22,8 @@
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/AudioComponent.h"
 #include "Components/TextBlock.h"
+#include "Components/UniformGridPanel.h"
+#include "Components/UniformGridSlot.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -132,7 +135,20 @@ void ABSc3bCharacter::BeginPlay()
 		PlayerController->SetInputMode(Input);
 		
 	}
-	
+
+	//Might need this so the bullet can access players EOS display name
+	GameInstanceRef = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	//KilLFeed test values
+	if (HasAuthority())
+	{
+		GameInstanceRef->PlayerName = TEXT("Server");
+		OwnName = TEXT("Server");
+	} else
+	{
+		GameInstanceRef->PlayerName = TEXT("Client");
+		//OwnName = TEXT("Client");
+		Server_SetPlayerName(TEXT("Client"));
+	}
 }
 
 void ABSc3bCharacter::Tick(float DeltaSeconds)
@@ -186,6 +202,7 @@ void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ABSc3bCharacter, Health);
 	DOREPLIFETIME(ABSc3bCharacter, bHitByBullet);
 	DOREPLIFETIME(ABSc3bCharacter, Ammo);
+	DOREPLIFETIME(ABSc3bCharacter, OwnName);
 	
 	//Replicated variables used in animations
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerHorizontalVelocity, COND_SkipOwner);
@@ -286,12 +303,12 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 
 }
 
-bool ABSc3bCharacter::Server_Health_Validate(FName Bone)
+bool ABSc3bCharacter::Server_Health_Validate(FName Bone, const FString& HitPlayerName, const FString& ShootingPlayerName)
 {
 	return true;
 }
 
-void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
+void ABSc3bCharacter::Server_Health_Implementation(FName Bone, const FString& HitPlayerName, const FString& ShootingPlayerName)
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{
@@ -317,9 +334,28 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone)
 		{
 			bIsDead = true;
 			Client_Respawn();
+			//Add in a value to our killfeed
+			UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			if (GI)
+			{
+				//Multicast_AddToKillFeed(GI->PlayerName);
+				Multicast_AddToKillFeed(HitPlayerName, ShootingPlayerName);
+			}
+			
 		}
 		
 	}
+}
+
+void ABSc3bCharacter::Multicast_AddToKillFeed_Implementation(const FString& HitPlayerName, const FString& ShootingPlayerName)
+{
+	AMenuGameState* GS = Cast<AMenuGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GS->ClientOnlyWidget)
+	{
+		GS->ClientOnlyWidget->AddToKilLFeed(HitPlayerName, ShootingPlayerName);
+	}
+	
+	
 }
 
 void ABSc3bCharacter::Server_EndHit_Implementation()
@@ -456,30 +492,24 @@ void ABSc3bCharacter::Server_PlaySpawnMessage_Implementation(const FString& Play
 
 void ABSc3bCharacter::Multicast_PlaySpawnMessage_Implementation(const FString& PlayerName)
 {
-	ABSc3bController* PC = Cast<ABSc3bController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-	/*if (PC->PlayerHUD)
+	AMenuGameState* GS = Cast<AMenuGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GS->ClientOnlyWidget)
 	{
 		TArray<FStringFormatArg> args;
 		args.Add(FStringFormatArg(PlayerName));
 		FString s = FString::Format(TEXT("{0} Has Spawned in"), args);
-		PC->PlayerHUD->MessageTextBox->SetText(FText::FromString(s));
-		PC->PlayerHUD->SetVisibility(ESlateVisibility::Visible);
+		GS->ClientOnlyWidget->MessageTextBox->SetText(FText::FromString(s));
+		GS->ClientOnlyWidget->MessageTextBox->SetVisibility(ESlateVisibility::Visible);	
 	}
-	*/
-	if (!IsValid(ClientOnlyWidgetClass))
-	{
-		return;
-	}
-		ClientOnlyWidget = CreateWidget<UGlobalHUD>(GetWorld(), ClientOnlyWidgetClass);
-		ClientOnlyWidget->AddToViewport();
-		TArray<FStringFormatArg> args;
-		args.Add(FStringFormatArg(PlayerName));
-		FString s = FString::Format(TEXT("{0} Has Spawned in"), args);
-		ClientOnlyWidget->MessageTextBox->SetText(FText::FromString(s));
-		ClientOnlyWidget->MessageTextBox->SetVisibility(ESlateVisibility::Visible);
+	
 }
 
-	void ABSc3bCharacter::Move(const FInputActionValue& Value)
+void ABSc3bCharacter::Server_SetPlayerName_Implementation(const FString& PlayerName)
+{
+	OwnName = PlayerName;
+}
+
+void ABSc3bCharacter::Move(const FInputActionValue& Value)
 {
 	// Replicate our move axis vector to be used in player state machine
 	FVector2D MovementVector = Value.Get<FVector2D>();

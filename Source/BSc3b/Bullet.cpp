@@ -5,6 +5,8 @@
 
 #include "BSc3bCharacter.h"
 #include "BSc3bController.h"
+#include "EOS_GameInstance.h"
+#include "MenuGameState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -79,7 +81,7 @@ void ABullet::CustomCollision()
 			if (HitPlayer->IsPlayerControlled())
 			{
 				//pass through hit bone to adjust damage based on the bone hit
-				HitPlayer->Server_Health(HitBone);
+				HitPlayer->Server_Health(HitBone, HitPlayer->OwnName, Player->OwnName);
 				//Play client specific functionality from getting hit
 				HitPlayer->Client_PlayHit();
 				//Add the hit actor to our ignore hit so we cannot hit the same player twice

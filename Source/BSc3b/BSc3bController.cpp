@@ -7,6 +7,7 @@
 #include "BSc3bGameMode.h"
 #include "Custom_GameUserSettings.h"
 #include "EOS_GameInstance.h"
+#include "GlobalHUD.h"
 #include "InGameMenu.h"
 #include "MenuGameState.h"
 #include "PlayerAnimation.h"
@@ -60,6 +61,14 @@ void ABSc3bController::BeginPlay()
 	*/
 	if (PlayerClass)
 	{
+		
+		/*if (!IsValid(PlayerClass->ClientOnlyWidgetClass))
+		{
+			return;
+		}
+		PlayerClass->ClientOnlyWidget = CreateWidget<UGlobalHUD>(GetWorld(), PlayerClass->ClientOnlyWidgetClass);
+		PlayerClass->ClientOnlyWidget->AddToViewport();
+		*/
 		UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 		PlayerClass->Server_PlaySpawnMessage(GI->PlayerName);
 	}
