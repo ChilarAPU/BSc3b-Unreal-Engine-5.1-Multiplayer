@@ -32,6 +32,18 @@ void UPlayerHUD::NativeConstruct()
 	RespawnButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnRespawnClicked);
 	RespawnButton->IsFocusable = false;
 
+	SciFiScopeButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnSciFiScopeClicked);
+	SciFiScopeButton->IsFocusable = false;
+
+	MakarovSilencerButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnMakarovSilencerClicked);
+	MakarovSilencerButton->IsFocusable = false;
+
+	ModernSilencerButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnModernSilencerClicked);
+	MakarovSilencerButton->IsFocusable = false;
+
+	SlantedGripButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnSlantedGripClicked);
+	MakarovSilencerButton->IsFocusable = false;
+
 }
 
 void UPlayerHUD::OnScopeClicked()
@@ -55,6 +67,15 @@ void UPlayerHUD::OnLongScopeClicked()
 	OwningPlayer->Server_EquipWeaponAttachment(LongRange);
 }
 
+void UPlayerHUD::OnSciFiScopeClicked()
+{
+	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
+
+	// Separate attachments for owner and other clients
+	OwningPlayer->EquipWeaponAttachment(SciFiScope);
+	OwningPlayer->Server_EquipWeaponAttachment(SciFiScope);
+}
+
 void UPlayerHUD::OnSilencerClicked()
 {
 	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
@@ -64,6 +85,24 @@ void UPlayerHUD::OnSilencerClicked()
 	OwningPlayer->Server_EquipWeaponAttachment(Silencer);
 }
 
+void UPlayerHUD::OnMakarovSilencerClicked()
+{
+	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
+
+	// Separate attachments for owner and other clients
+	OwningPlayer->EquipWeaponAttachment(MakarovSilencer);
+	OwningPlayer->Server_EquipWeaponAttachment(MakarovSilencer);
+}
+
+void UPlayerHUD::OnModernSilencerClicked()
+{
+	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
+
+	// Separate attachments for owner and other clients
+	OwningPlayer->EquipWeaponAttachment(SilencerTwo);
+	OwningPlayer->Server_EquipWeaponAttachment(SilencerTwo);
+}
+
 void UPlayerHUD::OnForegripClicked()
 {
 	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
@@ -71,6 +110,15 @@ void UPlayerHUD::OnForegripClicked()
 	// Separate attachments for owner and other clients
 	OwningPlayer->EquipWeaponAttachment(ForeGrip);
 	OwningPlayer->Server_EquipWeaponAttachment(ForeGrip);
+}
+
+void UPlayerHUD::OnSlantedGripClicked()
+{
+	OwningPlayer = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
+
+	// Separate attachments for owner and other clients
+	OwningPlayer->EquipWeaponAttachment(SlantedGrip);
+	OwningPlayer->Server_EquipWeaponAttachment(SlantedGrip);
 }
 
 void UPlayerHUD::OnRespawnClicked()
@@ -92,10 +140,18 @@ void UPlayerHUD::SetButtonVisibility(bool bVisible)
 	//can group up the appropriate buttons through something, this is the only way to do it.
 	if (bVisible)
 	{
+		//// SCOPES ////
 		ScopeButton->SetVisibility(ESlateVisibility::Visible);
 		LongScopeButton->SetVisibility(ESlateVisibility::Visible);
+		SciFiScopeButton->SetVisibility(ESlateVisibility::Visible);
+		//// MUZZLE ////
 		SilencerButton->SetVisibility(ESlateVisibility::Visible);
+		MakarovSilencerButton->SetVisibility(ESlateVisibility::Visible);
+		ModernSilencerButton->SetVisibility(ESlateVisibility::Visible);
+		//// GRIP ////
 		ForegripButton->SetVisibility(ESlateVisibility::Visible);
+		SlantedGripButton->SetVisibility(ESlateVisibility::Visible);
+		//// STATISTICS ////
 		DamageStatBar->SetVisibility(ESlateVisibility::Visible);
 		DamageText->SetVisibility(ESlateVisibility::Visible);
 		RangeStatBar->SetVisibility(ESlateVisibility::Visible);
@@ -106,10 +162,18 @@ void UPlayerHUD::SetButtonVisibility(bool bVisible)
 		MobilityText->SetVisibility(ESlateVisibility::Visible);
 	} else
 	{
+		//// SCOPES ////
 		ScopeButton->SetVisibility(ESlateVisibility::Hidden);
 		LongScopeButton->SetVisibility(ESlateVisibility::Hidden);
+		SciFiScopeButton->SetVisibility(ESlateVisibility::Hidden);
+		//// MUZZLE ////
 		SilencerButton->SetVisibility(ESlateVisibility::Hidden);
+		MakarovSilencerButton->SetVisibility(ESlateVisibility::Hidden);
+		ModernSilencerButton->SetVisibility(ESlateVisibility::Hidden);
+		//// GRIP ////
 		ForegripButton->SetVisibility(ESlateVisibility::Hidden);
+		SlantedGripButton->SetVisibility(ESlateVisibility::Hidden);
+		//// STATISTICS ////
 		DamageStatBar->SetVisibility(ESlateVisibility::Hidden);
 		DamageText->SetVisibility(ESlateVisibility::Hidden);
 		RangeStatBar->SetVisibility(ESlateVisibility::Hidden);

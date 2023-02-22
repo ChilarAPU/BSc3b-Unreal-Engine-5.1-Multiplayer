@@ -30,15 +30,19 @@ void UWeapon::SetAttachmentMesh(AAttachment* Actor, EAttachmentKey Attachment, T
 			//We have clicked the button for the same mesh so do nothing
 			return;
 		}
-		if (CachedAttachment != Attachment)
+		if (CachedAttachment)
 		{
-			//We have clicked a new button of the same attachment type e.g. long scope but have red dot equipped
-			//we want to remove the stat changes from our previous attachment before replacing the mesh
-			DamageStat -= Attachments.Find(CachedAttachment)->Damage;
-			RangeStat -= Attachments.Find(CachedAttachment)->Range;
-			StabilityStat -= Attachments.Find(CachedAttachment)->Stability;
-			MobilityStat -= Attachments.Find(CachedAttachment)->Mobility;
+			if (CachedAttachment != Attachment)
+        		{
+        			//We have clicked a new button of the same attachment type e.g. long scope but have red dot equipped
+        			//we want to remove the stat changes from our previous attachment before replacing the mesh
+        			DamageStat -= Attachments.Find(CachedAttachment)->Damage;
+        			RangeStat -= Attachments.Find(CachedAttachment)->Range;
+        			StabilityStat -= Attachments.Find(CachedAttachment)->Stability;
+        			MobilityStat -= Attachments.Find(CachedAttachment)->Mobility;
+        		}	
 		}
+		
 
 		//replace mesh and calculate our new stats
 		Actor->Attachment->SetStaticMesh(Attachments.Find(Attachment)->Mesh);

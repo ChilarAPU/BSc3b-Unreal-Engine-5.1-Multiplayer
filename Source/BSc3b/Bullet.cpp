@@ -63,7 +63,7 @@ void ABullet::CustomCollision()
 	//End of line trace is our bullets currently location
 	FVector End = BulletMesh->GetComponentLocation();
 	FHitResult OutHit;
-	UKismetSystemLibrary::LineTraceSingle(GetWorld(), CachedLocation, End, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::Persistent, OutHit, true);
+	UKismetSystemLibrary::LineTraceSingle(GetWorld(), CachedLocation, End, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, OutHit, true);
 	if (OutHit.bBlockingHit)
 	{
 		ABSc3bCharacter* HitPlayer = Cast<ABSc3bCharacter>(OutHit.GetActor());

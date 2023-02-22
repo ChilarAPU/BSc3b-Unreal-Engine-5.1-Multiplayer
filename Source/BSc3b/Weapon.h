@@ -19,7 +19,11 @@ enum EAttachmentKey : int
 	RedDot = 1,
 	LongRange = 2,
 	Silencer = 3,
-	ForeGrip = 4
+	ForeGrip = 4,
+	SciFiScope = 5,
+	SlantedGrip = 6,
+	MakarovSilencer = 7,
+	SilencerTwo = 8
 };
 
 /* Holds all available attachment types that are available on the weapon*/

@@ -32,10 +32,22 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 	void OnLongScopeClicked();
 
 	UFUNCTION()
+	void OnSciFiScopeClicked();
+
+	UFUNCTION()
 	void OnSilencerClicked();
 
 	UFUNCTION()
+	void OnMakarovSilencerClicked();
+
+	UFUNCTION()
+	void OnModernSilencerClicked();
+
+	UFUNCTION()
 	void OnForegripClicked();
+
+	UFUNCTION()
+	void OnSlantedGripClicked();
 
 	UFUNCTION()
 	void OnRespawnClicked();
@@ -65,6 +77,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString AmmoCount;
 
+	////// ATTACHMENT BUTTONS BOUND TO BLUEPRINT VALUES //////
+	///////// SCOPE //////
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* ScopeButton;
 
@@ -72,10 +86,26 @@ public:
 	UButton* LongScopeButton;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UButton* SciFiScopeButton;
+
+	////// MUZZLE //////
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* SilencerButton;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UButton* MakarovSilencerButton;
 	
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UButton* ModernSilencerButton;
+
+	////// GRIP //////
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* ForegripButton;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UButton* SlantedGripButton;
+	
+	////// END OF ATTACHMENT BUTTONS //////
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* RespawnButton;
