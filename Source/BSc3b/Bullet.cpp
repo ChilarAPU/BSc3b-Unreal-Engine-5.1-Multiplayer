@@ -74,7 +74,7 @@ void ABullet::CustomCollision()
 			Player = Cast<ABSc3bCharacter>(GetInstigator());
 			if (Player->IsPlayerControlled())
 			{
-				Player->PlayerController->Client_ShowHitmarker();
+				Player->PlayerController->Client_ShowHitmarker(HitBone);
 			}
 				
 			//make sure we run this locally and only on the hit player

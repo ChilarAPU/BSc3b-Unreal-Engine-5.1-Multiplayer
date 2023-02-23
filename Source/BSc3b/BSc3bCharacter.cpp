@@ -141,14 +141,16 @@ void ABSc3bCharacter::BeginPlay()
 	//KilLFeed test values
 	if (HasAuthority())
 	{
-		GameInstanceRef->PlayerName = TEXT("Server");
-		OwnName = TEXT("Server");
+		//GameInstanceRef->PlayerName = TEXT("Server");
+		//OwnName = TEXT("Server");
+		OwnName = GameInstanceRef->PlayerName;
 	} else
 	{
-		GameInstanceRef->PlayerName = TEXT("Client");
-		//OwnName = TEXT("Client");
-		Server_SetPlayerName(TEXT("Client"));
+		//GameInstanceRef->PlayerName = TEXT("Client");
+		//Server_SetPlayerName(TEXT("Client"));
+		Server_SetPlayerName(GameInstanceRef->PlayerName);
 	}
+	
 }
 
 void ABSc3bCharacter::Tick(float DeltaSeconds)

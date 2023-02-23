@@ -125,15 +125,26 @@ void ABSc3bController::WeaponSway(float DeltaTime, FVector2D LookAxis, UWeapon* 
 	Weapon->SetRelativeRotation(InterpDifference);
 }
 
-void ABSc3bController::Client_ShowHitmarker_Implementation()
+void ABSc3bController::Client_ShowHitmarker_Implementation(FName HitBone)
 {
 	if (PlayerHUD)
 	{
 		PlayerHUD->ShowHitmarker();
-		if (PlayerHitmarkerSound)
+		if (HitBone == "head")
 		{
-			UGameplayStatics::PlaySound2D(GetWorld(), PlayerHitmarkerSound);
+			if (HeadshotSound)
+			{
+				UGameplayStatics::PlaySound2D(GetWorld(), HeadshotSound);	
+			}
+			
+		} else
+		{
+			if (PlayerHitmarkerSound)
+			{
+				UGameplayStatics::PlaySound2D(GetWorld(), PlayerHitmarkerSound);
+			}
 		}
+		
 	}
 }
 

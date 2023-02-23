@@ -34,6 +34,9 @@ class BSC3B_API ABSc3bController : public APlayerController
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess))
 	USoundBase* PlayerHitmarkerSound;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound", meta = (AllowPrivateAccess))
+	USoundBase* HeadshotSound;
+
 
 public:
 	
@@ -96,8 +99,8 @@ public:
 	void WeaponSway(float DeltaTime, FVector2D LookAxis, UWeapon* Weapon);
 
 	UFUNCTION(Client, Unreliable)
-	void Client_ShowHitmarker();
-	void Client_ShowHitmarker_Implementation();
+	void Client_ShowHitmarker(FName HitBone);
+	void Client_ShowHitmarker_Implementation(FName HitBone);
 
 	/* During load, we set this value from our Epic Online Service GetPlayerUsername() call and allows
 	 * each player to be easily identifiable in the kill-feed and scoreboard.
