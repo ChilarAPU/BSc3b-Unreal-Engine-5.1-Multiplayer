@@ -95,6 +95,7 @@ void ABullet::CustomCollision()
 		BulletMesh->SetNotifyRigidBodyCollision(false);
 		//Stop our physics from simulating to save performance
 		BulletMesh->SetSimulatePhysics(false);
+		K2_DestroyActor();
 
 		/*UGameplayStatics::SpawnDecalAttached(BulletHoleDecal, FVector(.5, .5, .5), OutHit.GetComponent(), NAME_None,
 			OutHit.Location, OutHit.Normal.Rotation(), EAttachLocation::KeepWorldPosition, 10); */
