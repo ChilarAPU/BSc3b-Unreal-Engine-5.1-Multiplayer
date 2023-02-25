@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Bullet.h"
+#include "ChatBox.h"
 #include "NiagaraComponent.h"
 #include "BSc3bCharacter.generated.h"
 
@@ -288,6 +289,14 @@ public:
 	UFUNCTION(Server, Unreliable)
 	void Server_SetPlayerName(const FString& PlayerName);
 	void Server_SetPlayerName_Implementation(const FString& PlayerName);
+
+	UFUNCTION(Server, Unreliable)
+	void Server_ReceiveMessage(FCustomChatMessage IncomingMessage);
+	void Server_ReceiveMessage_Implementation(FCustomChatMessage IncomingMessage);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_ReceiveMessage(FCustomChatMessage IncomingMessage);
+	void Multicast_ReceiveMessage_Implementation(FCustomChatMessage IncomingMessage);
 
 protected:
 

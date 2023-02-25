@@ -511,7 +511,21 @@ void ABSc3bCharacter::Server_SetPlayerName_Implementation(const FString& PlayerN
 	OwnName = PlayerName;
 }
 
-void ABSc3bCharacter::Move(const FInputActionValue& Value)
+void ABSc3bCharacter::Server_ReceiveMessage_Implementation(FCustomChatMessage IncomingMessage)
+{
+	Multicast_ReceiveMessage(IncomingMessage);
+}
+
+void ABSc3bCharacter::Multicast_ReceiveMessage_Implementation(FCustomChatMessage IncomingMessage)
+{
+	AMenuGameState* GameStateRef = Cast<AMenuGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameStateRef)
+	{
+		GameStateRef->ClientOnlyWidget->SendMessageToBox(IncomingMessage);
+	}
+}
+
+	void ABSc3bCharacter::Move(const FInputActionValue& Value)
 {
 	// Replicate our move axis vector to be used in player state machine
 	FVector2D MovementVector = Value.Get<FVector2D>();
