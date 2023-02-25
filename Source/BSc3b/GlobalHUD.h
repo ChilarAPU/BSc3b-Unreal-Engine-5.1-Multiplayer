@@ -12,7 +12,6 @@
 class UTextBlock;
 class UUniformGridPanel;
 class UKillFeedSlot;
-class UButton;
 class UVerticalBox;
 class UMultiLineEditableTextBox;
 class UChatBox;
@@ -65,9 +64,6 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UUniformGridPanel* KillFeedBox;
-	
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
-	UButton* SendMessageButton;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UVerticalBox* AllChannelMessages;
@@ -93,5 +89,6 @@ public:
 
 	UFUNCTION()
 	void ClearChatBox();
-	
+
+	virtual FReply NativeOnPreviewKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 };

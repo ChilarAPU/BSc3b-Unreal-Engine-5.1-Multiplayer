@@ -21,6 +21,7 @@
 #include "Weapon.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/AudioComponent.h"
+#include "Components/MultiLineEditableTextBox.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
@@ -300,6 +301,9 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 
 		//In Game Menu
 		EnhancedInputComponent->BindAction(MenuAction, ETriggerEvent::Started, this, &ABSc3bCharacter::OpenInGameMenu);
+
+		//Open Game Chat
+		EnhancedInputComponent->BindAction(ChatAction, ETriggerEvent::Started, this, &ABSc3bCharacter::EnterChatBox);
 
 	}
 
@@ -889,6 +893,17 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 			Server_Shoot(Location, Rotation, Weapon->GetRightVector());
 		}
 		
+	}
+}
+
+void ABSc3bCharacter::EnterChatBox(const FInputActionValue& Value)
+{
+	//Focus the chat text box to allow the player to easily start typing
+	AMenuGameState* GameStateRef = Cast<AMenuGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameStateRef->ClientOnlyWidget)
+	{
+		PlayerController->SetIgnoreLookInput(true);
+		GameStateRef->ClientOnlyWidget->MessageToSend->SetUserFocus(PlayerController);
 	}
 }
 

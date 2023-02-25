@@ -4,6 +4,7 @@
 #include "GlobalHUD.h"
 
 #include "BSc3bCharacter.h"
+#include "BSc3bController.h"
 #include "EOS_GameInstance.h"
 #include "KillFeedSlot.h"
 #include "Components/Button.h"
@@ -15,13 +16,13 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetTextLibrary.h"
 #include "ChatBox.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/VerticalBox.h"
+#include "Kismet/KismetInputLibrary.h"
 
 void UGlobalHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
-	SendMessageButton->OnClicked.AddDynamic(this, &UGlobalHUD::SendMessageButtonOnPressed);
-	SendMessageButton->IsFocusable = false;
 }
 
 void UGlobalHUD::AddToKilLFeed(const FString& HitPlayerName, const FString& ShootingPlayerName)
@@ -76,4 +77,17 @@ void UGlobalHUD::SendMessageToBox(FCustomChatMessage Message)
 void UGlobalHUD::ClearChatBox()
 {
 	MessageToSend->SetText(FText::GetEmpty());
+}
+
+FReply UGlobalHUD::NativeOnPreviewKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+	FKey Input = UKismetInputLibrary::GetKey(InKeyEvent);
+	if (UKismetInputLibrary::EqualEqual_KeyKey(Input, EKeys::Enter))
+	{
+		SendMessageButtonOnPressed();
+		UWidgetBlueprintLibrary::SetFocusToGameViewport();
+		ABSc3bCharacter* PawnRef = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
+		PawnRef->PlayerController->SetIgnoreLookInput(false);
+	}
+	return Super::NativeOnPreviewKeyDown(InGeometry, InKeyEvent);
 }
