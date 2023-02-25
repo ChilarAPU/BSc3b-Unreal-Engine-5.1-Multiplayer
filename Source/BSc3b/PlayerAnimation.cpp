@@ -27,6 +27,12 @@ void UPlayerAnimation::Shoot_Notify(bool bAiming)
 {
 	//Run all shooting logic ending with the bullet being spawned into the world with an impulse
 	OwningPlayer->ShootLogic(bAiming);
+	bShouldContinueShooting = false;
+}
+
+void UPlayerAnimation::EndOfShoot_Notify()
+{
+	bShouldContinueShooting = true;
 }
 
 void UPlayerAnimation::EndReload_Notify()

@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
+
 void UEOS_GameInstance::LoginWithEOS(FString ID, FString Token, FString LoginType)
 {
 	IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(this->GetWorld());
@@ -155,6 +156,77 @@ void UEOS_GameInstance::OnJoinSessionCompleted(FName SessionName, EOnJoinSession
 	}
 }
 
+void UEOS_GameInstance::OnReadFileComplete(bool bSuccess, const FString& FileName)
+{
+	if(bSuccess)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("File Read"));
+		IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(this->GetWorld());
+		if (SubsystemRef)
+		{
+			IOnlineTitleFilePtr TitleFileRef = SubsystemRef->GetTitleFileInterface();
+			if (TitleFileRef)
+			{
+				/*TArray<uint8> t;
+				/*uint8* s = nullptr;
+				FString e = TEXT("Testing");
+				StringToBytes(e, s, 50);
+				//Create string from byte array
+				
+				bool b = TitleFileRef->GetFileContents(FileName, t);
+				TitleFileRef
+				*/
+				/*
+				FString	OutString;
+				FString p = BytesToString(s, 64);
+				//FFileHelper::BufferToString(OutString, s.GetData(), s.Num());
+				UE_LOG(LogTemp, Warning, TEXT("%s"), *p);
+				*/
+				/*FString	OutString = BytesToString(t.GetData(), t.Num());
+				FString l;
+				for (int i = 0; i < OutString.Len(); i++)
+				{
+					const TCHAR c = OutString[i] - 1;
+					l.AppendChar(c);
+				}
+				UE_LOG(LogTemp, Warning, TEXT("%s"), *l);
+				*/
+				/*std::string l = "";
+				for (int i = 0; i < t.Num(); i++)
+				{
+					l += std::to_string(2);
+				}
+				*/
+				//FString y = l.c_str();
+				//UE_LOG(LogTemp, Warning, TEXT("%s"), *y);
+				/*if(b)
+				{
+					FPlatformTypeLayoutParameters p;
+					FMemoryToStringContext s;
+					t.ToString(p, s);
+					for (int a = 0; a < t.Num() - 1; a++)
+					{
+						//UE_LOG(LogTemp, Warning, TEXT("%s"), *t[a]);
+					}
+					FStringBuilderBase* q = s.String;
+					const wchar_t* z = q->ToString();
+					for (int i = 0; i < t.Num() - 1; i++)
+					{
+						//FPlatformTypeLayoutParameters p;
+						//FMemoryToStringContext s;
+						//t.ToString(p, s);
+						//FString j = BytesToString(k, 8);
+						//t.RemoveAt(i);
+						//UE_LOG(LogTemp, Warning, TEXT("%s"), *j);
+					}
+					UE_LOG(LogTemp, Warning, TEXT("File Recieved"));
+				}
+				*/
+			}
+		}
+	}
+}
+
 void UEOS_GameInstance::CreateEOSSession(bool bIsDedicated, bool bIsLanServer, int32 NumberOfPublicConnections)
 {
 	IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(this->GetWorld());
@@ -220,6 +292,34 @@ void UEOS_GameInstance::DestroySession()
 		}
 	}
 	
+}
+
+void UEOS_GameInstance::GetTitleStorageInterface()
+{
+	IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(this->GetWorld());
+	if (SubsystemRef)
+	{
+		IOnlineTitleFilePtr TitleFileRef = SubsystemRef->GetTitleFileInterface();
+		if (TitleFileRef)
+		{
+			FString FileName = TEXT("Server_Names");
+			bool bContainsFile = TitleFileRef->ReadFile(FileName);
+			TitleFileRef->OnReadFileCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnReadFileComplete);
+			if (bContainsFile)
+			{
+				/*TArray<uint8> t;
+				/*bool b = TitleFileRef->GetFileContents(FileName, t);
+				if (b)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("File Read"));
+				}
+				*/
+			} else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("File Name: %s Does Not Exist"), *FileName);
+			}
+		}
+	}
 }
 
 void UEOS_GameInstance::ReturnToMainMenu()

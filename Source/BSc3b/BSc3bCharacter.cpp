@@ -908,7 +908,7 @@ void ABSc3bCharacter::ToggleMagazineVisibility(bool Hide)
 	{
 		//unhide bone and destroy magazine actor
 		Weapon->UnHideBoneByName(TEXT("b_gun_mag"));
-		Weapon->MagActor->Destroy();
+		Weapon->DestroyMagActor();
 	}
 	
 }
@@ -917,7 +917,7 @@ void ABSc3bCharacter::UpdateMagazineTransform()
 {
 	//Wrapper function so it can be easily called through animation class
 	FTransform SocketT = GetMesh()->GetSocketTransform(TEXT("mag_socket"), RTS_World);
-	Weapon->UpdateMagTransform(SocketT);
+	//Weapon->UpdateMagTransform(SocketT);
 }
 
 void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming, float speed)

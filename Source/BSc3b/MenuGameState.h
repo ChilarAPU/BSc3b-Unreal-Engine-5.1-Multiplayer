@@ -22,7 +22,7 @@ public:
 	UFUNCTION()
 	void ChangeServerName();
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	UGlobalHUD* ClientOnlyWidget;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess))

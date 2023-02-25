@@ -52,6 +52,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bPlayerChangingAttachments;
 
+	UPROPERTY(BlueprintReadOnly)
+	bool bShouldContinueShooting;
+
 	////// SOUND VARIABLES USED IN NOTIFY EVENTS //////
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	USoundBase* WalkFootstep;
@@ -88,6 +91,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Shoot_Notify(bool bAiming);
+
+	UFUNCTION(BlueprintCallable)
+	void EndOfShoot_Notify();
 
 	UFUNCTION(BlueprintCallable)
 	void EndReload_Notify();

@@ -5,6 +5,15 @@
 #include "BSc3bCharacter.h"
 #include "Attachment.h"
 
+void UWeapon::SpawnAttachmentLogic(FName Socket, AAttachment*& ActorAttachment)
+{
+	//Spawn sight actor at the transform of the socket
+	FTransform SocketTransform = GetSocketTransform(Socket, RTS_World);
+	ActorAttachment = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
+	//Attach attachment to a socket on this weapon
+	ActorAttachment->AttachToWeapon(this, Socket);
+}
+
 UWeapon::UWeapon()
 {
 	//Default values to fill out the TMap in blueprint
@@ -23,41 +32,43 @@ UWeapon::UWeapon()
 
 void UWeapon::SetAttachmentMesh(AAttachment* Actor, EAttachmentKey Attachment, TEnumAsByte<EAttachmentKey>& CachedAttachment)
 {
-	if (IsValid(Actor))
+	if (!IsValid(Actor))
 	{
-		if (Actor->Attachment->GetStaticMesh() == Attachments.Find(Attachment)->Mesh)
-		{
-			//We have clicked the button for the same mesh so do nothing
-			return;
-		}
-		if (CachedAttachment)
-		{
-			if (CachedAttachment != Attachment)
-        		{
-        			//We have clicked a new button of the same attachment type e.g. long scope but have red dot equipped
-        			//we want to remove the stat changes from our previous attachment before replacing the mesh
-        			DamageStat -= Attachments.Find(CachedAttachment)->Damage;
-        			RangeStat -= Attachments.Find(CachedAttachment)->Range;
-        			StabilityStat -= Attachments.Find(CachedAttachment)->Stability;
-        			MobilityStat -= Attachments.Find(CachedAttachment)->Mobility;
-        		}	
-		}
+		return;
+	}
+	
+	if (Actor->GetStaticMesh() == Attachments.Find(Attachment)->Mesh)    //Is the incoming mesh already on the weapon
+	{
+		return;
+	}
+	if (CachedAttachment)   //Is there an attachment already on the gun in the socket
+	{
+		if (CachedAttachment != Attachment)  //Do not remove the statistics of our new attachment
+			{
+			//Remove the stat changes from our previous attachment before replacing the mesh
+			DamageStat -= Attachments.Find(CachedAttachment)->Damage;
+			RangeStat -= Attachments.Find(CachedAttachment)->Range;
+			StabilityStat -= Attachments.Find(CachedAttachment)->Stability;
+			MobilityStat -= Attachments.Find(CachedAttachment)->Mobility;
+			}	
+	}
 		
 
-		//replace mesh and calculate our new stats
-		Actor->Attachment->SetStaticMesh(Attachments.Find(Attachment)->Mesh);
-		DamageStat += Attachments.Find(Attachment)->Damage;
-		RangeStat += Attachments.Find(Attachment)->Range;
-		StabilityStat += Attachments.Find(Attachment)->Stability;
-		MobilityStat += Attachments.Find(Attachment)->Mobility;
-		//Cache our attachment so we can remove the stats on the next attachment change
-		CachedAttachment = Attachment;
-	}
+	//replace mesh and calculate our new stats
+	Actor->SetStaticMesh(Attachments.Find(Attachment)->Mesh);
+	
+	DamageStat += Attachments.Find(Attachment)->Damage;
+	RangeStat += Attachments.Find(Attachment)->Range;
+	StabilityStat += Attachments.Find(Attachment)->Stability;
+	MobilityStat += Attachments.Find(Attachment)->Mobility;
+	
+	//Cache our attachment so we can remove the stats on the next attachment change
+	CachedAttachment = Attachment;
 }
 
 void UWeapon::EquipAttachment(EAttachmentKey Attachment)
 {
-	// Set the static mesh of the correct type
+	// Set the static mesh inside of the correct socket
 	if (Attachments.Find(Attachment)->Type == Scope)
 	{
 		SetAttachmentMesh(ScopeActor, Attachment, CachedScopeKey);
@@ -73,6 +84,11 @@ void UWeapon::EquipAttachment(EAttachmentKey Attachment)
 	
 }
 
+void UWeapon::DestroyMagActor()
+{
+	MagActor->Destroy();
+}
+
 void UWeapon::SpawnMag(FName SocketName, FName SocketAttachName, ABSc3bCharacter* Player)
 {
 	//Spawns magazine actor at our associate left hand socket. Called by reload notify event
@@ -80,41 +96,19 @@ void UWeapon::SpawnMag(FName SocketName, FName SocketAttachName, ABSc3bCharacter
 	MagActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
 	if (IsValid(MagazineMesh))
 	{
-		MagActor->Attachment->SetStaticMesh(MagazineMesh);
+		//Set the mesh of the magazine and attach it to the passed through bone/socket
+		MagActor->SetStaticMesh(MagazineMesh);
 		const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::KeepRelative, true);
 		MagActor->AttachToActor(Player, Rules, SocketAttachName);
 	}
 	
 }
 
-void UWeapon::UpdateMagTransform(FTransform Transform)
-{
-	if (IsValid(MagActor))
-	{
-		MagActor->SetActorTransform(Transform);
-	}
-	
-}
-
 void UWeapon::SpawnAttachment()
 {
-	//Spawn sight actor
-	FTransform SocketT = GetSocketTransform(TEXT("SightSocket"), RTS_World);
-	ScopeActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
-	//Attach attachment to a socket on this weapon
-	ScopeActor->GetOwningWeapon(this, TEXT("SightSocket"));
-
-	//spawn muzzle actor
-	SocketT = GetSocketTransform(TEXT("MuzzleSocket"), RTS_World);
-	MuzzleActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
-	//Attach attachment to a socket on this weapon
-	MuzzleActor->GetOwningWeapon(this, TEXT("MuzzleSocket"));
-
-	//spawn grip actor
-	SocketT = GetSocketTransform(TEXT("GripSocket"), RTS_World);
-	GripActor = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketT.GetLocation(), SocketT.GetRotation().Rotator());
-	//Attach attachment to a socket on this weapon
-	GripActor->GetOwningWeapon(this, TEXT("GripSocket"));
+	SpawnAttachmentLogic(TEXT("SightSocket"), ScopeActor);
+	SpawnAttachmentLogic(TEXT("MuzzleSocket"), MuzzleActor);
+	SpawnAttachmentLogic(TEXT("GripSocket"), GripActor);
 }
 
 void UWeapon::BeginPlay()
@@ -130,9 +124,4 @@ void UWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponen
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
-}
-
-void UWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }

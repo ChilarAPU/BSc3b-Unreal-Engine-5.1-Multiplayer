@@ -11,6 +11,8 @@
  */
 
 class ABSc3bCharacter;
+class AAttachment;
+
 /* Holds all available attachments that can be placed on the weapon*/
 UENUM(BlueprintType)
 enum EAttachmentKey : int
@@ -26,7 +28,7 @@ enum EAttachmentKey : int
 	SilencerTwo = 8
 };
 
-/* Holds all available attachment types that are available on the weapon*/
+/* Holds all available sockets that an attachment can be attached to*/
 UENUM(BlueprintType)
 enum EAttachmentType : int
 {
@@ -35,6 +37,7 @@ enum EAttachmentType : int
 	Muzzle = 2
 };
 
+/* Holds all available information for a single attachment that gets set inside of the component*/
 USTRUCT(BlueprintType)
 struct FAttachmentMesh
 {
@@ -83,7 +86,6 @@ public:
 	float Mobility;
 };
 
-class AAttachment;
 
 UCLASS()
 class BSC3B_API UWeapon : public USkeletalMeshComponent
@@ -95,13 +97,13 @@ class BSC3B_API UWeapon : public USkeletalMeshComponent
 	TSubclassOf<AAttachment> AttachmentActor;
 
 	/* All attachment types associated actors which are always spawned with the weapon */
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	AAttachment* ScopeActor;
 
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	AAttachment* MuzzleActor;
 
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	AAttachment* GripActor;
 
 	/* Mesh for our magazine that replaces original one on weapon during reload animation */
@@ -130,6 +132,11 @@ class BSC3B_API UWeapon : public USkeletalMeshComponent
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attachments, meta = (AllowPrivateAccess))
 	TMap<TEnumAsByte<EAttachmentKey>, FAttachmentMesh> Attachments;
 
+	UPROPERTY()
+	AAttachment* MagActor;
+
+	UFUNCTION()
+	void SpawnAttachmentLogic(FName Socket, AAttachment*& ActorAttachment);
 
 public:
 	UWeapon();
@@ -153,16 +160,12 @@ public:
 	UFUNCTION()
 	void EquipAttachment(EAttachmentKey Attachment);
 
-	UPROPERTY()
-	AAttachment* MagActor;
+	UFUNCTION()
+	void DestroyMagActor();
 
 	/* Spawn our magazine mesh at the players left hand. Called by reload notify event*/
 	UFUNCTION()
 	void SpawnMag(FName SocketName, FName SocketAttachName, ABSc3bCharacter* Player);
-
-	/* Updates our magazine transform. NOTE: SHOULD BE DEPRECATE WHEN ATTACH TO SOCKET IS IMPLEMENTED*/
-	UFUNCTION()
-	void UpdateMagTransform(FTransform Transform);
 
 	/* Spawns the attachment type actors into the world for local client only as opposed to where the actors
 	 * are spawned in the server through the player*/
@@ -172,7 +175,5 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
 };

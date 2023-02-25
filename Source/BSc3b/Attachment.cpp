@@ -16,10 +16,21 @@ AAttachment::AAttachment()
 	
 	Attachment = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon New"));
 	Attachment->SetupAttachment(GetRootComponent());
+	//Actor does not need any collision as its location is never directly changed from its owner
 	Attachment->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
-void AAttachment::GetOwningWeapon(UWeapon* Weapon, FName Socket)
+UStaticMesh* AAttachment::GetStaticMesh()
+{
+	return Attachment->GetStaticMesh();
+}
+
+void AAttachment::SetStaticMesh(UStaticMesh* Mesh)
+{
+	Attachment->SetStaticMesh(Mesh);
+}
+
+void AAttachment::AttachToWeapon(UWeapon* Weapon, FName Socket)
 {
 	//Attach this actor to a socket on the owning weapon
 	const FAttachmentTransformRules Rules = FAttachmentTransformRules(EAttachmentRule::KeepRelative, true);
