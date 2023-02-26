@@ -2,7 +2,7 @@
 
 
 #include "Weapon.h"
-#include "BSc3bCharacter.h"
+#include "../Player/BSc3bCharacter.h"
 #include "Attachment.h"
 
 UWeapon::UWeapon()

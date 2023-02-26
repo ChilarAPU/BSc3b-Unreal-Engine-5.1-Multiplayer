@@ -127,10 +127,11 @@ void UEOS_GameInstance::OnFindSessionCompleted(bool bWasSuccess)
 	//Join the first available session
 	if (SessionSearch->SearchResults.Num()>0)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *SessionSearch->SearchResults[0].Session.OwningUserName);
 		SessionPtrRef->ClearOnJoinSessionCompleteDelegates(this);  //Not sure if this is needed
 		SessionPtrRef->OnJoinSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnJoinSessionCompleted);
 		//Join first session inside the session interface inside the EOS, does not effect client program
-		SessionPtrRef->JoinSession(0, FName("Main Session"), SessionSearch->SearchResults[0]);
+		SessionPtrRef->JoinSession(0, NAME_GameSession, SessionSearch->SearchResults[0]);
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *SessionSearch->SearchResults[0].GetSessionIdStr());
 		return;
 	}
@@ -161,7 +162,7 @@ void UEOS_GameInstance::OnJoinSessionCompleted(FName SessionName, EOnJoinSession
 	{
 		return;
 	}
-	SessionPtrRef->GetResolvedConnectString(FName("Main Session"), JoinAddress); //Get the address of the server
+	SessionPtrRef->GetResolvedConnectString(NAME_GameSession, JoinAddress); //Get the address of the server
 	UE_LOG(LogTemp, Warning, TEXT("Join Address: %s"), *JoinAddress);  //Debug purposes
 	if (!JoinAddress.IsEmpty())  //Make sure we are not trying to join an empty server, would result in a crash
 	{
@@ -269,7 +270,8 @@ void UEOS_GameInstance::CreateEOSSession(bool bIsDedicated, bool bIsLanServer, i
 	//Join session and map for the user once server has been created
 	SessionPtrRef->OnCreateSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnCreateSessionCompleted);
 	//create session on the server
-	SessionPtrRef->CreateSession(0, FName("Main Session"), SessionCreationInfo);
+	//NAME_GameSession
+	SessionPtrRef->CreateSession(0, NAME_GameSession, SessionCreationInfo);
 	//SessionPtrRef->StartSession(FName("Main Session"));
 }
 
@@ -310,7 +312,7 @@ void UEOS_GameInstance::DestroySession()
 		return;
 	}
 	SessionPtrRef->OnDestroySessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnDestroySessionCompleted);
-	SessionPtrRef->DestroySession(FName("Main Session"));
+	SessionPtrRef->DestroySession(NAME_GameSession);
 	UE_LOG(LogTemp, Warning, TEXT("Session Destroyed 3"));
 }
 

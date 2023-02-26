@@ -69,7 +69,7 @@ public:
 	/* Return a search of current available session to a max of 20 results*/
 	UFUNCTION(BlueprintCallable, Category = "EOS Functions")
 	void FindSessionAndJoin();
-
+	
 	/* Called by EOS delegate to destroy the session. Currently bugged and does not work correctly*/
 	UFUNCTION(BlueprintCallable, Category = "EOS Functions")
 	void DestroySession();

@@ -2,11 +2,11 @@
 
 
 #include "PlayerHUD.h"
-#include "BSc3bCharacter.h"
+#include "../Player/BSc3bCharacter.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Blueprint/WidgetTree.h"
 //Include weapons header file so we can access the enums
-#include "Weapon.h"
+#include "../Weapon/Weapon.h"
 //Widget Component includes
 #include "Components/Button.h"
 #include "Components/Image.h"

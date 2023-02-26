@@ -3,9 +3,9 @@
 
 #include "GlobalHUD.h"
 
-#include "BSc3bCharacter.h"
-#include "BSc3bController.h"
-#include "EOS_GameInstance.h"
+#include "../Player/BSc3bCharacter.h"
+#include "../Player/BSc3bController.h"
+#include "../EOS_GameInstance.h"
 #include "KillFeedSlot.h"
 #include "Components/MultiLineEditableTextBox.h"
 #include "Components/TextBlock.h"

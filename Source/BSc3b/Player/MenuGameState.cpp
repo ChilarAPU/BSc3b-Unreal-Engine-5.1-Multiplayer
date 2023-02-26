@@ -2,7 +2,7 @@
 
 
 #include "MenuGameState.h"
-#include "GlobalHUD.h"
+#include "../UI/GlobalHUD.h"
 
 UGlobalHUD* AMenuGameState::GetGlobalWidget()
 {

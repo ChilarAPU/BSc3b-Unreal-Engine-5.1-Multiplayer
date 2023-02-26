@@ -6,8 +6,8 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "NiagaraComponent.h"
-#include "Bullet.h"
-#include "ChatBox.h"
+#include "../Weapon/Bullet.h"
+#include "../UI/ChatBox.h"
 #include "BSc3bCharacter.generated.h"
 
 //Forward Declarations

@@ -3,8 +3,8 @@
 
 #include "Bullet.h"
 
-#include "BSc3bCharacter.h"
-#include "BSc3bController.h"
+#include "../Player/BSc3bCharacter.h"
+#include "../Player/BSc3bController.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values
