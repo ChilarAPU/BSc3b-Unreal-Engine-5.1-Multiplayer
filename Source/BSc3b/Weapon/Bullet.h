@@ -55,6 +55,12 @@ class BSC3B_API ABullet : public AActor
 
 	UPROPERTY()
 	int ShouldWeCheckCollision;
+
+	/* Adjusts the values inside the player state once a player has been killed. Called here as it is the once place
+	 * we have easy access to both relevant players
+	 */
+	UFUNCTION()
+	void AdjustPlayerStateValues(ABSc3bCharacter* HitPlayer, ABSc3bCharacter* OwnerOfBullet);
 	
 public:	
 	// Sets default values for this actor's properties

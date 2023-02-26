@@ -5,6 +5,7 @@
 
 #include "../Player/BSc3bCharacter.h"
 #include "../Player/BSc3bController.h"
+#include "BSc3b/Player/PlayerStatistics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values
@@ -85,6 +86,11 @@ void ABullet::CustomCollision()
 			{
 				//pass through hit bone to adjust damage based on the bone hit
 				HitPlayer->Server_Health(HitBone, HitPlayer->GetPlayerOnlineName(), Player->GetPlayerOnlineName());
+				//Scoreboard relates changes here. Done here as we need access to both the owner and the player being killed
+				if (HitPlayer->Health <= 0)
+				{
+					AdjustPlayerStateValues(HitPlayer, Player);
+				}
 				//Play client specific functionality from getting hit
 				HitPlayer->Client_PlayHit();
 				//Add the hit actor to our ignore hit so we cannot hit the same player twice
@@ -104,6 +110,18 @@ void ABullet::CustomCollision()
 			OutHit.Location, OutHit.Normal.Rotation(), EAttachLocation::KeepWorldPosition, 10); */
 	}
 	
+}
+
+void ABullet::AdjustPlayerStateValues(ABSc3bCharacter* HitPlayer, ABSc3bCharacter* OwnerOfBullet)
+{
+	//Get a reference to both relevant player state classes
+	APlayerStatistics* HitPlayerStatistics = Cast<APlayerStatistics>(HitPlayer->GetPlayerState());
+	APlayerStatistics* OwnerPlayerStatistics = Cast<APlayerStatistics>(OwnerOfBullet->GetPlayerState());
+	if (HitPlayerStatistics && OwnerPlayerStatistics)
+	{
+		HitPlayerStatistics->AddDeathToScore(1);
+		OwnerPlayerStatistics->AddKillToScore(1);
+	}
 }
 
 // Called when the game starts or when spawned
