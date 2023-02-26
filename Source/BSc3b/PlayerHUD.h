@@ -14,7 +14,6 @@ class UButton;
 class UTextBlock;
 class UProgressBar;
 class UImage;
-
 class ABSc3bCharacter;
 
 UCLASS()
@@ -24,7 +23,7 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 
 	virtual void NativeConstruct() override;
 
-	////// UMG BUTTON DELEGATE FUNCTIONS //////
+	////// UMG BUTTON ATTACHMENT DELEGATE FUNCTIONS //////
 	UFUNCTION()
 	void OnScopeClicked();
 
@@ -49,6 +48,7 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 	UFUNCTION()
 	void OnSlantedGripClicked();
 
+	/* Call player Server_Respawn*/
 	UFUNCTION()
 	void OnRespawnClicked();
 
@@ -71,11 +71,16 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UProgressBar* PlayerHealth;
 
+	////// UMG WIDGETS BOUND TO BLUEPRINT VALUES //////
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
+	FString AmmoCount;
+
 public:
 
 	////// UMG WIDGETS BOUND TO BLUEPRINT VALUES //////
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString AmmoCount;
+	
+	UFUNCTION()
+	void SetAmmoCount(FString Amount);
 
 	////// ATTACHMENT BUTTONS BOUND TO BLUEPRINT VALUES //////
 	///////// SCOPE //////
@@ -106,7 +111,7 @@ public:
 	UButton* SlantedGripButton;
 	
 	////// END OF ATTACHMENT BUTTONS //////
-
+	
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* RespawnButton;
 
@@ -124,12 +129,6 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UImage* HitMarker;
-
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* KillFeed;
-
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
-	UTextBlock* MessageTextBox;
 	
 	/* Divide our statistic values so they work in the 0 - 1 value range which is required for
 	 * progress bars to function correctly
@@ -137,19 +136,22 @@ public:
 	UFUNCTION()
 	void AdjustStatPercentage(UProgressBar* Bar, float value);
 
-	/* Adjust the visibility of everything relates to attachments in the widget */
+	/* Adjust the visibility of everything relating to attachments in the widget */
 	UFUNCTION()
 	void SetButtonVisibility(bool bVisible);
-
+	
 	UFUNCTION()
 	void ShowHitmarker();
 
+	/* Gradually lower the opacity of the hitmarker through Timer delegate */
 	UFUNCTION()
 	void HideHitmarker();
 
+	/* Divide incoming health values to work inside the bar */
 	UFUNCTION()
 	void AdjustPlayerHealthBar(float Value);
 
+	/* TimerHandler for the hitmarker. Could not pass it through as a reference parameter so it is now here */
 	UPROPERTY()
 	FTimerHandle VisibilityHandler;
 };

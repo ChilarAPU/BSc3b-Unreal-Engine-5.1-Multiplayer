@@ -15,18 +15,19 @@ class BSC3B_API AMenuPawn : public APawn
 {
 	GENERATED_BODY()
 
-public:
-	// Sets default values for this pawn's properties
-	AMenuPawn();
-
+	/* Use a camera so we can have a 3D Main menu background */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 	UCameraComponent* Camera;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 	TSubclassOf<UUserWidget> MainMenuWidget;
 
 	UPROPERTY()
 	UUserWidget* MainMenu;
+	
+public:
+	// Sets default values for this pawn's properties
+	AMenuPawn();
 
 protected:
 	// Called when the game starts or when spawned

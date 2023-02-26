@@ -2,7 +2,6 @@
 
 #include "BSc3bCharacter.h"
 
-#include "Attachment.h"
 #include "BSc3bController.h"
 #include "Custom_GameUserSettings.h"
 #include "Camera/CameraComponent.h"
@@ -14,17 +13,10 @@
 #include "EnhancedInputSubsystems.h"
 #include "EOS_GameInstance.h"
 #include "GlobalHUD.h"
-#include "InGameMenu.h"
 #include "MenuGameState.h"
-#include "PlayerAnimation.h"
 #include "PlayerHUD.h"
 #include "Weapon.h"
-#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/AudioComponent.h"
-#include "Components/MultiLineEditableTextBox.h"
-#include "Components/TextBlock.h"
-#include "Components/UniformGridPanel.h"
-#include "Components/UniformGridSlot.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -128,8 +120,7 @@ void ABSc3bCharacter::BeginPlay()
 		//Hide the head bone of our mesh
 		Client_CustomBeginPlay();
 		
-		//Setting this here forces clients input to switch to the game on launch
-		//not sure if this is a good feature or not
+		//This resets the input mode upon re-spawn while also automatically taking input from the player upon game launch 
 		PlayerController->SetShowMouseCursor(false);
 		PlayerController->SetIgnoreLookInput(false);
 		const FInputModeGameOnly Input;
@@ -137,19 +128,14 @@ void ABSc3bCharacter::BeginPlay()
 		
 	}
 
-	//Might need this so the bullet can access players EOS display name
+	// Set the replicated OwnName variable as the EpicID so other classes can access it
 	GameInstanceRef = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	//KilLFeed test values
 	if (HasAuthority())
 	{
-		//GameInstanceRef->PlayerName = TEXT("Server");
-		//OwnName = TEXT("Server");
-		OwnName = GameInstanceRef->PlayerName;
+		OwnName = GameInstanceRef->GetPlayerEpicID();
 	} else
 	{
-		//GameInstanceRef->PlayerName = TEXT("Client");
-		//Server_SetPlayerName(TEXT("Client"));
-		Server_SetPlayerName(GameInstanceRef->PlayerName);
+		Server_SetPlayerName(GameInstanceRef->GetPlayerEpicID());
 	}
 	
 }
@@ -184,15 +170,15 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 		return;
 	}
 	//Again, would like to move this into a function that is only run when needed
-	if (IsValid(PlayerController->PlayerHUD))
+	if (IsValid(PlayerController->GetPlayerHUD()))
 	{
-		PlayerController->PlayerHUD->AdjustPlayerHealthBar(Health);
-		PlayerController->PlayerHUD->AmmoCount = FString::SanitizeFloat(Ammo, 0);
+		PlayerController->GetPlayerHUD()->AdjustPlayerHealthBar(Health);
+		PlayerController->GetPlayerHUD()->SetAmmoCount(FString::SanitizeFloat(Ammo, 0));
 		//Call this function so we dont have to include the progress bar file
-		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->DamageStatBar, Weapon->DamageStat);
-		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->RangeStatBar, Weapon->RangeStat);
-		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->MobilityStatBar, Weapon->MobilityStat);
-		PlayerController->PlayerHUD->AdjustStatPercentage(PlayerController->PlayerHUD->StabilityStatBar, Weapon->StabilityStat);
+		PlayerController->GetPlayerHUD()->AdjustStatPercentage(PlayerController->GetPlayerHUD()->DamageStatBar, Weapon->DamageStat);
+		PlayerController->GetPlayerHUD()->AdjustStatPercentage(PlayerController->GetPlayerHUD()->RangeStatBar, Weapon->RangeStat);
+		PlayerController->GetPlayerHUD()->AdjustStatPercentage(PlayerController->GetPlayerHUD()->MobilityStatBar, Weapon->MobilityStat);
+		PlayerController->GetPlayerHUD()->AdjustStatPercentage(PlayerController->GetPlayerHUD()->StabilityStatBar, Weapon->StabilityStat);
 	}
 	DeltaTime = DeltaSeconds;
 }
@@ -251,14 +237,14 @@ void ABSc3bCharacter::Server_Shoot_Implementation(FVector Location, FRotator Rot
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnBullet(Location, Rotation, Direction);
-	//Play sound based on if we have ammo
+	//Play different sound based on whether we have ammo or not.
 	if (Ammo > 0)
 	{
-		Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);	
+		Multi_PlayFootstep(Location, PlayerController->GetGunshotSound(), PlayerController->GetGunshotAttenuation());	
 	}
 	else
 	{
-		Multi_PlayFootstep(Location, PlayerController->EmptyGunshot, PlayerController->GunshotAttenuation);	
+		Multi_PlayFootstep(Location, PlayerController->GetEmptyGunshotSound(), PlayerController->GetGunshotAttenuation());	
 	}
 }
 
@@ -335,16 +321,15 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone, const FString& Hi
 			Health = 0;
 			UE_LOG(LogTemp, Warning, TEXT("HeadShot"));
 		}
-		//Players health as reduced enough to be considered dead
-		if (Health <= 0)
+		//Players health has reduced enough to be considered dead
+		if (Health <= 0 && !bIsDead)  //Check that we not already dead
 		{
 			bIsDead = true;
-			Client_Respawn();
-			//Add in a value to our killfeed
+			Client_Respawn();  //Spawn respawn button
+			//Add in a value to our killfeed to all clients
 			UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 			if (GI)
 			{
-				//Multicast_AddToKillFeed(GI->PlayerName);
 				Multicast_AddToKillFeed(HitPlayerName, ShootingPlayerName);
 			}
 			
@@ -356,9 +341,9 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone, const FString& Hi
 void ABSc3bCharacter::Multicast_AddToKillFeed_Implementation(const FString& HitPlayerName, const FString& ShootingPlayerName)
 {
 	AMenuGameState* GS = Cast<AMenuGameState>(UGameplayStatics::GetGameState(GetWorld()));
-	if (GS->ClientOnlyWidget)
+	if (GS->GetGlobalWidget())
 	{
-		GS->ClientOnlyWidget->AddToKilLFeed(HitPlayerName, ShootingPlayerName);
+		GS->GetGlobalWidget()->AddToKilLFeed(HitPlayerName, ShootingPlayerName);
 	}
 	
 	
@@ -381,10 +366,10 @@ void ABSc3bCharacter::Client_FlipLaserVisibility_Implementation(bool Visible)
 		LaserImpact->SetVisibility(Visible);
 		if (Visible)
 		{
-			UGameplayStatics::PlaySound2D(GetWorld(), PlayerController->LaserSightOff);
+			UGameplayStatics::PlaySound2D(GetWorld(), PlayerController->GetLaserSightOffSound());
 		} else
 		{
-			UGameplayStatics::PlaySound2D(GetWorld(), PlayerController->LaserSightOn);
+			UGameplayStatics::PlaySound2D(GetWorld(), PlayerController->GetLaserSightOnSound());
 		}
 	}
 	
@@ -401,8 +386,7 @@ void ABSc3bCharacter::Server_Respawn_Implementation()
 	GetController()->Possess(NewPlayer);
 	//delete old actor once we have possessed the new one
 	K2_DestroyActor();
-	//NewPlayer->Client_Respawn();
-	//Hides our head for the server as for some reason, BeginPlay does not work
+	//Hides our head for the server as BeginPlay does not work for server
 	NewPlayer->Client_CustomBeginPlay();
 }
 
@@ -423,10 +407,6 @@ void ABSc3bCharacter::Client_CustomBeginPlay_Implementation()
 		FName Head = TEXT("head");
 		GetMesh()->HideBoneByName(Head, PBO_None);
 		PlayerController = Cast<ABSc3bController>(Controller);
-		if (IsValid(PlayerController))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("BEGIN PLAY"));
-		}
 	}
 }
 
@@ -459,7 +439,7 @@ void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation, FVector D
 		return;
 	}
 	//Spawn in bullet actor and pass through this as the owner
-	AActor* T = GetWorld()->SpawnActor<AActor>(PlayerController->SpawnObject, Location, Rotation);
+	AActor* T = GetWorld()->SpawnActor<AActor>(PlayerController->GetBulletClass(), Location, Rotation);
 	T->SetInstigator(this);
 	//Add impulse to our bullet. Call this here as we need a reference to the weapon components right vector
 	if (ABullet* Bullet = Cast<ABullet>(T))
@@ -470,24 +450,18 @@ void ABSc3bCharacter::SpawnBullet(FVector Location, FRotator Rotation, FVector D
 	Ammo --;
 	
 	//adjust this as it is run on server, do not want this
-	if (IsValid(PlayerController->PlayerHUD))
+	if (IsValid(PlayerController->GetPlayerHUD()))
 	{
-		PlayerController->PlayerHUD->AmmoCount = FString::FromInt(Ammo);	
+		PlayerController->GetPlayerHUD()->SetAmmoCount(FString::FromInt(Ammo));	
 	}
 
-}
-
-void ABSc3bCharacter::Server_Spawn_Implementation()
-{
-	//Spawn our attachment actors on our weapon in begin play
-	Weapon->SpawnAttachment();
 }
 
 void ABSc3bCharacter::Client_PlayHit_Implementation()
 {
 	if (IsLocallyControlled())
 	{
-		UGameplayStatics::PlaySound2D(GetWorld(), PlayerController->PlayerHit);
+		UGameplayStatics::PlaySound2D(GetWorld(), PlayerController->GetPlayerHitSound());
 	}
 }
 
@@ -496,16 +470,22 @@ void ABSc3bCharacter::Server_PlaySpawnMessage_Implementation(const FString& Play
 	Multicast_PlaySpawnMessage(PlayerName);
 }
 
+FString ABSc3bCharacter::GetPlayerOnlineName()
+{
+	return OwnName;
+}
+
 void ABSc3bCharacter::Multicast_PlaySpawnMessage_Implementation(const FString& PlayerName)
 {
 	AMenuGameState* GS = Cast<AMenuGameState>(UGameplayStatics::GetGameState(GetWorld()));
-	if (GS->ClientOnlyWidget)
+	if (GS->GetGlobalWidget())
 	{
 		TArray<FStringFormatArg> args;
 		args.Add(FStringFormatArg(PlayerName));
 		FString s = FString::Format(TEXT("{0} Has Spawned in"), args);
-		GS->ClientOnlyWidget->MessageTextBox->SetText(FText::FromString(s));
-		GS->ClientOnlyWidget->MessageTextBox->SetVisibility(ESlateVisibility::Visible);	
+		
+		GS->GetGlobalWidget()->SetConnectMessage(FText::FromString(s));
+		GS->GetGlobalWidget()->SetConnectMessageVisibility(true);
 	}
 	
 }
@@ -525,11 +505,11 @@ void ABSc3bCharacter::Multicast_ReceiveMessage_Implementation(FCustomChatMessage
 	AMenuGameState* GameStateRef = Cast<AMenuGameState>(UGameplayStatics::GetGameState(GetWorld()));
 	if (GameStateRef)
 	{
-		GameStateRef->ClientOnlyWidget->SendMessageToBox(IncomingMessage);
+		GameStateRef->GetGlobalWidget()->SendMessageToBox(IncomingMessage);
 	}
 }
 
-	void ABSc3bCharacter::Move(const FInputActionValue& Value)
+void ABSc3bCharacter::Move(const FInputActionValue& Value)
 {
 	// Replicate our move axis vector to be used in player state machine
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -566,6 +546,10 @@ void ABSc3bCharacter::Multicast_ReceiveMessage_Implementation(FCustomChatMessage
 			return;
 		}
 
+		/*Below is slowing our movement speed down if we move in a different direction other than forwards while holding
+		 *down the sprint button. 
+		 **/
+
 		//Are we moving forwards?
 		if (MovementVector.Y > 0)
 		{
@@ -595,8 +579,8 @@ void ABSc3bCharacter::Look(const FInputActionValue& Value)
 	if (Controller != nullptr)
 	{
 		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X * PlayerController->UserSettings->GetPlayerSensitivity());
-		AddControllerPitchInput(LookAxisVector.Y * PlayerController->UserSettings->GetPlayerSensitivity());
+		AddControllerYawInput(LookAxisVector.X * PlayerController->GetConfigUserSettings()->GetPlayerSensitivity());
+		AddControllerPitchInput(LookAxisVector.Y * PlayerController->GetConfigUserSettings()->GetPlayerSensitivity());
 	}
 }
 
@@ -643,7 +627,7 @@ void ABSc3bCharacter::ShootComplete(const FInputActionValue& Value)
 			Server_PlayerShooting(Value.Get<bool>());
 		}
 	} 
-	//Code specific to release input which flips the visibility of our laser sight depending on whether we are aiming
+	//Code specific to release input which flips the visibility of our laser sight depending on whether we are aiming.
 	//without this, Laser sight would have the wrong visibility if the player let go of the
 	//aiming input while still shooting
 	if (bIsPlayerAiming && !LaserSight->IsVisible())
@@ -671,9 +655,12 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 	{
 		return;
 	}
-	//If we have pressed the aim button while sprinting but not released if, run this
+	//If we have pressed the aim button while sprinting but not released it, run this
 	if (bAimingWhileSprinting)
 	{
+		/* If we do not check this, movement speed will be wrong once the player stops holding down the sprint button
+		 * until they eventually sprint again
+		 */
 		bAimingWhileSprinting = false;
 		return;
 	}
@@ -718,20 +705,25 @@ void ABSc3bCharacter::SpawnClothSound(float Duration)
 	{
 		return;
 	}
-	if (IsValid(PlayerController->ClothSound))
+	if (IsValid(PlayerController->GetClothSound()))
 	{
 		//get random float
 		float StartTime = UKismetMathLibrary::RandomFloatInRange(0, 26);
 		float Pitch = UKismetMathLibrary::RandomFloatInRange(1, 4);
 		//play sound at random position
-		UAudioComponent* Sound = UGameplayStatics::SpawnSoundAttached(PlayerController->ClothSound, GetMesh(), NAME_None, FVector::Zero(), FRotator::ZeroRotator,
+		UAudioComponent* Sound = UGameplayStatics::SpawnSoundAttached(PlayerController->GetClothSound(), GetMesh(), NAME_None, FVector::Zero(), FRotator::ZeroRotator,
 			EAttachLocation::KeepRelativeOffset, false, 1, Pitch, StartTime);
 		//stop sound after 1 second
 		Sound->StopDelayed(Duration);
 	}
 }
 
-void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
+ABSc3bController* ABSc3bCharacter::GetActivePlayerController()
+{
+	return PlayerController;
+}
+
+	void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 {
 	//If player is aiming or shooting, do not allow the player to start sprinting
 	if (bIsPlayerAiming  || bWasAimingCanceled || bIsShooting)
@@ -798,7 +790,7 @@ void ABSc3bCharacter::OpenAttachments(const FInputActionValue& Value)
 	//Set value to stop certain mouse inputs
 	bIsChangingAttachments = Value.Get<bool>();
 	//Flip our attachment buttons visiblity
-	PlayerController->PlayerHUD->SetButtonVisibility(Value.Get<bool>());
+	PlayerController->GetPlayerHUD()->SetButtonVisibility(Value.Get<bool>());
 	
 	//Set our input mode so we can interact with our widget with one click
 	if (Value.Get<bool>())
@@ -816,26 +808,13 @@ void ABSc3bCharacter::OpenAttachments(const FInputActionValue& Value)
 
 void ABSc3bCharacter::OpenInGameMenu(const FInputActionValue& Value)
 {
-	if (!IsValid(PlayerController->InGameMenuClass))
-	{
-		return;
-	}
 	if (!IsMenuOpen)
 	{
-		PlayerController->SetShowMouseCursor(true);
-		PlayerController->SetIgnoreLookInput(true);
-		PlayerController->InGameMenuWidget = CreateWidget<UInGameMenu>(GetWorld(), PlayerController->InGameMenuClass);
-        PlayerController->InGameMenuWidget->AddToViewport();
-		const FInputModeGameAndUI Input;
-		PlayerController->SetInputMode(Input);
+		PlayerController->SpawnInGameMenu();
 		IsMenuOpen = true;
 	} else
 	{
-		PlayerController->SetShowMouseCursor(false);
-		PlayerController->SetIgnoreLookInput(false);
-		PlayerController->InGameMenuWidget->RemoveFromParent();
-		const FInputModeGameOnly Input;
-		PlayerController->SetInputMode(Input);
+		PlayerController->RemoveInGameMenu();
 		IsMenuOpen = false;
 	}
 	
@@ -881,11 +860,11 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 			//Play sound based on if we have ammo
 			if (Ammo > 0)
 			{
-				Multi_PlayFootstep(Location, PlayerController->Gunshot, PlayerController->GunshotAttenuation);	
+				Multi_PlayFootstep(Location, PlayerController->GetGunshotSound(), PlayerController->GetGunshotAttenuation());	
 			}
 			else
 			{
-				Multi_PlayFootstep(Location, PlayerController->EmptyGunshot, PlayerController->GunshotAttenuation);	
+				Multi_PlayFootstep(Location, PlayerController->GetEmptyGunshotSound(), PlayerController->GetGunshotAttenuation());	
 			}
 			
 		}else
@@ -898,12 +877,12 @@ void ABSc3bCharacter::ShootLogic(bool bAimingIn)
 
 void ABSc3bCharacter::EnterChatBox(const FInputActionValue& Value)
 {
-	//Focus the chat text box to allow the player to easily start typing
+	//Focus the chat text box to allow the player to instantly start typing
 	AMenuGameState* GameStateRef = Cast<AMenuGameState>(UGameplayStatics::GetGameState(GetWorld()));
-	if (GameStateRef->ClientOnlyWidget)
+	if (GameStateRef->GetGlobalWidget())
 	{
 		PlayerController->SetIgnoreLookInput(true);
-		GameStateRef->ClientOnlyWidget->MessageToSend->SetUserFocus(PlayerController);
+		GameStateRef->GetGlobalWidget()->SetFocusToTextBox(PlayerController);
 	}
 }
 
@@ -940,13 +919,6 @@ void ABSc3bCharacter::ToggleMagazineVisibility(bool Hide)
 		Weapon->DestroyMagActor();
 	}
 	
-}
-
-void ABSc3bCharacter::UpdateMagazineTransform()
-{
-	//Wrapper function so it can be easily called through animation class
-	FTransform SocketT = GetMesh()->GetSocketTransform(TEXT("mag_socket"), RTS_World);
-	//Weapon->UpdateMagTransform(SocketT);
 }
 
 void ABSc3bCharacter::Server_PlayerAiming_Implementation(bool bIsAiming, float speed)

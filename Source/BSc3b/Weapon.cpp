@@ -5,15 +5,6 @@
 #include "BSc3bCharacter.h"
 #include "Attachment.h"
 
-void UWeapon::SpawnAttachmentLogic(FName Socket, AAttachment*& ActorAttachment)
-{
-	//Spawn sight actor at the transform of the socket
-	FTransform SocketTransform = GetSocketTransform(Socket, RTS_World);
-	ActorAttachment = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
-	//Attach attachment to a socket on this weapon
-	ActorAttachment->AttachToWeapon(this, Socket);
-}
-
 UWeapon::UWeapon()
 {
 	//Default values to fill out the TMap in blueprint
@@ -28,6 +19,15 @@ UWeapon::UWeapon()
 	StabilityStat = 4.3;
 	MobilityStat = 4;
 
+}
+
+void UWeapon::SpawnAttachmentLogic(FName Socket, AAttachment*& ActorAttachment)
+{
+	//Spawn sight actor at the transform of the socket
+	FTransform SocketTransform = GetSocketTransform(Socket, RTS_World);
+	ActorAttachment = GetWorld()->SpawnActor<AAttachment>(AttachmentActor, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
+	//Attach attachment to a socket on this weapon
+	ActorAttachment->AttachToWeapon(this, Socket);
 }
 
 void UWeapon::SetAttachmentMesh(AAttachment* Actor, EAttachmentKey Attachment, TEnumAsByte<EAttachmentKey>& CachedAttachment)
@@ -106,6 +106,7 @@ void UWeapon::SpawnMag(FName SocketName, FName SocketAttachName, ABSc3bCharacter
 
 void UWeapon::SpawnAttachment()
 {
+	//Spawn actors for all available sockets
 	SpawnAttachmentLogic(TEXT("SightSocket"), ScopeActor);
 	SpawnAttachmentLogic(TEXT("MuzzleSocket"), MuzzleActor);
 	SpawnAttachmentLogic(TEXT("GripSocket"), GripActor);

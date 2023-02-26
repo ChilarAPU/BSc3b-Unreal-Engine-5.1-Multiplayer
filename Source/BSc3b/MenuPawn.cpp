@@ -13,7 +13,7 @@ AMenuPawn::AMenuPawn()
 	PrimaryActorTick.bCanEverTick = true;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(GetRootComponent());
+	Camera->SetupAttachment(GetRootComponent());  //technically is no root component so Camera becomes it
 
 }
 
@@ -21,23 +21,25 @@ AMenuPawn::AMenuPawn()
 void AMenuPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	if (!IsLocallyControlled())
+	if (!IsLocallyControlled()) //not really needed as main menu only ever has one client
 	{
 		return;
 	}
-	if (MainMenuWidget)
+	if (!MainMenuWidget)
 	{
-		MainMenu = CreateWidget<UUserWidget>(GetWorld(), MainMenuWidget);
-		MainMenu->AddToViewport();
-		APlayerController* CastController = Cast<APlayerController>(GetController());
-		if (!Controller)
-		{
-			return;
-		}
-		CastController->SetShowMouseCursor(true);
-		const FInputModeUIOnly Input;
-		CastController->SetInputMode(Input);
+		return;
 	}
+	MainMenu = CreateWidget<UUserWidget>(GetWorld(), MainMenuWidget);
+	MainMenu->AddToViewport();
+		
+	APlayerController* CastController = Cast<APlayerController>(GetController());
+	if (!Controller)
+	{
+		return;
+	}
+	CastController->SetShowMouseCursor(true);
+	const FInputModeUIOnly Input;
+	CastController->SetInputMode(Input);
 }
 
 // Called every frame

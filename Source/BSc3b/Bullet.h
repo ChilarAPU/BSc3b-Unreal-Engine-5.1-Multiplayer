@@ -6,8 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Bullet.generated.h"
 
-class UNiagaraComponent;
 //Forward Declarations
+class UNiagaraComponent;
 class ABSc3bCharacter;
 
 UCLASS()
@@ -26,6 +26,12 @@ class BSC3B_API ABullet : public AActor
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet", meta = (AllowPrivateAccess))
 	UMaterialInterface* BulletHoleDecal;
+
+	/* Determines how strong of an impulse should be applied. This gets adjusted along with the range statistic of
+	* a weapon
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet", meta = (AllowPrivateAccess))
+	float BulletSpeed;
 
 	/* Used in line trace to specify what actors it should ignore */
 	UPROPERTY()
@@ -53,12 +59,6 @@ class BSC3B_API ABullet : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ABullet();
-
-	/* Determines how strong of an impulse should be applied. This gets adjusted along with the range statistic of
-	 * a weapon
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
-	float BulletSpeed;
 
 	/* Add an impulse to our bullet given a specified direction vector*/
 	void AddImpulseToBullet(FVector Direction);

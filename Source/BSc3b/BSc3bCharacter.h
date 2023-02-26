@@ -5,15 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "NiagaraComponent.h"
 #include "Bullet.h"
 #include "ChatBox.h"
-#include "NiagaraComponent.h"
 #include "BSc3bCharacter.generated.h"
 
+//Forward Declarations
 class UGlobalHUD;
 enum EAttachmentKey : int;
 class ABSc3bController;
-//Forward Declarations
 class UCameraComponent;
 class UWeapon;
 class UNiagaraComponent;
@@ -111,9 +111,60 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY()
 	float DeltaTime;
 
+	/* Reference to our Game Instance that holds all Epic Account/Server related logic */
+	UPROPERTY()
+	class UEOS_GameInstance* GameInstanceRef;
+
+	/* Reference to the active Player Controller*/
+	UPROPERTY()
+	ABSc3bController* PlayerController;
+
+	/* Holds the Epic ID that is set in Game Instance. Players need a reference to this as the game instance itself
+	 * cannot be accessed outside of the owning client
+	 */
+	UPROPERTY(Replicated)
+	FString OwnName;
+
+	////// PRIVATE CLIENT RPCS //////
+	
+	/* Called when Respawn button is pressed and simply hides the button again */
+	UFUNCTION(Client, Reliable)
+	void Client_ResetInput();
+	void Client_ResetInput_Implementation();
+
+	////// PRIVATE NETMULTICAST RPCS //////
+	
+	/* Add widget to KillFeed for all clients*/
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_AddToKillFeed(const FString& HitPlayerName, const FString& ShootingPlayerName);
 	void Multicast_AddToKillFeed_Implementation(const FString& HitPlayerName, const FString& ShootingPlayerName);
+
+	/* Equip an attachment for other clients missing out our owning client */
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_EquipWeaponAttachment(EAttachmentKey Attachment);
+	void Multicast_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment);
+
+	/* Called by Server_PlaySpawnMessage to replicate the message to all clients*/
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlaySpawnMessage(const FString& PlayerName);
+	void Multicast_PlaySpawnMessage_Implementation(const FString& PlayerName);
+
+	/* Replicate incoming message to all clients */
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_ReceiveMessage(FCustomChatMessage IncomingMessage);
+	void Multicast_ReceiveMessage_Implementation(FCustomChatMessage IncomingMessage);
+
+	/* Called by our Server footstep RPC to make sure every client will hear this footstep.
+	* Has to be called by the server otherwise it acts as a client RPC
+	*/
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multi_PlayFootstep(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation);
+	void Multi_PlayFootstep_Implementation(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation);
+
+	/* Set the name of our player ID on the server in the case that we are a client */
+	UFUNCTION(Server, Unreliable)
+	void Server_SetPlayerName(const FString& PlayerName);
+	void Server_SetPlayerName_Implementation(const FString& PlayerName);
 
 public:
 	ABSc3bCharacter();
@@ -181,46 +232,11 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_Reload(bool Reload);
 	void Server_Reload_Implementation(bool Reload);
-	
-	////// LOGIC FUNCTION NEEDED TO BE ACCESSED OUTSIDE OF CURRENT CLASS //////
-	/* Used by animation instance to get the weapons transform */
-	UFUNCTION()
-	FTransform GetWeaponTransform(FName Socket, ERelativeTransformSpace TransformSpace);
-
-	/* Called by shoot notify event that spawns in a bullet at the guns laser sight location*/
-	UFUNCTION()
-	void ShootLogic(bool bAimingIn);
-
-	/* Called by widget to equip an attachment. Just an access through function so the component can stay
-	 * private
-	 */
-	UFUNCTION()
-	void EquipWeaponAttachment(EAttachmentKey Attachment);
-
-	/* Spawn a new magazine mesh in our hand while simultaneously hiding the magazine that is attached to our weapon */
-	UFUNCTION()
-	void ToggleMagazineVisibility(bool Hide);
-
-	/* Called by animation to update the transform of our magazine. NOTE: IMRPOVE BY ATTACHING TO SOCKET INSTEAD OF
-	 * SETTING LOCATION EVERY FRAME
-	 */
-	UFUNCTION()
-	void UpdateMagazineTransform();
 
 	/* Wrapper function to call Multicast_EquipWeaponAttachment()*/
 	UFUNCTION(Server, Unreliable)
 	void Server_EquipWeaponAttachment(EAttachmentKey Attachment);
 	void Server_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment);
-
-	/* Equip an attachment for other clients missing out our owning client */
-	UFUNCTION(NetMulticast, Unreliable)
-	void Multicast_EquipWeaponAttachment(EAttachmentKey Attachment);
-	void Multicast_EquipWeaponAttachment_Implementation(EAttachmentKey Attachment);
-
-	/* Spawn weapon attachment actors on the server. This also attaches these actors to specific sockets on the weapon*/
-	UFUNCTION(Server, Unreliable)
-	void Server_Spawn();
-	void Server_Spawn_Implementation();
 
 	/* Called at the end of hit animation and simply returns our boolean to false*/
 	UFUNCTION(Server, Unreliable)
@@ -231,18 +247,24 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_Respawn();
 	void Server_Respawn_Implementation();
+	
+	////// LOGIC FUNCTION NEEDED TO BE ACCESSED OUTSIDE OF CURRENT CLASS //////
+	/* Used by animation instance to get the weapons transform */
+	UFUNCTION()
+	FTransform GetWeaponTransform(FName Socket, ERelativeTransformSpace TransformSpace);
 
-	/* Called when Respawn button is pressed and simply hides the button again */
-	UFUNCTION(Client, Reliable)
-	void Client_ResetInput();
-	void Client_ResetInput_Implementation();
+	/* Called by shoot notify event that spawns in a bullet at the guns laser sight location*/
+	UFUNCTION()
+	void ShootLogic(bool bAimingIn);
 
-	/* Have to call a custom begin play function as the server client does not
-	 * run BeginPlay() for some reason when spawning in a new character
+	/* Spawns weapon attachment for our owning client only which is not replicated to any other clients
 	 */
-	UFUNCTION(Client, Reliable)
-	void Client_CustomBeginPlay();
-	void Client_CustomBeginPlay_Implementation();
+	UFUNCTION()
+	void EquipWeaponAttachment(EAttachmentKey Attachment);
+
+	/* Spawn a new magazine mesh in our hand while simultaneously hiding the magazine that is attached to our weapon */
+	UFUNCTION()
+	void ToggleMagazineVisibility(bool Hide);
 
 	/* Holds the ammo for the current gun */
 	UPROPERTY(Replicated)
@@ -260,8 +282,8 @@ public:
 	UFUNCTION()
 	void SpawnClothSound(float Duration);
 
-	UPROPERTY()
-	ABSc3bController* PlayerController;
+	UFUNCTION()
+	ABSc3bController* GetActivePlayerController();
 
 	/* Called from bullet class and runs any client specific functionality for when a player gets hit.
 	 * For example, playing a hit sound or spawning blood on widget
@@ -270,37 +292,18 @@ public:
 	void Client_PlayHit();
 	void Client_PlayHit_Implementation();
 
+	/* Called from PlayerController on BeginPlay and spawns a connect message for each client */
 	UFUNCTION(Server, Unreliable)
 	void Server_PlaySpawnMessage(const FString& PlayerName);
 	void Server_PlaySpawnMessage_Implementation(const FString& PlayerName);
 
-	UFUNCTION(NetMulticast, Unreliable)
-	void Multicast_PlaySpawnMessage(const FString& PlayerName);
-	void Multicast_PlaySpawnMessage_Implementation(const FString& PlayerName);
-	
-	UPROPERTY()
-	UGlobalHUD* ClientOnlyWidget;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess))
-	TSubclassOf<UGlobalHUD> ClientOnlyWidgetClass;
+	UFUNCTION()
+	FString GetPlayerOnlineName();
 
-	UPROPERTY()
-	class UEOS_GameInstance* GameInstanceRef;
-
-	UPROPERTY(Replicated)
-	FString OwnName;
-
-	UFUNCTION(Server, Unreliable)
-	void Server_SetPlayerName(const FString& PlayerName);
-	void Server_SetPlayerName_Implementation(const FString& PlayerName);
-
+	/* Take in Incoming Message and send it to all other clients*/
 	UFUNCTION(Server, Unreliable)
 	void Server_ReceiveMessage(FCustomChatMessage IncomingMessage);
 	void Server_ReceiveMessage_Implementation(FCustomChatMessage IncomingMessage);
-
-	UFUNCTION(NetMulticast, Unreliable)
-	void Multicast_ReceiveMessage(FCustomChatMessage IncomingMessage);
-	void Multicast_ReceiveMessage_Implementation(FCustomChatMessage IncomingMessage);
 
 protected:
 
@@ -409,14 +412,15 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void Client_Respawn();
 	void Client_Respawn_Implementation();
+
+	/* Have to call a custom begin play function as the server client does not
+	* run BeginPlay() for some reason when spawning in a new character
+	*/
+	UFUNCTION(Client, Reliable)
+	void Client_CustomBeginPlay();
+	void Client_CustomBeginPlay_Implementation();
 	
 	////// PROTECTED MULTICAST RPCS //////
-	/* Called by our Server footstep RPC to make sure every client will hear this footstep.
-	 * Has to be called by the server otherwise it acts as a client RPC
-	 */
-	UFUNCTION(NetMulticast, Unreliable)
-	void Multi_PlayFootstep(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation);
-	void Multi_PlayFootstep_Implementation(FVector Location, USoundBase* Sound, USoundAttenuation* Attenuation);
 
 	////// REP NOTIFY FUNCTIONS //////
 	//Function to call whenever I would change the health function. Can check health value for example

@@ -2,12 +2,12 @@
 
 
 #include "PlayerHUD.h"
-
 #include "BSc3bCharacter.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Blueprint/WidgetTree.h"
 //Include weapons header file so we can access the enums
 #include "Weapon.h"
+//Widget Component includes
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
@@ -17,6 +17,7 @@ void UPlayerHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
 	////// BUTTON DELEGATES //////
+	/// All buttons need IsFocusable set to false otherwise it bugs out when used with gameplay movement
 	ScopeButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnScopeClicked);
 	ScopeButton->IsFocusable = false;
 	
@@ -127,6 +128,11 @@ void UPlayerHUD::OnRespawnClicked()
 	OwningPlayer->Server_Respawn();
 }
 
+void UPlayerHUD::SetAmmoCount(FString Amount)
+{
+	AmmoCount = Amount;
+}
+
 void UPlayerHUD::AdjustStatPercentage(UProgressBar* Bar, float value)
 {
 	//divide our value by 10 as the max it can be is 10, but needs to be between 0-1 in the progress bar
@@ -188,16 +194,17 @@ void UPlayerHUD::SetButtonVisibility(bool bVisible)
 void UPlayerHUD::ShowHitmarker()
 {
 	HitMarker->SetRenderOpacity(1);
-	HitMarker->SetVisibility(ESlateVisibility::Visible);
+	HitMarker->SetVisibility(ESlateVisibility::Visible);   //as setting render opacity to 1 does not automate this
 	FTimerDelegate TimerDelgate;
 	TimerDelgate.BindUFunction(this, "HideHitmarker");
-	GetWorld()->GetTimerManager().SetTimer(VisibilityHandler, TimerDelgate, .1, true);
+	//Basically an interp but done through a timer
+	GetWorld()->GetTimerManager().SetTimer(VisibilityHandler, TimerDelgate, .1, true);  
 }
 
 void UPlayerHUD::HideHitmarker()
 {
-	HitMarker->SetRenderOpacity(HitMarker->GetRenderOpacity() - .2);
-	if (HitMarker->GetRenderOpacity() <= 0)
+	HitMarker->SetRenderOpacity(HitMarker->GetRenderOpacity() - .2);  //gives the impression of a smooth transition
+	if (HitMarker->GetRenderOpacity() <= 0)  //Optimization calls
 	{
 		GetWorld()->GetTimerManager().ClearTimer(VisibilityHandler);
 		HitMarker->SetVisibility(ESlateVisibility::Hidden);

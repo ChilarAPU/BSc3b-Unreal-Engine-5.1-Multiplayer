@@ -7,7 +7,6 @@
 #include "BSc3bController.h"
 #include "EOS_GameInstance.h"
 #include "KillFeedSlot.h"
-#include "Components/Button.h"
 #include "Components/MultiLineEditableTextBox.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridPanel.h"
@@ -25,16 +24,43 @@ void UGlobalHUD::NativeConstruct()
 	Super::NativeConstruct();
 }
 
+void UGlobalHUD::SetConnectMessage(FText IncomingMessage)
+{
+	MessageTextBox->SetText(IncomingMessage);
+}
+
+void UGlobalHUD::SetConnectMessageVisibility(bool bShouldBeVisible)
+{
+	if (bShouldBeVisible)
+	{
+		MessageTextBox->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		MessageTextBox->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void UGlobalHUD::SetFocusToTextBox(APlayerController* PlayerController)
+{
+	MessageToSend->SetUserFocus(PlayerController);
+}
+
 void UGlobalHUD::AddToKilLFeed(const FString& HitPlayerName, const FString& ShootingPlayerName)
 {
 	if (KillFeedWidgetClass)
 	{
+		//Setup KillFeed widget
 		KillFeedWidget = CreateWidget<UKillFeedSlot>(GetWorld(), KillFeedWidgetClass);
-		KillFeedWidget->Killed->SetText(FText::FromString(HitPlayerName));
-		KillFeedWidget->Killer->SetText(FText::FromString(ShootingPlayerName));
+		KillFeedWidget->SetKilledText(FText::FromString(HitPlayerName));
+		KillFeedWidget->SetKillerText(FText::FromString(ShootingPlayerName));
+		
+		//Add widget to UniformGridPanel
 		int32 ChildrenInKillFeed = KillFeedBox->GetChildrenCount();
 		UUniformGridSlot* FeedSlot = KillFeedBox->AddChildToUniformGrid(KillFeedWidget, ChildrenInKillFeed);
 		FeedSlot->SetHorizontalAlignment(HAlign_Fill);
+		
+		// TODO: Remove kill feed widget after some time will still adding in to the grid panel correctly
 	}
 }
 
@@ -55,10 +81,12 @@ void UGlobalHUD::SendMessageButtonOnPressed()
 	{
 		// Game instance ref so we can access our clients epic ID
 		UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		
 		//Current Message struct filled out
-		FCustomChatMessage CurrentMessage = FCustomChatMessage(MessageLoc, FormattedTime, GI->PlayerName);
+		FCustomChatMessage CurrentMessage = FCustomChatMessage(MessageLoc, FormattedTime, GI->GetPlayerEpicID());
+		
 		ABSc3bCharacter* PawnRef = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
-		PawnRef->Server_ReceiveMessage(CurrentMessage);
+		PawnRef->Server_ReceiveMessage(CurrentMessage);  //Send message to all clients
 		ClearChatBox();
 	}
 }
@@ -68,7 +96,7 @@ void UGlobalHUD::SendMessageToBox(FCustomChatMessage Message)
 	if (ChatBoxWidgetClass)
 	{
 		ChatBoxWidget = CreateWidget<UChatBox>(GetWorld(), ChatBoxWidgetClass);
-		//Call ChatBox function to add child to vertical box, passing through the message
+		//Call ChatBox function to set struct to its associating values in the widget
 		ChatBoxWidget->SetChatMessage(Message);
 		AllChannelMessages->AddChildToVerticalBox(ChatBoxWidget);
 	}
@@ -82,12 +110,14 @@ void UGlobalHUD::ClearChatBox()
 FReply UGlobalHUD::NativeOnPreviewKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
 	FKey Input = UKismetInputLibrary::GetKey(InKeyEvent);
-	if (UKismetInputLibrary::EqualEqual_KeyKey(Input, EKeys::Enter))
+	if (UKismetInputLibrary::EqualEqual_KeyKey(Input, EKeys::Enter))  //Check we are using the enter key
 	{
-		SendMessageButtonOnPressed();
-		UWidgetBlueprintLibrary::SetFocusToGameViewport();
+		SendMessageButtonOnPressed();  //Replcement for the button delegate
+		
+		//Restore normal Gameplay to client
+		UWidgetBlueprintLibrary::SetFocusToGameViewport();  
 		ABSc3bCharacter* PawnRef = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
-		PawnRef->PlayerController->SetIgnoreLookInput(false);
+		PawnRef->GetActivePlayerController()->SetIgnoreLookInput(false);
 	}
 	return Super::NativeOnPreviewKeyDown(InGeometry, InKeyEvent);
 }

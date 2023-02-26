@@ -16,11 +16,20 @@ UCLASS()
 class BSC3B_API UKillFeedSlot : public UUserWidget
 {
 	GENERATED_BODY()
-	
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
+
+	/* Player name that shot the bullet */
+	UPROPERTY()
 	UTextBlock* Killer;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
+	/* Player name that got killed from the bullet */
+	UPROPERTY()
 	UTextBlock* Killed;
+	
+public:
+
+	UFUNCTION()
+	void SetKillerText(FText IncomingText);
+	
+	UFUNCTION()
+	void SetKilledText(FText IncomingText);
 };

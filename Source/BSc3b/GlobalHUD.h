@@ -9,6 +9,7 @@
 /**
  * 
  */
+//Forward Declarations
 class UTextBlock;
 class UUniformGridPanel;
 class UKillFeedSlot;
@@ -16,6 +17,7 @@ class UVerticalBox;
 class UMultiLineEditableTextBox;
 class UChatBox;
 
+//Chat Message Struct
 USTRUCT(BlueprintType)
 struct FCustomChatMessage
 {
@@ -36,13 +38,13 @@ struct FCustomChatMessage
 	}
 
 	UPROPERTY()
-	FText Message;
+	FText Message;  //Message sent from multi-line text box
 
 	UPROPERTY()
-	FString TimeOfMessage;
+	FString TimeOfMessage;  //Takes in the hour and minute from the client local machine
 
 	UPROPERTY()
-	FString PlayerID;
+	FString PlayerID;  //Platform ID
 };
 
 UCLASS()
@@ -52,43 +54,66 @@ class BSC3B_API UGlobalHUD : public UUserWidget
 
 	virtual void NativeConstruct() override;
 
+	/* Separate widget containing look and logic of killfeed*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess))
 	TSubclassOf<UKillFeedSlot> KillFeedWidgetClass;
 
+	UPROPERTY()
+	UKillFeedSlot* KillFeedWidget;
+
+	/* Separate widget containing what is seen by client when someone sends a message */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess))
 	TSubclassOf<UChatBox> ChatBoxWidgetClass;
+	
+	UPROPERTY()
+	UChatBox* ChatBoxWidget;
 
-public:
+	/* Connect message that gets displayed upon new client joining session */
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UTextBlock* MessageTextBox;
 
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
-	UUniformGridPanel* KillFeedBox;
-
+	//// CHAT WIDGET POINTERS ////
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UVerticalBox* AllChannelMessages;
-
+	
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UMultiLineEditableTextBox* MessageToSend;
 
-	UPROPERTY(BlueprintReadOnly)
-	UKillFeedSlot* KillFeedWidget;
+	/* Container to spawn in kill feed class */
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UUniformGridPanel* KillFeedBox;
 
-	UPROPERTY(BlueprintReadOnly)
-	UChatBox* ChatBoxWidget;
+public:
+	
+	UFUNCTION()
+	void SetConnectMessage(FText IncomingMessage);
 
+	UFUNCTION()
+	void SetConnectMessageVisibility(bool bShouldBeVisible);
 
+	/* Focus the text box as opposed to clicking it with the mouse */
+	UFUNCTION()
+	void SetFocusToTextBox(APlayerController* PlayerController);
+
+	/* Set kill feed variables and add it to KillFeedBox */
 	UFUNCTION()
 	void AddToKilLFeed(const FString& HitPlayerName, const FString& ShootingPlayerName);
 
+	/* Called on Enter key and converts parameters to an FChatMessage and sending it to all current
+	 * clients through a NetMulticast
+	 */
 	UFUNCTION()
 	void SendMessageButtonOnPressed();
 
+	/* Sends FChatMessage struct to the total channel messages vertical box */
 	UFUNCTION()
 	void SendMessageToBox(FCustomChatMessage Message);
 
 	UFUNCTION()
 	void ClearChatBox();
 
+	/* Override Enter key while we are inside the multi-line text box otherwise it would
+	 * go to next line 
+	 */
 	virtual FReply NativeOnPreviewKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 };

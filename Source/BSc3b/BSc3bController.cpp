@@ -7,10 +7,7 @@
 #include "BSc3bGameMode.h"
 #include "Custom_GameUserSettings.h"
 #include "EOS_GameInstance.h"
-#include "GlobalHUD.h"
 #include "InGameMenu.h"
-#include "MenuGameState.h"
-#include "PlayerAnimation.h"
 #include "PlayerHUD.h"
 #include "Weapon.h"
 #include "Components/Button.h"
@@ -20,8 +17,7 @@
 
 ABSc3bController::ABSc3bController()
 {
-	Player = nullptr;
-	PlayerDisplayName = TEXT("PlayerIdentifier");
+	
 }
 
 void ABSc3bController::BeginPlay()
@@ -40,38 +36,47 @@ void ABSc3bController::BeginPlay()
 		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), PlayerHUDClass);
 		PlayerHUD->AddToViewport();	
 	}
-	//Set our player animation class so we can adjust the values inside of it directly from our character
-	if (!IsValid(PlayerAnimClass))
-	{
-		return;
-	}
-	PlayerAnim = PlayerAnimClass.GetDefaultObject();
 
 	//Get our custom Game settings class so we can access and set its values
 	UserSettings = Cast<UCustom_GameUserSettings>(UserSettings->GetGameUserSettings());
-	/*UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	if (PlayerHUD)
-	{
-		TArray<FStringFormatArg> args;
-		args.Add(FStringFormatArg(GI->PlayerName));
-		FString s = FString::Format(TEXT("{0} Has Spawned in"), args);
-		PlayerHUD->MessageTextBox->SetText(FText::FromString(s));
-		PlayerHUD->SetVisibility(ESlateVisibility::Visible);
-	}
-	*/
+	
 	if (PlayerClass)
 	{
-		
-		/*if (!IsValid(PlayerClass->ClientOnlyWidgetClass))
-		{
-			return;
-		}
-		PlayerClass->ClientOnlyWidget = CreateWidget<UGlobalHUD>(GetWorld(), PlayerClass->ClientOnlyWidgetClass);
-		PlayerClass->ClientOnlyWidget->AddToViewport();
-		*/
 		UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-		PlayerClass->Server_PlaySpawnMessage(GI->PlayerName);
+		PlayerClass->Server_PlaySpawnMessage(GI->GetPlayerEpicID());
 	}
+}
+
+UPlayerHUD* ABSc3bController::GetPlayerHUD()
+{
+	return PlayerHUD;
+}
+
+void ABSc3bController::SpawnInGameMenu()
+{
+	if (!IsValid(InGameMenuClass))
+	{
+		return;
+	}
+	SetShowMouseCursor(true);
+	SetIgnoreLookInput(true);
+	InGameMenuWidget = CreateWidget<UInGameMenu>(GetWorld(), InGameMenuClass);
+	InGameMenuWidget->AddToViewport();
+	const FInputModeGameAndUI Input;
+	SetInputMode(Input);
+}
+
+void ABSc3bController::RemoveInGameMenu()
+{
+	if (!IsValid(InGameMenuWidget))
+	{
+		return;
+	}
+	SetShowMouseCursor(false);
+	SetIgnoreLookInput(false);
+	InGameMenuWidget->RemoveFromParent();
+	const FInputModeGameOnly Input;
+	SetInputMode(Input);
 }
 
 void ABSc3bController::ShowRespawnButton(bool Visible)
@@ -96,6 +101,51 @@ void ABSc3bController::ShowRespawnButton(bool Visible)
 		
 	}
 	
+}
+
+USoundBase* ABSc3bController::GetClothSound()
+{
+	return ClothSound;
+}
+
+USoundBase* ABSc3bController::GetGunshotSound()
+{
+	return Gunshot;
+}
+
+USoundBase* ABSc3bController::GetEmptyGunshotSound()
+{
+	return EmptyGunshot;
+}
+
+USoundBase* ABSc3bController::GetPlayerHitSound()
+{
+	return PlayerHit;
+}
+
+USoundBase* ABSc3bController::GetLaserSightOnSound()
+{
+	return LaserSightOn;
+}
+
+USoundBase* ABSc3bController::GetLaserSightOffSound()
+{
+	return LaserSightOff;
+}
+
+USoundAttenuation* ABSc3bController::GetGunshotAttenuation()
+{
+	return GunshotAttenuation;
+}
+
+TSubclassOf<ABullet> ABSc3bController::GetBulletClass()
+{
+	return SpawnObject;
+}
+
+UCustom_GameUserSettings* ABSc3bController::GetConfigUserSettings()
+{
+	return UserSettings;
 }
 
 void ABSc3bController::WeaponSway(float DeltaTime, FVector2D LookAxis, UWeapon* Weapon)
@@ -129,8 +179,8 @@ void ABSc3bController::Client_ShowHitmarker_Implementation(FName HitBone)
 {
 	if (PlayerHUD)
 	{
-		PlayerHUD->ShowHitmarker();
-		if (HitBone == "head")
+		PlayerHUD->ShowHitmarker();  //Show Hitmarker image
+		if (HitBone == "head")  //If we have hit the head bone
 		{
 			if (HeadshotSound)
 			{
@@ -150,14 +200,15 @@ void ABSc3bController::Client_ShowHitmarker_Implementation(FName HitBone)
 
 void ABSc3bController::OnNetCleanup(UNetConnection* Connection)
 {
-	UEOS_GameInstance* GameInstanceRef = Cast<UEOS_GameInstance>(GetWorld()->GetGameInstance());
-	if (GameInstanceRef)
-	{
-		GameInstanceRef->DestroySession();
-	}
-	
+	//Logout Player from the session inside EOS otherwise it will not know when a client has left
 	if (GetLocalRole() == ROLE_Authority && PlayerState != NULL)
 	{
+		UEOS_GameInstance* GameInstanceRef = Cast<UEOS_GameInstance>(GetWorld()->GetGameInstance());
+		/*if (GameInstanceRef)
+		{
+			GameInstanceRef->DestroySession();
+		}
+		*/
 		ABSc3bGameMode* GameMode = Cast<ABSc3bGameMode>(GetWorld()->GetAuthGameMode());
 		if (GameMode)
 		{

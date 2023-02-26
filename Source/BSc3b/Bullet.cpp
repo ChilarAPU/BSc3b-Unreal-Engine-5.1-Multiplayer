@@ -5,10 +5,6 @@
 
 #include "BSc3bCharacter.h"
 #include "BSc3bController.h"
-#include "EOS_GameInstance.h"
-#include "MenuGameState.h"
-#include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values
@@ -30,36 +26,44 @@ ABullet::ABullet()
 	
 	BulletMesh->SetRelativeRotation(FRotator(0.0, -90, -90));
 	BulletMesh->SetRelativeScale3D(FVector(0.1, 0.1, 0.1));
-	//Do not need this bullet to have its movement perfectly replicated among clients
+	//Do not need this bullet to have its movement perfectly replicated among clients as the clients mesh are only visual
 	BulletMesh->SetIsReplicated(true);
 
 	BulletTrail = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Trail"));
 	BulletTrail->SetupAttachment(BulletMesh);
 
-	//Set bullet to despawn 10 seconds after it has been fired. Quick and easy way to stop
-	//our level from lagging due to too many meshes
+	//Should never get to the point of being alive for 10 seconds but in the event something goes wrong, we can
+	//automatically remove it
 	InitialLifeSpan = 10;
 
+	//Decides how far the bullet should travel
 	BulletSpeed = 1000;
+	
 	//Just in case SetIsReplicated() gets skipped
 	bReplicates = true;
 	
 	BulletMesh->SetSimulatePhysics(true);
 	Player = nullptr;
+	//Used for bullet network size optimization
 	ShouldWeCheckCollision = 0;
 	
 	//Do not want to listen for any hit events on the mesh as we use a line trace for collision instead
 	BulletMesh->SetNotifyRigidBodyCollision(false);
 	
+	/*NOTE: Most collision calls here are likely unnecessary but are kept here just in case changing one setting
+	 *does not automatically result in the other ones following */
+	
 }
 
 void ABullet::AddImpulseToBullet(FVector Direction)
 {
+	// BulletSpeed is the only variable that should get changed here 
 	BulletMesh->AddImpulse(Direction * BulletSpeed, NAME_None);
 }
 
 void ABullet::CustomCollision()
 {
+	//Start of line trace is our cached location
 	//End of line trace is our bullets currently location
 	FVector End = BulletMesh->GetComponentLocation();
 	FHitResult OutHit;
@@ -72,16 +76,15 @@ void ABullet::CustomCollision()
 		if (HitPlayer)
 		{
 			Player = Cast<ABSc3bCharacter>(GetInstigator());
-			if (Player->IsPlayerControlled())
+			if (Player->IsPlayerControlled())  //Logic for the player that shot the bullet
 			{
-				Player->PlayerController->Client_ShowHitmarker(HitBone);
+				Player->GetActivePlayerController()->Client_ShowHitmarker(HitBone);
 			}
-				
-			//make sure we run this locally and only on the hit player
-			if (HitPlayer->IsPlayerControlled())
+			
+			if (HitPlayer->IsPlayerControlled()) //Logic for the player that got hit
 			{
 				//pass through hit bone to adjust damage based on the bone hit
-				HitPlayer->Server_Health(HitBone, HitPlayer->OwnName, Player->OwnName);
+				HitPlayer->Server_Health(HitBone, HitPlayer->GetPlayerOnlineName(), Player->GetPlayerOnlineName());
 				//Play client specific functionality from getting hit
 				HitPlayer->Client_PlayHit();
 				//Add the hit actor to our ignore hit so we cannot hit the same player twice
@@ -96,7 +99,7 @@ void ABullet::CustomCollision()
 		//Stop our physics from simulating to save performance
 		BulletMesh->SetSimulatePhysics(false);
 		K2_DestroyActor();
-
+		
 		/*UGameplayStatics::SpawnDecalAttached(BulletHoleDecal, FVector(.5, .5, .5), OutHit.GetComponent(), NAME_None,
 			OutHit.Location, OutHit.Normal.Rotation(), EAttachLocation::KeepWorldPosition, 10); */
 	}
@@ -111,7 +114,6 @@ void ABullet::BeginPlay()
 	SetReplicateMovement(true);
 	
 	Player = Cast<ABSc3bCharacter>(GetInstigator());
-	//Used for the start location of our line trace
 	//Used for the start location of our line trace
 	CachedLocation = GetActorLocation();
 	//Make sure we cannot hit the player that shot this bullet

@@ -18,6 +18,7 @@ UCLASS()
 class BSC3B_API UChatBox : public UUserWidget
 {
 	GENERATED_BODY()
+	/* This widget decides how a received message should look inside the chat box*/
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UTextBlock* Time;
@@ -29,6 +30,7 @@ class BSC3B_API UChatBox : public UUserWidget
 	UMultiLineEditableTextBox* Message;
 
 public:
+	/* Set class properties from the incoming struct */
 	UFUNCTION()
 	void SetChatMessage(FCustomChatMessage IncomingMessage);
 	

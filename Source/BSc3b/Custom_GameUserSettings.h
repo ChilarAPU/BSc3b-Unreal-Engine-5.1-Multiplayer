@@ -17,6 +17,7 @@ class BSC3B_API UCustom_GameUserSettings : public UGameUserSettings
 	UCustom_GameUserSettings();
 
 protected:
+	/* Saves local sensitivity value which is saved to config */
 	UPROPERTY(Config)
 	float PlayerSensitivity;
 
@@ -28,7 +29,7 @@ public:
 	float GetPlayerSensitivity() const;
 
 	/* Replace the original GetGameUserSettings function call with our own similar function which
-	 * returns this class instead
+	 * returns this class instead. Only used for blueprints
 	 */
 	UFUNCTION(BlueprintCallable)
 	static UCustom_GameUserSettings* GetCustomGameUserSettings();

@@ -15,21 +15,18 @@ class BSC3B_API AMenuGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 
-public:
-	UPROPERTY(BlueprintReadOnly, Replicated)
-	FName ServerName;
-
-	UFUNCTION()
-	void ChangeServerName();
-
-	UPROPERTY(BlueprintReadOnly)
-	UGlobalHUD* ClientOnlyWidget;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess))
 	TSubclassOf<UGlobalHUD> ClientOnlyWidgetClass;
 
+	/* Widget that is replicated to all clients screens at the same time */
+	UPROPERTY()
+	UGlobalHUD* ClientOnlyWidget;
+
+public:
+	
+	UFUNCTION()
+	UGlobalHUD* GetGlobalWidget();
+
 	virtual void BeginPlay() override;
 	
-	/* All replicated values must be called in this function with any conditions */
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
