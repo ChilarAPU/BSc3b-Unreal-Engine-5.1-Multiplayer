@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "BSc3bController.generated.h"
 
+enum EAttachmentKey;
+enum EAttachmentType;
 class UCustom_GameUserSettings;
 class UInGameMenu;
 class UPlayerAnimation;
@@ -137,6 +139,9 @@ public:
 	UFUNCTION(Client, Unreliable)
 	void Client_ShowHitmarker(FName HitBone);
 	void Client_ShowHitmarker_Implementation(FName HitBone);
+
+	UPROPERTY()
+	TMap<TEnumAsByte<EAttachmentType>,TEnumAsByte<EAttachmentKey>> SavedAttachments;
 
 protected:
 	virtual void OnNetCleanup(UNetConnection* Connection) override;

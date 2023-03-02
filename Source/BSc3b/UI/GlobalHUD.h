@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GlobalHUD.generated.h"
 
+class UHorizontalBox;
 class UScoreboardData;
 /**
  * 
@@ -99,6 +100,9 @@ class BSC3B_API UGlobalHUD : public UUserWidget
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UVerticalBox* Scoreboard;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UHorizontalBox* ScoreboardHeader;
 
 	UFUNCTION()
 	void ReachedMaximumKillFeedSlots();

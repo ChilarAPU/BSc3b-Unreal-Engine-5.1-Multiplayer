@@ -19,6 +19,7 @@
 #include "BSc3b/Player/PlayerStatistics.h"
 #include "Components/GridPanel.h"
 #include "Components/GridSlot.h"
+#include "Components/HorizontalBox.h"
 #include "Components/VerticalBox.h"
 #include "Kismet/KismetInputLibrary.h"
 
@@ -130,6 +131,7 @@ void UGlobalHUD::ShowScoreboard(bool bVisible, AMenuGameState* GS)
 	if (bVisible)
 	{
 		Scoreboard->SetVisibility(ESlateVisibility::Visible);
+		ScoreboardHeader->SetVisibility(ESlateVisibility::Visible);
 		//Fill up scoreboard with data
 		if (ScoreboardWidgetClass)
 		{
@@ -147,6 +149,7 @@ void UGlobalHUD::ShowScoreboard(bool bVisible, AMenuGameState* GS)
 	} else
 	{
 		Scoreboard->SetVisibility(ESlateVisibility::Hidden);
+		ScoreboardHeader->SetVisibility(ESlateVisibility::Hidden);
 		if (ScoreboardWidget)
 		{
 			Scoreboard->ClearChildren();

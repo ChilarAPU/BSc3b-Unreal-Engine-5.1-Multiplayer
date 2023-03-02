@@ -135,8 +135,11 @@ class BSC3B_API UWeapon : public USkeletalMeshComponent
 	UPROPERTY()
 	AAttachment* MagActor;
 
+	/* Cached Attachment and Type parameters are for re-spawing old attachments. Nothing is done with CachedAttachment
+	 * but is needed for SetAttachmentMesh to run
+	 */
 	UFUNCTION()
-	void SpawnAttachmentLogic(FName Socket, AAttachment*& ActorAttachment);
+	void SpawnAttachmentLogic(FName Socket, AAttachment*& ActorAttachment, TEnumAsByte<EAttachmentKey>& CachedAttachment, EAttachmentType Type);
 
 public:
 	UWeapon();
