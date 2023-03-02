@@ -13,6 +13,20 @@ ABSc3bGameMode::ABSc3bGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+	bSpawnPoint = false;
+}
+
+bool ABSc3bGameMode::FlipSpawnPoint()
+{
+	if (bSpawnPoint)
+	{
+		bSpawnPoint = false;
+	}
+	else
+	{
+		bSpawnPoint = true;
+	}
+	return bSpawnPoint;
 }
 
 void ABSc3bGameMode::PostLogin(APlayerController* NewPlayer)

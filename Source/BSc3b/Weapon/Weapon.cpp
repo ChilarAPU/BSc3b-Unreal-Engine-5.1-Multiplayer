@@ -112,6 +112,13 @@ void UWeapon::SpawnAttachment()
 	SpawnAttachmentLogic(TEXT("GripSocket"), GripActor);
 }
 
+void UWeapon::DestroyAttachments()
+{
+	ScopeActor->Destroy();
+	MuzzleActor->Destroy();
+	GripActor->Destroy();
+}
+
 void UWeapon::BeginPlay()
 {
 	Super::BeginPlay();

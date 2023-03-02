@@ -7,9 +7,33 @@
 #include "MenuGameState.generated.h"
 
 class UGlobalHUD;
+class APlayerState;
 /**
  * 
  */
+
+USTRUCT()
+struct FScoreboardData
+{
+	GENERATED_BODY()
+
+	FScoreboardData()
+	{
+		Name = TEXT("Default Value");
+		TotalKills = 0;
+		TotalDeaths = 0;
+	}
+
+	UPROPERTY()
+	FString Name;
+
+	UPROPERTY()
+	int TotalKills;
+
+	UPROPERTY()
+	int TotalDeaths;
+};
+
 UCLASS()
 class BSC3B_API AMenuGameState : public AGameStateBase
 {
@@ -21,6 +45,9 @@ class BSC3B_API AMenuGameState : public AGameStateBase
 	/* Widget that is replicated to all clients screens at the same time */
 	UPROPERTY()
 	UGlobalHUD* ClientOnlyWidget;
+
+	UPROPERTY()
+	TMap<APlayerState*, FScoreboardData> Scoreboard;
 
 public:
 	

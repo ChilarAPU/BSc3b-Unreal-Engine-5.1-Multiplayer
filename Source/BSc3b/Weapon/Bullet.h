@@ -69,6 +69,10 @@ public:
 	/* Add an impulse to our bullet given a specified direction vector*/
 	void AddImpulseToBullet(FVector Direction);
 
+	UFUNCTION(BlueprintNativeEvent)
+	void SpawnWallParticle(FVector Location);
+	void SpawnWallParticle_Implementation(FVector Location);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

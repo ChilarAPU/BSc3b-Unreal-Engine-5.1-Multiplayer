@@ -166,6 +166,11 @@ class ABSc3bCharacter : public ACharacter
 	void Server_SetPlayerName(const FString& PlayerName);
 	void Server_SetPlayerName_Implementation(const FString& PlayerName);
 
+	/* Set the name of our player ID on the server in the case that we are a client */
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_DestroyAttachments();
+	void Multicast_DestroyAttachments_Implementation();
+
 public:
 	ABSc3bCharacter();
 

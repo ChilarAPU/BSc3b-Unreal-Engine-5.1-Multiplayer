@@ -104,6 +104,9 @@ void ABullet::CustomCollision()
 		BulletMesh->SetNotifyRigidBodyCollision(false);
 		//Stop our physics from simulating to save performance
 		BulletMesh->SetSimulatePhysics(false);
+		//Spawn particle system to visualize to the player where the bullet has landed
+		SpawnWallParticle(OutHit.Location);
+		//Destroy the bullet
 		K2_DestroyActor();
 		
 		/*UGameplayStatics::SpawnDecalAttached(BulletHoleDecal, FVector(.5, .5, .5), OutHit.GetComponent(), NAME_None,
@@ -122,6 +125,11 @@ void ABullet::AdjustPlayerStateValues(ABSc3bCharacter* HitPlayer, ABSc3bCharacte
 		HitPlayerStatistics->AddDeathToScore(1);
 		OwnerPlayerStatistics->AddKillToScore(1);
 	}
+}
+
+void ABullet::SpawnWallParticle_Implementation(FVector Location)
+{
+	
 }
 
 // Called when the game starts or when spawned

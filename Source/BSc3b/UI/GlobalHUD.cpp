@@ -9,19 +9,31 @@
 #include "KillFeedSlot.h"
 #include "Components/MultiLineEditableTextBox.h"
 #include "Components/TextBlock.h"
-#include "Components/UniformGridPanel.h"
-#include "Components/UniformGridSlot.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetTextLibrary.h"
 #include "ChatBox.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Components/GridPanel.h"
+#include "Components/GridSlot.h"
 #include "Components/VerticalBox.h"
 #include "Kismet/KismetInputLibrary.h"
 
 void UGlobalHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
+}
+
+void UGlobalHUD::ReachedMaximumKillFeedSlots()
+{
+	NewKilLFeedBox->RemoveChildAt(0); //Remove first row kill feed
+	// Move each widget up a row inside the grid panel
+	for (int i = 0; i < TotalKillFeedSlots.Num(); i++)
+	{
+		int32 CurrentRow = TotalKillFeedSlots[i]->GetRow();
+		TotalKillFeedSlots[i]->SetRow(CurrentRow - 1);
+	}
+	TotalKillFeedSlots.RemoveAt(0); //Remove the kill feed widget from the array
 }
 
 void UGlobalHUD::SetConnectMessage(FText IncomingMessage)
@@ -54,13 +66,16 @@ void UGlobalHUD::AddToKilLFeed(const FString& HitPlayerName, const FString& Shoo
 		KillFeedWidget = CreateWidget<UKillFeedSlot>(GetWorld(), KillFeedWidgetClass);
 		KillFeedWidget->SetKilledText(FText::FromString(HitPlayerName));
 		KillFeedWidget->SetKillerText(FText::FromString(ShootingPlayerName));
-		
-		//Add widget to UniformGridPanel
-		int32 ChildrenInKillFeed = KillFeedBox->GetChildrenCount();
-		UUniformGridSlot* FeedSlot = KillFeedBox->AddChildToUniformGrid(KillFeedWidget, ChildrenInKillFeed);
-		FeedSlot->SetHorizontalAlignment(HAlign_Fill);
-		
-		// TODO: Remove kill feed widget after some time will still adding in to the grid panel correctly
+
+		/* Add kill widget to killfeed*/
+		const int32 ChildrenInKillFeed = NewKilLFeedBox->GetChildrenCount();
+		UGridSlot* NewFeedSlot = NewKilLFeedBox->AddChildToGrid(KillFeedWidget, ChildrenInKillFeed);
+		TotalKillFeedSlots.Emplace(NewFeedSlot); //Add UGridSlot to array
+		NewFeedSlot->SetHorizontalAlignment(HAlign_Fill);
+		if (ChildrenInKillFeed >= 2) //Maximum number of kill feed widgets to display on screen
+		{
+			ReachedMaximumKillFeedSlots();
+		}
 	}
 }
 

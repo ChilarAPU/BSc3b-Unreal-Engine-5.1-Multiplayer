@@ -46,13 +46,17 @@ void UPlayerAnimation::EndReload_Notify()
 	{
 		OwningPlayer->Server_Reload(false);
 	}
-	//Client only cloth sound
-	OwningPlayer->SpawnClothSound(.3);
+	if (OwningPlayer->IsLocallyControlled())
+	{
+		//Client only cloth sound
+		OwningPlayer->SpawnClothSound(.3);
+	}
+
 }
 
 void UPlayerAnimation::AttachMag_Notify()
 {
-	if (IsValid(MagAttach))
+	if (IsValid(MagAttach) && OwningPlayer->IsLocallyControlled())
 	{
 		//Do want to attenuate this later on in the project
 		UGameplayStatics::PlaySound2D(GetWorld(), MagAttach);
@@ -63,7 +67,7 @@ void UPlayerAnimation::AttachMag_Notify()
 
 void UPlayerAnimation::DetachMag_Notify()
 {
-	if (IsValid(MagDetach))
+	if (IsValid(MagDetach) && OwningPlayer->IsLocallyControlled())
 	{
 		//Do want to attenuate this later on in the project
 		UGameplayStatics::PlaySound2D(GetWorld(), MagDetach);

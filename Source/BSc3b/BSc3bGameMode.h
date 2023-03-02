@@ -11,8 +11,14 @@ class ABSc3bGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+	UPROPERTY()
+	bool bSpawnPoint;
+
 public:
 	ABSc3bGameMode();
+
+	UFUNCTION()
+	bool FlipSpawnPoint();
 
 	/* */
 	virtual void PostLogin(APlayerController* NewPlayer) override;

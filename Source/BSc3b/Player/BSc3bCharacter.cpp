@@ -16,6 +16,7 @@
 #include "MenuGameState.h"
 #include "../UI/PlayerHUD.h"
 #include "../Weapon/Weapon.h"
+#include "BSc3b/BSc3bGameMode.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -320,6 +321,8 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone, const FString& Hi
 		{
 			Health = 0;
 			UE_LOG(LogTemp, Warning, TEXT("HeadShot"));
+			GetCharacterMovement()->StopMovementImmediately();
+			Multicast_DestroyAttachments();
 		}
 		//Players health has reduced enough to be considered dead
 		if (Health <= 0 && !bIsDead)  //Check that we not already dead
@@ -336,6 +339,11 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone, const FString& Hi
 		}
 		
 	}
+}
+
+void ABSc3bCharacter::Multicast_DestroyAttachments_Implementation()
+{
+	Weapon->DestroyAttachments();
 }
 
 void ABSc3bCharacter::Multicast_AddToKillFeed_Implementation(const FString& HitPlayerName, const FString& ShootingPlayerName)
@@ -379,10 +387,17 @@ void ABSc3bCharacter::Server_Respawn_Implementation()
 {
 	//Hide the respawn button
 	Client_ResetInput();
-	//Temporarily location to decide where we should spawn a new character
-	const FVector t = GetActorLocation();
-	const FRotator r = GetActorRotation();
-	ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), t, r);
+	//Get a Player start location for the new character
+	ABSc3bGameMode* GM = Cast<ABSc3bGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	const AActor* Spawn = nullptr;
+	if (GM->FlipSpawnPoint())
+	{
+		Spawn = GM->FindPlayerStart(PlayerController, TEXT("Spawn"));
+	} else
+	{
+		Spawn = GM->FindPlayerStart(PlayerController, TEXT("Spawn1"));
+	}
+	ABSc3bCharacter* NewPlayer = GetWorld()->SpawnActor<ABSc3bCharacter>(this->GetClass(), Spawn->GetActorLocation(), Spawn->GetActorRotation());
 	GetController()->Possess(NewPlayer);
 	//delete old actor once we have possessed the new one
 	K2_DestroyActor();
@@ -647,7 +662,7 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 	float Speed;
 	if (bIsSprinting)
 	{
-		bAimingWhileSprinting = true;
+		bAimingWhileSprinting = Value.Get<bool>();
 		return;	
 	}
 	//If we are changing attachments or reloading, do not allow player to aim
@@ -723,7 +738,7 @@ ABSc3bController* ABSc3bCharacter::GetActivePlayerController()
 	return PlayerController;
 }
 
-	void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
+void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 {
 	//If player is aiming or shooting, do not allow the player to start sprinting
 	if (bIsPlayerAiming  || bWasAimingCanceled || bIsShooting)

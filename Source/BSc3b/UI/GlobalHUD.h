@@ -11,7 +11,8 @@
  */
 //Forward Declarations
 class UTextBlock;
-class UUniformGridPanel;
+class UGridPanel;
+class UGridSlot;
 class UKillFeedSlot;
 class UVerticalBox;
 class UMultiLineEditableTextBox;
@@ -78,10 +79,16 @@ class BSC3B_API UGlobalHUD : public UUserWidget
 	
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UMultiLineEditableTextBox* MessageToSend;
-
+	
 	/* Container to spawn in kill feed class */
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
-	UUniformGridPanel* KillFeedBox;
+	UGridPanel* NewKilLFeedBox;
+
+	UPROPERTY()
+	TArray<UGridSlot*> TotalKillFeedSlots;
+
+	UFUNCTION()
+	void ReachedMaximumKillFeedSlots();
 
 public:
 	

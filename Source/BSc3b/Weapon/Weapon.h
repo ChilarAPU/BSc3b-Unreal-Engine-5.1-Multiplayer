@@ -172,6 +172,9 @@ public:
 	UFUNCTION()
 	void SpawnAttachment();
 
+	UFUNCTION()
+	void DestroyAttachments();
+
 	virtual void BeginPlay() override;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
