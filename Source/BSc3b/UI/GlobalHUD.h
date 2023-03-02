@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GlobalHUD.generated.h"
 
+class UScoreboardData;
 /**
  * 
  */
@@ -17,6 +18,7 @@ class UKillFeedSlot;
 class UVerticalBox;
 class UMultiLineEditableTextBox;
 class UChatBox;
+class AMenuGameState;
 
 //Chat Message Struct
 USTRUCT(BlueprintType)
@@ -69,6 +71,14 @@ class BSC3B_API UGlobalHUD : public UUserWidget
 	UPROPERTY()
 	UChatBox* ChatBoxWidget;
 
+	/* Separate widget containing what is seen by client when someone sends a message */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess))
+	TSubclassOf<UScoreboardData> ScoreboardWidgetClass;
+	
+	UPROPERTY()
+	UScoreboardData* ScoreboardWidget;
+
+
 	/* Connect message that gets displayed upon new client joining session */
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UTextBlock* MessageTextBox;
@@ -86,6 +96,9 @@ class BSC3B_API UGlobalHUD : public UUserWidget
 
 	UPROPERTY()
 	TArray<UGridSlot*> TotalKillFeedSlots;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UVerticalBox* Scoreboard;
 
 	UFUNCTION()
 	void ReachedMaximumKillFeedSlots();
@@ -118,6 +131,9 @@ public:
 
 	UFUNCTION()
 	void ClearChatBox();
+
+	UFUNCTION()
+	void ShowScoreboard(bool bVisible, AMenuGameState* GS);
 
 	/* Override Enter key while we are inside the multi-line text box otherwise it would
 	 * go to next line 

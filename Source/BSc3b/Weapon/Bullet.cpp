@@ -5,7 +5,9 @@
 
 #include "../Player/BSc3bCharacter.h"
 #include "../Player/BSc3bController.h"
+#include "BSc3b/Player/MenuGameState.h"
 #include "BSc3b/Player/PlayerStatistics.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values

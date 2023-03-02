@@ -17,6 +17,7 @@ void APlayerStatistics::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME(APlayerStatistics, PlayerKills);
 	DOREPLIFETIME(APlayerStatistics, PlayerDeaths);
+	DOREPLIFETIME(APlayerStatistics, PlayerEpicID);
 }
 
 void APlayerStatistics::AddKillToScore(int Amount)
@@ -29,6 +30,11 @@ void APlayerStatistics::AddDeathToScore(int Amount)
 	PlayerDeaths = PlayerDeaths + Amount;
 }
 
+void APlayerStatistics::SetPlayerEpicID(FString IncomingID)
+{
+	PlayerEpicID = IncomingID;
+}
+
 int APlayerStatistics::GetTotalPlayerKills()
 {
 	return PlayerKills;
@@ -37,4 +43,9 @@ int APlayerStatistics::GetTotalPlayerKills()
 int APlayerStatistics::GetTotalPlayerDeath()
 {
 	return PlayerDeaths;
+}
+
+FString APlayerStatistics::GetPlayerEpicID()
+{
+	return PlayerEpicID;
 }

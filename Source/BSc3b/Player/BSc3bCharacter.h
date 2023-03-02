@@ -84,6 +84,11 @@ class ABSc3bCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ChatAction;
 
+	/** Chat Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ScoreboardAction;
+
+
 	////// PRIVATE VARIABLES //////
 
 	/* Easily adjust how long the laser should travel */
@@ -350,6 +355,10 @@ protected:
 	/** Called for Chat input*/
 	UFUNCTION()
 	void EnterChatBox(const FInputActionValue& Value);
+
+	/** Called for Chat input*/
+	UFUNCTION()
+	void OpenScoreboard(const FInputActionValue& Value);
 
 	/* Used inside menu input event to dictate whether we need to open or close the widget */
 	UPROPERTY()

@@ -13,7 +13,10 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetTextLibrary.h"
 #include "ChatBox.h"
+#include "ScoreboardData.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "BSc3b/Player/MenuGameState.h"
+#include "BSc3b/Player/PlayerStatistics.h"
 #include "Components/GridPanel.h"
 #include "Components/GridSlot.h"
 #include "Components/VerticalBox.h"
@@ -120,6 +123,36 @@ void UGlobalHUD::SendMessageToBox(FCustomChatMessage Message)
 void UGlobalHUD::ClearChatBox()
 {
 	MessageToSend->SetText(FText::GetEmpty());
+}
+
+void UGlobalHUD::ShowScoreboard(bool bVisible, AMenuGameState* GS)
+{
+	if (bVisible)
+	{
+		Scoreboard->SetVisibility(ESlateVisibility::Visible);
+		//Fill up scoreboard with data
+		if (ScoreboardWidgetClass)
+		{
+			for (int i = 0; i < GS->PlayerArray.Num(); i++)
+			{
+				ScoreboardWidget = CreateWidget<UScoreboardData>(GetWorld(), ScoreboardWidgetClass);
+				APlayerStatistics* PS = Cast<APlayerStatistics>(GS->PlayerArray[i]);
+				ScoreboardWidget->SetPlayerID(PS->GetPlayerEpicID());
+				ScoreboardWidget->SetPlayerKills(PS->GetTotalPlayerKills());
+				ScoreboardWidget->SetPlayerDeaths(PS->GetTotalPlayerDeath());
+				Scoreboard->AddChildToVerticalBox(ScoreboardWidget);
+			}
+		}
+		
+	} else
+	{
+		Scoreboard->SetVisibility(ESlateVisibility::Hidden);
+		if (ScoreboardWidget)
+		{
+			Scoreboard->ClearChildren();
+		}
+		
+	}
 }
 
 FReply UGlobalHUD::NativeOnPreviewKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)

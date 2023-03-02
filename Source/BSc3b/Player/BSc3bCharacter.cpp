@@ -14,6 +14,7 @@
 #include "../EOS_GameInstance.h"
 #include "../UI/GlobalHUD.h"
 #include "MenuGameState.h"
+#include "PlayerStatistics.h"
 #include "../UI/PlayerHUD.h"
 #include "../Weapon/Weapon.h"
 #include "BSc3b/BSc3bGameMode.h"
@@ -134,11 +135,16 @@ void ABSc3bCharacter::BeginPlay()
 	if (HasAuthority())
 	{
 		OwnName = GameInstanceRef->GetPlayerEpicID();
+		APlayerStatistics* PlayerStatistics = Cast<APlayerStatistics>(GetPlayerState());
+		if (PlayerStatistics)
+		{
+			PlayerStatistics->SetPlayerEpicID(GameInstanceRef->GetPlayerEpicID());
+		}
+		
 	} else
 	{
 		Server_SetPlayerName(GameInstanceRef->GetPlayerEpicID());
 	}
-	
 }
 
 void ABSc3bCharacter::Tick(float DeltaSeconds)
@@ -291,6 +297,10 @@ void ABSc3bCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 
 		//Open Game Chat
 		EnhancedInputComponent->BindAction(ChatAction, ETriggerEvent::Started, this, &ABSc3bCharacter::EnterChatBox);
+
+		//Open Game Chat
+		EnhancedInputComponent->BindAction(ScoreboardAction, ETriggerEvent::Started, this, &ABSc3bCharacter::OpenScoreboard);
+		EnhancedInputComponent->BindAction(ScoreboardAction, ETriggerEvent::Completed, this, &ABSc3bCharacter::OpenScoreboard);
 
 	}
 
@@ -508,6 +518,12 @@ void ABSc3bCharacter::Multicast_PlaySpawnMessage_Implementation(const FString& P
 void ABSc3bCharacter::Server_SetPlayerName_Implementation(const FString& PlayerName)
 {
 	OwnName = PlayerName;
+	APlayerStatistics* PlayerStatistics = Cast<APlayerStatistics>(GetPlayerState());
+	if (PlayerStatistics)
+	{
+		PlayerStatistics->SetPlayerEpicID(PlayerName);
+	}
+
 }
 
 void ABSc3bCharacter::Server_ReceiveMessage_Implementation(FCustomChatMessage IncomingMessage)
@@ -900,6 +916,16 @@ void ABSc3bCharacter::EnterChatBox(const FInputActionValue& Value)
 		GameStateRef->GetGlobalWidget()->SetFocusToTextBox(PlayerController);
 	}
 }
+
+void ABSc3bCharacter::OpenScoreboard(const FInputActionValue& Value)
+{
+	AMenuGameState* GameStateRef = Cast<AMenuGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameStateRef->GetGlobalWidget())
+	{
+		GameStateRef->GetGlobalWidget()->ShowScoreboard(Value.Get<bool>(), GameStateRef);
+	}
+}
+
 
 void ABSc3bCharacter::EquipWeaponAttachment(EAttachmentKey Attachment)
 {

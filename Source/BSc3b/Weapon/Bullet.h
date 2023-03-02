@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Bullet.generated.h"
 
+class APlayerStatistics;
 //Forward Declarations
 class UNiagaraComponent;
 class ABSc3bCharacter;

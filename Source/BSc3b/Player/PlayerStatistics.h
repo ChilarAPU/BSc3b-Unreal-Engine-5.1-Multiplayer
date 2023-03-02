@@ -22,6 +22,9 @@ class BSC3B_API APlayerStatistics : public APlayerState
 	UPROPERTY(Replicated)
 	int PlayerDeaths;
 
+	UPROPERTY(Replicated)
+	FString PlayerEpicID;
+
 	/* All replicated values must be called in this function with any conditions */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -33,8 +36,14 @@ public:
 	void AddDeathToScore(int Amount);
 
 	UFUNCTION()
+	void SetPlayerEpicID(FString IncomingID);
+
+	UFUNCTION()
 	int GetTotalPlayerKills();
 
 	UFUNCTION()
 	int GetTotalPlayerDeath();
+
+	UFUNCTION()
+	FString GetPlayerEpicID();
 };
