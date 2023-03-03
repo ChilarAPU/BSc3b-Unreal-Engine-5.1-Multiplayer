@@ -14,6 +14,9 @@ class ABSc3bGameMode : public AGameModeBase
 	UPROPERTY()
 	bool bSpawnPoint;
 
+	UPROPERTY()
+	FName CurrentServerName;
+
 public:
 	ABSc3bGameMode();
 

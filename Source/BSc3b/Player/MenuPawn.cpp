@@ -3,7 +3,7 @@
 
 #include "MenuPawn.h"
 
-#include "Blueprint/UserWidget.h"
+#include "BSc3b/UI/MainMenu.h"
 #include "Camera/CameraComponent.h"
 
 // Sets default values
@@ -29,7 +29,7 @@ void AMenuPawn::BeginPlay()
 	{
 		return;
 	}
-	MainMenu = CreateWidget<UUserWidget>(GetWorld(), MainMenuWidget);
+	MainMenu = CreateWidget<UMainMenu>(GetWorld(), MainMenuWidget);
 	MainMenu->AddToViewport();
 		
 	APlayerController* CastController = Cast<APlayerController>(GetController());

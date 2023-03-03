@@ -7,7 +7,7 @@
 #include "MenuPawn.generated.h"
 
 class UCameraComponent;
-class UUserWidget;
+class UMainMenu;
 
 
 UCLASS()
@@ -20,10 +20,7 @@ class BSC3B_API AMenuPawn : public APawn
 	UCameraComponent* Camera;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
-	TSubclassOf<UUserWidget> MainMenuWidget;
-
-	UPROPERTY()
-	UUserWidget* MainMenu;
+	TSubclassOf<UMainMenu> MainMenuWidget;
 	
 public:
 	// Sets default values for this pawn's properties
@@ -39,5 +36,8 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UPROPERTY()
+	UMainMenu* MainMenu;
 
 };

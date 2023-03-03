@@ -7,7 +7,9 @@
 #include "OnlineSubsystem.h"
 #include "Interfaces/OnlineIdentityInterface.h"
 #include "Kismet/GameplayStatics.h"
-
+#include "Player/MenuPawn.h"
+#include "UI/MainMenu.h"
+#include "UI/ServerSlot.h"
 
 void UEOS_GameInstance::LoginWithEOS(FString ID, FString Token, FString LoginType)
 {
@@ -124,17 +126,19 @@ void UEOS_GameInstance::OnFindSessionCompleted(bool bWasSuccess)
 	{
 		return;
 	}
+	
 	//Join the first available session
 	if (SessionSearch->SearchResults.Num()>0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *SessionSearch->SearchResults[0].Session.OwningUserName);
 		SessionPtrRef->ClearOnJoinSessionCompleteDelegates(this);  //Not sure if this is needed
 		SessionPtrRef->OnJoinSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnJoinSessionCompleted);
 		//Join first session inside the session interface inside the EOS, does not effect client program
-		SessionPtrRef->JoinSession(0, NAME_GameSession, SessionSearch->SearchResults[0]);
+		
+		SessionPtrRef->JoinSession(0, FName(TEXT("MainSession")), SessionSearch->SearchResults[0]);
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *SessionSearch->SearchResults[0].GetSessionIdStr());
 		return;
 	}
+	
 	//If we have got here, it means that the player was not logged in
 	UserFeedback = TEXT("Please Login Before trying to Find A Session");
 	
@@ -162,12 +166,25 @@ void UEOS_GameInstance::OnJoinSessionCompleted(FName SessionName, EOnJoinSession
 	{
 		return;
 	}
-	SessionPtrRef->GetResolvedConnectString(NAME_GameSession, JoinAddress); //Get the address of the server
-	UE_LOG(LogTemp, Warning, TEXT("Join Address: %s"), *JoinAddress);  //Debug purposes
-	if (!JoinAddress.IsEmpty())  //Make sure we are not trying to join an empty server, would result in a crash
+	
+	AMenuPawn* PlayerRef = Cast<AMenuPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (!PlayerRef)
 	{
-		PlayerControllerRef->ClientTravel(JoinAddress, TRAVEL_Absolute);  //Client join server map
+		return;
 	}
+	PlayerRef->MainMenu->ShowServerBrowser();
+	for (int i = 0; i < SessionSearch->SearchResults.Num(); i++)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WW"));
+		if (ServerDataSlotClass)
+		{
+			ServerDataSlot = CreateWidget<UServerSlot>(GetWorld(), ServerDataSlotClass);
+			ServerDataSlot->SetServerName(SessionSearch->SearchResults[i].Session.OwningUserName);
+			ServerDataSlot->PlaceInSearchResult = i;
+			PlayerRef->MainMenu->AddSlotToServerBrowser(ServerDataSlot);
+		}
+	}
+	
 }
 
 void UEOS_GameInstance::OnReadFileComplete(bool bSuccess, const FString& FileName)
@@ -185,60 +202,6 @@ void UEOS_GameInstance::OnReadFileComplete(bool bSuccess, const FString& FileNam
 	IOnlineTitleFilePtr TitleFileRef = SubsystemRef->GetTitleFileInterface();
 	if (!TitleFileRef)
 	{
-		/*TArray<uint8> t;
-		/*uint8* s = nullptr;
-		FString e = TEXT("Testing");
-		StringToBytes(e, s, 50);
-		//Create string from byte array
-		
-		bool b = TitleFileRef->GetFileContents(FileName, t);
-		TitleFileRef
-		*/
-		/*
-		FString	OutString;
-		FString p = BytesToString(s, 64);
-		//FFileHelper::BufferToString(OutString, s.GetData(), s.Num());
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *p);
-		*/
-		/*FString	OutString = BytesToString(t.GetData(), t.Num());
-		FString l;
-		for (int i = 0; i < OutString.Len(); i++)
-		{
-			const TCHAR c = OutString[i] - 1;
-			l.AppendChar(c);
-		}
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *l);
-		*/
-		/*std::string l = "";
-		for (int i = 0; i < t.Num(); i++)
-		{
-			l += std::to_string(2);
-		}
-		*/
-		//FString y = l.c_str();
-		//UE_LOG(LogTemp, Warning, TEXT("%s"), *y);
-		/*if(b)
-		{
-			FPlatformTypeLayoutParameters p;
-			FMemoryToStringContext s;
-			t.ToString(p, s);
-			for (int a = 0; a < t.Num() - 1; a++)
-			{
-				//UE_LOG(LogTemp, Warning, TEXT("%s"), *t[a]);
-			}
-			FStringBuilderBase* q = s.String;
-			const wchar_t* z = q->ToString();
-			for (int i = 0; i < t.Num() - 1; i++)
-			{
-				//FPlatformTypeLayoutParameters p;
-				//FMemoryToStringContext s;
-				//t.ToString(p, s);
-				//FString j = BytesToString(k, 8);
-				//t.RemoveAt(i);
-				//UE_LOG(LogTemp, Warning, TEXT("%s"), *j);
-			}
-			UE_LOG(LogTemp, Warning, TEXT("File Recieved"));
-		return;*/
 	}
 }
 
@@ -255,6 +218,16 @@ void UEOS_GameInstance::CreateEOSSession(bool bIsDedicated, bool bIsLanServer, i
 		return;
 	}
 	// preset settings of the server
+	//Preset settings for client searching for sessions
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	SessionSearch->bIsLanQuery = false;
+	SessionSearch->MaxSearchResults = 20;
+	SessionSearch->QuerySettings.SearchParams.Empty();  //If we want to only search for a specific set of sessions
+	
+	/*SessionPtrRef->FindSessions(0, SessionSearch.ToSharedRef());
+	SessionPtrRef->OnFindSessionsCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnNewFindSessionCompleted);
+	*/
+	
 	FOnlineSessionSettings SessionCreationInfo;
 	SessionCreationInfo.bIsDedicated = bIsDedicated;
 	SessionCreationInfo.bAllowInvites = true;
@@ -271,8 +244,16 @@ void UEOS_GameInstance::CreateEOSSession(bool bIsDedicated, bool bIsLanServer, i
 	SessionPtrRef->OnCreateSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnCreateSessionCompleted);
 	//create session on the server
 	//NAME_GameSession
-	SessionPtrRef->CreateSession(0, NAME_GameSession, SessionCreationInfo);
+	AMenuPawn* PlayerRef = Cast<AMenuPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (!PlayerRef)
+	{
+		return;
+	}
+	ServerPassword = FName(PlayerRef->MainMenu->GetServerPassword());
+	SessionPtrRef->CreateSession(0, FName(TEXT("MainSession")), SessionCreationInfo);
 	//SessionPtrRef->StartSession(FName("Main Session"));
+	
+	
 }
 
 void UEOS_GameInstance::FindSessionAndJoin()
@@ -299,21 +280,18 @@ void UEOS_GameInstance::FindSessionAndJoin()
 
 void UEOS_GameInstance::DestroySession()
 {
-	UE_LOG(LogTemp, Warning, TEXT("DESTROYSESSION"));
 	IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(this->GetWorld());
 	if (!SubsystemRef)
 	{
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Session Destroyed 2"));
 	IOnlineSessionPtr SessionPtrRef = SubsystemRef->GetSessionInterface();
 	if (!SessionPtrRef)
 	{
 		return;
 	}
 	SessionPtrRef->OnDestroySessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnDestroySessionCompleted);
-	SessionPtrRef->DestroySession(NAME_GameSession);
-	UE_LOG(LogTemp, Warning, TEXT("Session Destroyed 3"));
+	SessionPtrRef->DestroySession(FName(TEXT("MainSession")));
 }
 
 void UEOS_GameInstance::GetTitleStorageInterface()
@@ -336,6 +314,42 @@ void UEOS_GameInstance::GetTitleStorageInterface()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("File Name: %s Does Not Exist"), *FileName);
 	}
+}
+
+void UEOS_GameInstance::JoinSelectedSession(int LocationInBrowser)
+{
+	APlayerController* PlayerControllerRef = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PlayerControllerRef)
+	{
+		return;
+	}
+	FString JoinAddress;  //Will hold the address of our server
+	IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(this->GetWorld());
+	if (!SubsystemRef)
+	{
+		return;
+	}
+	IOnlineSessionPtr SessionPtrRef = SubsystemRef->GetSessionInterface();
+	if (!SessionPtrRef)
+	{
+		return;
+	}
+
+	AMenuPawn* PlayerRef = Cast<AMenuPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (!PlayerRef)
+	{
+		return;
+	}
+	ServerPassword = FName(PlayerRef->MainMenu->GetServerPassword());
+	
+	SessionPtrRef->GetResolvedConnectString(FName(TEXT("MainSession")), JoinAddress); //Get the address of the server
+	UE_LOG(LogTemp, Warning, TEXT("Join Address: %s"), *JoinAddress);  //Debug purposes
+	if (!JoinAddress.IsEmpty())  //Make sure we are not trying to join an empty server, would result in a crash
+	{
+		//SessionPtrRef->JoinSession(0, FName(TEXT("MainSession")), SessionSearch->SearchResults[LocationInBrowser]);
+		PlayerControllerRef->ClientTravel(JoinAddress, TRAVEL_Absolute);  //Client join server map
+	}
+	
 }
 
 void UEOS_GameInstance::ReturnToMainMenu()

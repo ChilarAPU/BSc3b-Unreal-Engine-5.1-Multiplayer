@@ -7,6 +7,7 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "EOS_GameInstance.generated.h"
 
+class UServerSlot;
 /**
  * 
  */
@@ -28,6 +29,12 @@ class BSC3B_API UEOS_GameInstance : public UGameInstance
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EOS Variables", meta = (AllowPrivateAccess))
 	FString OpenLevelText;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI", meta = (AllowPrivateAccess))
+	TSubclassOf<UServerSlot> ServerDataSlotClass;
+
+	UPROPERTY()
+	UServerSlot* ServerDataSlot;
+	
 	/* Holds a search of the current available sessions a client can join. Cannot be set as UPROPERTY*/
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 
@@ -44,6 +51,7 @@ class BSC3B_API UEOS_GameInstance : public UGameInstance
 	void OnJoinSessionCompleted(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	/* TODO: Decrypt file that has been received from EOS cloud */
 	void OnReadFileComplete(bool bSuccess, const FString& FileName);
+	
 	
 public:
 
@@ -78,6 +86,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "EOS Functions")
 	void GetTitleStorageInterface();
 
+	UFUNCTION(BlueprintCallable, Category = "EOS Functions")
+	void JoinSelectedSession(int LocationInBrowser);
+
 	/* Returns player back to the original/default map of the project */
 	UFUNCTION(BlueprintCallable, Category = "EOS Functions")
 	virtual void ReturnToMainMenu() override;
@@ -87,6 +98,9 @@ public:
 
 	UFUNCTION()
 	FString GetPlayerEpicID();
+
+	UPROPERTY()
+	FName ServerPassword;
 
 	
 };

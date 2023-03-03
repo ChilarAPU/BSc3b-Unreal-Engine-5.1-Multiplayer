@@ -140,6 +140,9 @@ public:
 	void Client_ShowHitmarker(FName HitBone);
 	void Client_ShowHitmarker_Implementation(FName HitBone);
 
+	/* Used inside of Weapon.h to keep track of the attachment that are on the gun. This is used upon respawn so that
+	 * attachments are not lost upon death
+	 */
 	UPROPERTY()
 	TMap<TEnumAsByte<EAttachmentType>,TEnumAsByte<EAttachmentKey>> SavedAttachments;
 

@@ -10,6 +10,7 @@
 #include "../UI/ChatBox.h"
 #include "BSc3bCharacter.generated.h"
 
+class UWidgetComponent;
 //Forward Declarations
 class UGlobalHUD;
 enum EAttachmentKey : int;
@@ -42,6 +43,9 @@ class ABSc3bCharacter : public ACharacter
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Weapons, meta = (AllowPrivateAccess = "true"))
 	UNiagaraComponent* LaserImpact;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = UI, meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* WorldSpacePlayerWidget;
 
 	////// INPUT ACTIONS //////
 	/** MappingContext */
@@ -129,6 +133,15 @@ class ABSc3bCharacter : public ACharacter
 	 */
 	UPROPERTY(Replicated)
 	FString OwnName;
+
+	UPROPERTY()
+	float AimSpeed;
+
+	UPROPERTY()
+	float WalkSpeed;
+
+	UPROPERTY()
+	float RunSpeed;
 
 	////// PRIVATE CLIENT RPCS //////
 	

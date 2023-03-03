@@ -1,8 +1,11 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "BSc3bGameMode.h"
+
+#include "EOS_GameInstance.h"
 #include "OnlineSubsystemUtils.h"
 #include "OnlineSubsystem.h"
+#include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
 ABSc3bGameMode::ABSc3bGameMode()
@@ -38,7 +41,9 @@ void ABSc3bGameMode::PostLogin(APlayerController* NewPlayer)
 		{
 			IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(NewPlayer->GetWorld());
 			IOnlineSessionPtr SessionRef = SubsystemRef->GetSessionInterface();
-			bool bRegistrationSuccess = SessionRef->RegisterPlayer(FName("Main Session"), *UniqueNetId, false);
+			UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *GI->ServerPassword.ToString());
+			bool bRegistrationSuccess = SessionRef->RegisterPlayer(FName(TEXT("MainSession")), *UniqueNetId, false);
 			if (bRegistrationSuccess)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Registration Successful"));
@@ -53,7 +58,9 @@ void ABSc3bGameMode::PreLogout(APlayerController* InPlayerController)
 		{
 			IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(InPlayerController->GetWorld());
 			IOnlineSessionPtr SessionRef = SubsystemRef->GetSessionInterface();
-			bool bRegistrationSuccess = SessionRef->UnregisterPlayer(FName("Main Session"), *UniqueNetId);
+			UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *GI->ServerPassword.ToString());
+			bool bRegistrationSuccess = SessionRef->UnregisterPlayer(FName(TEXT("MainSession")), *UniqueNetId);
 			if (bRegistrationSuccess)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Unregistration Successful"));

@@ -19,6 +19,7 @@
 #include "../Weapon/Weapon.h"
 #include "BSc3b/BSc3bGameMode.h"
 #include "Components/AudioComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -75,6 +76,9 @@ ABSc3bCharacter::ABSc3bCharacter()
 	LaserImpact->SetVisibility(false);
 	LaserImpact->SetIsReplicated(false);
 
+	WorldSpacePlayerWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("WorldSpacePlayerWidget"));
+	WorldSpacePlayerWidget->SetupAttachment(GetRootComponent());
+
 	//Will Setup custom movement rotation as this rotates the mesh for any movement
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	bUseControllerRotationYaw = true;
@@ -85,6 +89,9 @@ ABSc3bCharacter::ABSc3bCharacter()
 	//default values
 	LaserDistance = 1000;
 	Health = 100;
+	AimSpeed = 150;
+	WalkSpeed = 300;
+	RunSpeed = 600;
 	
 	//Animation Values
 	PlayerPitch = 0;
@@ -591,13 +598,13 @@ void ABSc3bCharacter::Move(const FInputActionValue& Value)
 		if (HasAuthority())
 		{
 			bStopSprinting = true;
-			GetCharacterMovement()->MaxWalkSpeed = 200;
+			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 		}
 		else if (IsLocallyControlled())
 		{
 			bStopSprinting = true;
-			GetCharacterMovement()->MaxWalkSpeed = 200;
-			Server_PlayerSprinting(bIsSprinting, 200);
+			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+			Server_PlayerSprinting(bIsSprinting, WalkSpeed);
 		} 
 	} 
 }
@@ -698,11 +705,11 @@ void ABSc3bCharacter::Aim(const FInputActionValue& Value)
 	//Lower movement speed if we are aiming down sights
 	if (!bIsPlayerAiming)
 	{
-		Speed = 150;
+		Speed = AimSpeed;
 	}
 	else
 	{
-		Speed = 300;
+		Speed = WalkSpeed;
 	}
 	//Setting our aiming variable to be replicated
 	if (HasAuthority())
@@ -766,11 +773,11 @@ void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 	//Set speed based on whether we are already sprinting
 	if (bIsSprinting)
 	{
-		Speed = 300;
+		Speed = WalkSpeed;
 	}
 	else
 	{
-		Speed = 500;
+		Speed = RunSpeed;
 	}
 
 	//This is used to optimise related code in Move()
