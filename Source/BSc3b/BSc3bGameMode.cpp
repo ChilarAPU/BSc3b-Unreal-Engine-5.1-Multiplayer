@@ -42,8 +42,9 @@ void ABSc3bGameMode::PostLogin(APlayerController* NewPlayer)
 			IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(NewPlayer->GetWorld());
 			IOnlineSessionPtr SessionRef = SubsystemRef->GetSessionInterface();
 			UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *GI->ServerPassword.ToString());
-			bool bRegistrationSuccess = SessionRef->RegisterPlayer(FName(TEXT("MainSession")), *UniqueNetId, false);
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *GI->SessionID.ToString());
+			//bool bRegistrationSuccess = SessionRef->RegisterPlayer(GI->ServerPassword, *UniqueNetId, false);
+			bool bRegistrationSuccess = SessionRef->RegisterPlayer(GI->SessionID, *UniqueNetId, false);
 			if (bRegistrationSuccess)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Registration Successful"));
@@ -59,8 +60,9 @@ void ABSc3bGameMode::PreLogout(APlayerController* InPlayerController)
 			IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(InPlayerController->GetWorld());
 			IOnlineSessionPtr SessionRef = SubsystemRef->GetSessionInterface();
 			UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *GI->ServerPassword.ToString());
-			bool bRegistrationSuccess = SessionRef->UnregisterPlayer(FName(TEXT("MainSession")), *UniqueNetId);
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *GI->SessionID.ToString());
+			//bool bRegistrationSuccess = SessionRef->UnregisterPlayer(GI->ServerPassword, *UniqueNetId);
+			bool bRegistrationSuccess = SessionRef->UnregisterPlayer(GI->SessionID, *UniqueNetId);
 			if (bRegistrationSuccess)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Unregistration Successful"));

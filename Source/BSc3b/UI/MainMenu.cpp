@@ -21,3 +21,8 @@ FString UMainMenu::GetServerPassword()
 {
 	return FString(ServerPassword->GetText().ToString());
 }
+
+void UMainMenu::ClearServerBrowser()
+{
+	ServerBrowser->ClearChildren();
+}

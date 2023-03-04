@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "Interfaces/OnlineIdentityInterface.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "EOS_GameInstance.generated.h"
 
@@ -51,7 +52,14 @@ class BSC3B_API UEOS_GameInstance : public UGameInstance
 	void OnJoinSessionCompleted(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	/* TODO: Decrypt file that has been received from EOS cloud */
 	void OnReadFileComplete(bool bSuccess, const FString& FileName);
-	
+	/* If we have found available sessions inside EOS, Join the first available session */
+	void OnCreateNewSession(bool bWasSuccess);
+
+	/* Get Access to the main Session interface of EOS. This is needed for any interaction with servers */
+	IOnlineSessionPtr GetSessionInterface();
+
+	/* Get Access to the identity interface inside of EOS. Allows access to Account Details/Settings*/
+	IOnlineIdentityPtr GetIdentityInterface();
 	
 public:
 
@@ -76,7 +84,7 @@ public:
 
 	/* Return a search of current available session to a max of 20 results*/
 	UFUNCTION(BlueprintCallable, Category = "EOS Functions")
-	void FindSessionAndJoin();
+	void FindSessionsAndDisplayBrowser();
 	
 	/* Called by EOS delegate to destroy the session. Currently bugged and does not work correctly*/
 	UFUNCTION(BlueprintCallable, Category = "EOS Functions")
@@ -101,6 +109,9 @@ public:
 
 	UPROPERTY()
 	FName ServerPassword;
+
+	UPROPERTY()
+	FName SessionID;
 
 	
 };

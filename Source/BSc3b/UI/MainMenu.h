@@ -32,4 +32,7 @@ public:
 
 	UFUNCTION()
 	FString GetServerPassword();
+
+	UFUNCTION()
+	void ClearServerBrowser();
 };
