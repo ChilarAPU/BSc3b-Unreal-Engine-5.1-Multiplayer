@@ -107,13 +107,18 @@ void UEOS_GameInstance::OnFindSessionCompleted(bool bWasSuccess)
 
 	UE_LOG(LogTemp, Warning, TEXT("Display Session Delegate"));
 	PlayerRef->MainMenu->ShowServerBrowser(); //Show server browser widget
+	
 	for (int i = 0; i < SessionSearch->SearchResults.Num(); i++) //Loop through each available session
 	{
 		//for each session, add a new child to the server browser container
 		if (ServerDataSlotClass)
 		{
 			ServerDataSlot = CreateWidget<UServerSlot>(GetWorld(), ServerDataSlotClass);
+			//Send over data for the server slot that will be visible on browser
+			ServerDataSlot->SetServerPing(SessionSearch->SearchResults[i].PingInMs);
 			ServerDataSlot->SetServerName(SessionSearch->SearchResults[i].Session.OwningUserName);
+			ServerDataSlot->SetTotalCurrentPlayersInServer(SessionSearch->SearchResults[i].Session.NumOpenPrivateConnections,
+				SessionSearch->SearchResults[i].Session.SessionSettings.NumPublicConnections);
 			ServerDataSlot->PlaceInSearchResult = i; //Used with joining a session
 			PlayerRef->MainMenu->AddSlotToServerBrowser(ServerDataSlot);
 		}
@@ -245,30 +250,6 @@ void UEOS_GameInstance::CreateEOSSession(bool bIsDedicated, bool bIsLanServer, i
 	SessionPtrRef->FindSessions(0, SessionSearch.ToSharedRef());
 	SessionPtrRef->OnFindSessionsCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnCreateNewSession);
 	
-	/*FOnlineSessionSettings SessionCreationInfo;
-	SessionCreationInfo.bIsDedicated = bIsDedicated;
-	SessionCreationInfo.bAllowInvites = true;
-	SessionCreationInfo.bIsLANMatch = bIsLanServer;
-	SessionCreationInfo.NumPublicConnections = NumberOfPublicConnections;
-	SessionCreationInfo.bUseLobbiesIfAvailable = false;
-	SessionCreationInfo.bUsesPresence = false;
-	SessionCreationInfo.bShouldAdvertise = true;
-	//SessionCreationInfo.bAllowJoinInProgress = true; For some reason stops players from being able to join
-
-	//Set key so session can be searched through the dev portal
-	SessionCreationInfo.Set(SEARCH_KEYWORDS, FString("RandomHi"), EOnlineDataAdvertisementType::ViaOnlineService);
-	//Join session and map for the user once server has been created
-	SessionPtrRef->OnCreateSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnCreateSessionCompleted);
-	
-	AMenuPawn* PlayerRef = Cast<AMenuPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-	if (!PlayerRef)
-	{
-		return;
-	}
-	// Get server name from editable text box on the widget
-	ServerPassword = FName(PlayerRef->MainMenu->GetServerPassword());
-	SessionPtrRef->CreateSession(0, ServerPassword, SessionCreationInfo);
-	*/
 }
 
 void UEOS_GameInstance::FindSessionsAndDisplayBrowser()

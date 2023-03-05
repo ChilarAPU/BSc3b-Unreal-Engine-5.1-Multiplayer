@@ -290,7 +290,7 @@ public:
 	void ToggleMagazineVisibility(bool Hide);
 
 	/* Holds the ammo for the current gun */
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	int Ammo;
 
 	/* Determines whether the player is inside the attachment changing pose. Used to stop other inputs from

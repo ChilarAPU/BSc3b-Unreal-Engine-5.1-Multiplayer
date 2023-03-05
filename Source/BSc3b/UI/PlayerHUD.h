@@ -12,7 +12,6 @@
 
 class UButton;
 class UTextBlock;
-class UProgressBar;
 class UImage;
 class ABSc3bCharacter;
 
@@ -67,9 +66,6 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UTextBlock* DamageText;
-
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
-	UProgressBar* PlayerHealth;
 
 	////// UMG WIDGETS BOUND TO BLUEPRINT VALUES //////
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
@@ -146,10 +142,6 @@ public:
 	/* Gradually lower the opacity of the hitmarker through Timer delegate */
 	UFUNCTION()
 	void HideHitmarker();
-
-	/* Divide incoming health values to work inside the bar */
-	UFUNCTION()
-	void AdjustPlayerHealthBar(float Value);
 
 	/* TimerHandler for the hitmarker. Could not pass it through as a reference parameter so it is now here */
 	UPROPERTY()

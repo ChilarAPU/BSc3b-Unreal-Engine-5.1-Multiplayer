@@ -186,7 +186,6 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 	//Again, would like to move this into a function that is only run when needed
 	if (IsValid(PlayerController->GetPlayerHUD()))
 	{
-		PlayerController->GetPlayerHUD()->AdjustPlayerHealthBar(Health);
 		PlayerController->GetPlayerHUD()->SetAmmoCount(FString::SanitizeFloat(Ammo, 0));
 		//Call this function so we dont have to include the progress bar file
 		PlayerController->GetPlayerHUD()->AdjustStatPercentage(PlayerController->GetPlayerHUD()->DamageStatBar, Weapon->DamageStat);

@@ -8,6 +8,7 @@
 
 class UEditableText;
 class UVerticalBox;
+class UBorder;
 
 /**
  * 
@@ -19,6 +20,9 @@ class BSC3B_API UMainMenu : public UUserWidget
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UVerticalBox* ServerBrowser;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UBorder* ServerBrowserHeader;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UEditableText* ServerPassword;
