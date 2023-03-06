@@ -17,6 +17,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "BSc3b/Player/MenuGameState.h"
 #include "BSc3b/Player/PlayerStatistics.h"
+#include "Components/Border.h"
 #include "Components/GridPanel.h"
 #include "Components/GridSlot.h"
 #include "Components/HorizontalBox.h"
@@ -26,6 +27,7 @@
 void UGlobalHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
+	bIsCurrentlyTyping = false;
 }
 
 void UGlobalHUD::ReachedMaximumKillFeedSlots()
@@ -40,9 +42,38 @@ void UGlobalHUD::ReachedMaximumKillFeedSlots()
 	TotalKillFeedSlots.RemoveAt(0); //Remove the kill feed widget from the array
 }
 
+void UGlobalHUD::SetTimerWithDelegate(FTimerHandle& TimerHandle, TBaseDelegate<void> ObjectDelegate, float Time,
+	bool bLoop)
+{
+	GetWorld()->GetTimerManager().ClearTimer(TimerHandle); //if the inputted timer is currently running, then clear it
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, ObjectDelegate, Time, bLoop);
+}
+
+void UGlobalHUD::RemoveSlotFromKillFeed(UKillFeedSlot* IncomingKillFeedSlot, UGridSlot* IncomingSlot)
+{
+	//if the slot has already been destroyed automatically by ReachedMaximumKillFeedSlots(), do nothing
+	if (!IsValid(IncomingKillFeedSlot))
+	{
+		return;
+	}
+	
+	NewKilLFeedBox->RemoveChild(IncomingKillFeedSlot); //Remove widget from grid panel
+	TotalKillFeedSlots.Remove(IncomingSlot); //Remove widget from kill feed array
+}
+
+void UGlobalHUD::HideChatBox()
+{
+	if (!bIsCurrentlyTyping) //Check that the current client is not typing
+	{
+		ChatBoxUI->SetVisibility(ESlateVisibility::Hidden);
+	}
+	
+}
+
 void UGlobalHUD::SetConnectMessage(FText IncomingMessage)
 {
 	MessageTextBox->SetText(IncomingMessage);
+	SetTimerWithDelegate(ConnectMessageHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::SetConnectMessageVisibility, false), 2.f, false);
 }
 
 void UGlobalHUD::SetConnectMessageVisibility(bool bShouldBeVisible)
@@ -60,6 +91,9 @@ void UGlobalHUD::SetConnectMessageVisibility(bool bShouldBeVisible)
 void UGlobalHUD::SetFocusToTextBox(APlayerController* PlayerController)
 {
 	MessageToSend->SetUserFocus(PlayerController);
+	ChatBoxUI->SetVisibility(ESlateVisibility::Visible);
+	bIsCurrentlyTyping = true;
+	
 }
 
 void UGlobalHUD::AddToKilLFeed(const FString& HitPlayerName, const FString& ShootingPlayerName)
@@ -76,10 +110,15 @@ void UGlobalHUD::AddToKilLFeed(const FString& HitPlayerName, const FString& Shoo
 		UGridSlot* NewFeedSlot = NewKilLFeedBox->AddChildToGrid(KillFeedWidget, ChildrenInKillFeed);
 		TotalKillFeedSlots.Emplace(NewFeedSlot); //Add UGridSlot to array
 		NewFeedSlot->SetHorizontalAlignment(HAlign_Fill);
+		
 		if (ChildrenInKillFeed >= 2) //Maximum number of kill feed widgets to display on screen
 		{
 			ReachedMaximumKillFeedSlots();
 		}
+
+		//Timer to hide kill feed slot. We do not want this value to be overridable from subsequent calls
+		FTimerHandle KillSlotHandle;
+		SetTimerWithDelegate(KillSlotHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::RemoveSlotFromKillFeed, KillFeedWidget, NewFeedSlot), 8.f, false);
 	}
 }
 
@@ -107,11 +146,15 @@ void UGlobalHUD::SendMessageButtonOnPressed()
 		ABSc3bCharacter* PawnRef = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 		PawnRef->Server_ReceiveMessage(CurrentMessage);  //Send message to all clients
 		ClearChatBox();
+	} else //If we have decided not to send a message, make sure that the chat box becomes hidden on the client
+	{
+		SetTimerWithDelegate(ChatMessageHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::HideChatBox), 3.f, false);
 	}
 }
 
 void UGlobalHUD::SendMessageToBox(FCustomChatMessage Message)
 {
+	ChatBoxUI->SetVisibility(ESlateVisibility::Visible);
 	if (ChatBoxWidgetClass)
 	{
 		ChatBoxWidget = CreateWidget<UChatBox>(GetWorld(), ChatBoxWidgetClass);
@@ -119,6 +162,16 @@ void UGlobalHUD::SendMessageToBox(FCustomChatMessage Message)
 		ChatBoxWidget->SetChatMessage(Message);
 		AllChannelMessages->AddChildToVerticalBox(ChatBoxWidget);
 	}
+	//Play sound on owning client when a message has been recieved
+	ABSc3bCharacter* PawnRef = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
+	if (PawnRef->IsLocallyControlled() && MessageRecieveSound) //make sure we are only running this on the clients machine
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), MessageRecieveSound);
+	}
+
+	//Hide all chat boxes once a message has been sent
+	SetTimerWithDelegate(ChatMessageHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::HideChatBox), 3.f, false);
+	
 }
 
 void UGlobalHUD::ClearChatBox()
@@ -161,14 +214,18 @@ void UGlobalHUD::ShowScoreboard(bool bVisible, AMenuGameState* GS)
 FReply UGlobalHUD::NativeOnPreviewKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
 	FKey Input = UKismetInputLibrary::GetKey(InKeyEvent);
+	ABSc3bCharacter* PawnRef = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 	if (UKismetInputLibrary::EqualEqual_KeyKey(Input, EKeys::Enter))  //Check we are using the enter key
 	{
 		SendMessageButtonOnPressed();  //Replcement for the button delegate
-		
+		bIsCurrentlyTyping = false;
 		//Restore normal Gameplay to client
 		UWidgetBlueprintLibrary::SetFocusToGameViewport();  
-		ABSc3bCharacter* PawnRef = Cast<ABSc3bCharacter>(GetOwningPlayerPawn());
 		PawnRef->GetActivePlayerController()->SetIgnoreLookInput(false);
+	} else if (PawnRef->IsLocallyControlled() && ChatTypingSound)
+	{
+		float KeyPitch = UKismetMathLibrary::RandomFloatInRange(.7, 1.5);
+		UGameplayStatics::PlaySound2D(GetWorld(), ChatTypingSound, 1, KeyPitch);
 	}
 	return Super::NativeOnPreviewKeyDown(InGeometry, InKeyEvent);
 }

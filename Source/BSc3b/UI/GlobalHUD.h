@@ -19,6 +19,7 @@ class UKillFeedSlot;
 class UVerticalBox;
 class UMultiLineEditableTextBox;
 class UChatBox;
+class UBorder;
 class AMenuGameState;
 
 //Chat Message Struct
@@ -72,6 +73,9 @@ class BSC3B_API UGlobalHUD : public UUserWidget
 	UPROPERTY()
 	UChatBox* ChatBoxWidget;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UBorder* ChatBoxUI;
+
 	/* Separate widget containing what is seen by client when someone sends a message */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess))
 	TSubclassOf<UScoreboardData> ScoreboardWidgetClass;
@@ -106,6 +110,30 @@ class BSC3B_API UGlobalHUD : public UUserWidget
 
 	UFUNCTION()
 	void ReachedMaximumKillFeedSlots();
+
+	//Timer Handle variables
+	UPROPERTY()
+	FTimerHandle ConnectMessageHandle;
+
+	UPROPERTY()
+	FTimerHandle ChatMessageHandle;
+	
+	void SetTimerWithDelegate(FTimerHandle& TimerHandle, TBaseDelegate<void> ObjectDelegate, float Time, bool bLoop);
+
+	UFUNCTION()
+	void RemoveSlotFromKillFeed(UKillFeedSlot* IncomingKillFeedSlot, UGridSlot* IncomingSlot);
+	
+	UFUNCTION()
+	void HideChatBox();
+
+	UPROPERTY()
+	bool bIsCurrentlyTyping;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess))
+	USoundBase* MessageRecieveSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess))
+	USoundBase* ChatTypingSound;
 
 public:
 	
