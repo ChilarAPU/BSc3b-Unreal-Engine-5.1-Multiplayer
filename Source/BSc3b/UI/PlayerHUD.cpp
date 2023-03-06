@@ -8,6 +8,7 @@
 //Include weapons header file so we can access the enums
 #include "../Weapon/Weapon.h"
 //Widget Component includes
+#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
@@ -210,4 +211,14 @@ void UPlayerHUD::HideHitmarker()
 		HitMarker->SetVisibility(ESlateVisibility::Hidden);
 	}
 	
+}
+
+void UPlayerHUD::ShowGameOverMessage(FString WinningPlayerID)
+{
+	TArray<FStringFormatArg> args;
+	args.Add(WinningPlayerID);
+	args.Add(TEXT(" Has Won The Session. Sending Client Back to Menu..."));
+	FString Message = FString::Format(TEXT("{0}{1}"), args);
+	GameOverMessage = Message;
+	GameOver->SetVisibility(ESlateVisibility::Visible);
 }

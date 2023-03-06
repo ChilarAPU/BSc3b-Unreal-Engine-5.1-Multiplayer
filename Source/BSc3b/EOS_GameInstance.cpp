@@ -147,7 +147,7 @@ void UEOS_GameInstance::OnJoinSessionCompleted(FName SessionName, EOnJoinSession
 	SessionPtrRef->ClearOnJoinSessionCompleteDelegates(this);
 
 	// Join the selected session server and world once the server has registered the client
-	SessionPtrRef->GetResolvedConnectString(SessionID, JoinAddress); //Get the address of the server
+	SessionPtrRef->GetResolvedConnectString(ServerPassword, JoinAddress); //Get the address of the server
 	UE_LOG(LogTemp, Warning, TEXT("Join Address: %s"), *JoinAddress);  //Debug purposes
 	PlayerControllerRef->ClientTravel(JoinAddress, TRAVEL_Absolute);  //Client join server map
 
@@ -182,16 +182,7 @@ void UEOS_GameInstance::OnCreateNewSession(bool bWasSuccess)
 	IOnlineSessionPtr SessionPtrRef = GetSessionInterface();
 
 	SessionPtrRef->ClearOnFindSessionsCompleteDelegates(this);
-	
-	//Set the session name to a default string plus however many sessions are currently made
-	//This should allow for an infinite number of server names
-	TArray<FStringFormatArg> args;
-	args.Add(TEXT("MainSession"));
-	args.Add(SessionSearch->SearchResults.Num());
-	FString SessionName = FString::Format(TEXT("{0}{1}"), args);
-	// Set SessionName as a variable so it can be accessed from GameMode Login/Logout functions
-	SessionID = FName(SessionName);
-	
+
 	FOnlineSessionSettings SessionCreationInfo;
 	SessionCreationInfo.bIsDedicated = false;
 	SessionCreationInfo.bAllowInvites = true;
@@ -201,14 +192,27 @@ void UEOS_GameInstance::OnCreateNewSession(bool bWasSuccess)
 	SessionCreationInfo.bUsesPresence = false;
 	SessionCreationInfo.bShouldAdvertise = true;
 
+	// Get the password from the editable text box on the menu
+	AMenuPawn* PlayerRef = Cast<AMenuPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (!PlayerRef)
+	{
+		return;
+	}
+	ServerPassword = FName(PlayerRef->MainMenu->GetServerPassword());
+
 	//Set key so session can be searched through the dev portal
 	SessionCreationInfo.Set(SEARCH_KEYWORDS, FString("RandomHi"), EOnlineDataAdvertisementType::ViaOnlineService);
 	//Join session and map for the user once server has been created
 	SessionPtrRef->OnCreateSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnCreateSessionCompleted);
 	//Create session with the given name
-	SessionPtrRef->CreateSession(0, FName(SessionName), SessionCreationInfo);
-
+	bool bCreationSuccessful = SessionPtrRef->CreateSession(0, ServerPassword, SessionCreationInfo);
 	SendUserFeedback(TEXT("Empty Server Found"));
+	
+	if (!bCreationSuccessful) //If we could not create a new session due to naming conflict
+	{
+		SendUserFeedback(TEXT("Server With That Name Exists. Please Choose Another"));
+	}
+	
 }
 
 IOnlineSessionPtr UEOS_GameInstance::GetSessionInterface()
@@ -302,7 +306,7 @@ void UEOS_GameInstance::DestroySession()
 	IOnlineSessionPtr SessionPtrRef = GetSessionInterface();
 	
 	SessionPtrRef->OnDestroySessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnDestroySessionCompleted);
-	SessionPtrRef->DestroySession(SessionID);
+	SessionPtrRef->DestroySession(ServerPassword);
 }
 
 void UEOS_GameInstance::GetTitleStorageInterface()
@@ -344,17 +348,8 @@ void UEOS_GameInstance::JoinSelectedSession(int LocationInBrowser)
 		return;
 	}
 	ServerPassword = FName(PlayerRef->MainMenu->GetServerPassword());
-
-	TArray<FStringFormatArg> args;
-	args.Add(TEXT("MainSession"));
-	args.Add(LocationInBrowser);
-	FString SessionName = FString::Format(TEXT("{0}{1}"), args);
-	// Set SessionName as a variable so it can be accessed from GameMode Login/Logout functions
-	SessionID = FName(SessionName);
 	
-	//Join the selected session inside the EOS subsystem
-	//SessionPtrRef->JoinSession(0, ServerPassword, SessionSearch->SearchResults[LocationInBrowser]);
-	SessionPtrRef->JoinSession(0, FName(SessionName), SessionSearch->SearchResults[LocationInBrowser]);
+	SessionPtrRef->JoinSession(0, ServerPassword, SessionSearch->SearchResults[LocationInBrowser]);
 	SessionPtrRef->OnJoinSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnJoinSessionCompleted);
 
 	SendUserFeedback(TEXT("Attempting To Joining Selected Session..."));

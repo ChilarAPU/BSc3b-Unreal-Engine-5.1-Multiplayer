@@ -117,8 +117,5 @@ public:
 	UPROPERTY()
 	FName ServerPassword;
 
-	UPROPERTY()
-	FName SessionID;
-
 	
 };

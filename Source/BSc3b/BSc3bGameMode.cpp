@@ -17,7 +17,7 @@ ABSc3bGameMode::ABSc3bGameMode()
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 	bSpawnPoint = false;
-	TargetNumberOfKills = 2;
+	TargetNumberOfKills = 30;
 }
 
 bool ABSc3bGameMode::FlipSpawnPoint()
@@ -48,9 +48,9 @@ void ABSc3bGameMode::PostLogin(APlayerController* NewPlayer)
 			IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(NewPlayer->GetWorld());
 			IOnlineSessionPtr SessionRef = SubsystemRef->GetSessionInterface();
 			UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *GI->SessionID.ToString());
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *GI->ServerPassword.ToString());
 			//bool bRegistrationSuccess = SessionRef->RegisterPlayer(GI->ServerPassword, *UniqueNetId, false);
-			bool bRegistrationSuccess = SessionRef->RegisterPlayer(GI->SessionID, *UniqueNetId, false);
+			bool bRegistrationSuccess = SessionRef->RegisterPlayer(GI->ServerPassword, *UniqueNetId, false);
 			if (bRegistrationSuccess)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Registration Successful"));
@@ -66,9 +66,9 @@ void ABSc3bGameMode::PreLogout(APlayerController* InPlayerController)
 			IOnlineSubsystem* SubsystemRef = Online::GetSubsystem(InPlayerController->GetWorld());
 			IOnlineSessionPtr SessionRef = SubsystemRef->GetSessionInterface();
 			UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *GI->SessionID.ToString());
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *GI->ServerPassword.ToString());
 			//bool bRegistrationSuccess = SessionRef->UnregisterPlayer(GI->ServerPassword, *UniqueNetId);
-			bool bRegistrationSuccess = SessionRef->UnregisterPlayer(GI->SessionID, *UniqueNetId);
+			bool bRegistrationSuccess = SessionRef->UnregisterPlayer(GI->ServerPassword, *UniqueNetId);
 			if (bRegistrationSuccess)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Unregistration Successful"));

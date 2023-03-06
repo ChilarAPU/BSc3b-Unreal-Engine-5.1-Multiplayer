@@ -112,7 +112,7 @@ void UGlobalHUD::AddToKilLFeed(const FString& HitPlayerName, const FString& Shoo
 		TotalKillFeedSlots.Emplace(NewFeedSlot); //Add UGridSlot to array
 		NewFeedSlot->SetHorizontalAlignment(HAlign_Fill);
 		
-		if (ChildrenInKillFeed >= 2) //Maximum number of kill feed widgets to display on screen
+		if (ChildrenInKillFeed >= 5) //Maximum number of kill feed widgets to display on screen
 		{
 			ReachedMaximumKillFeedSlots();
 		}

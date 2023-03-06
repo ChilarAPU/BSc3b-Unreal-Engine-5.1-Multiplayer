@@ -3,6 +3,7 @@
 
 #include "PlayerStatistics.h"
 
+#include "MenuGameState.h"
 #include "BSc3b/BSc3bGameMode.h"
 #include "BSc3b/EOS_GameInstance.h"
 #include "Kismet/GameplayStatics.h"
@@ -33,14 +34,16 @@ void APlayerStatistics::AddKillToScore(int Amount)
 		return;
 	}
 	UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	AMenuGameState* GS = Cast<AMenuGameState>(UGameplayStatics::GetGameState(GetWorld()));
 	if (!GI)
 	{
 		return;
 	}
 	if (PlayerKills >= GameModeRef->GetTargetNumberOfKills())
 	{
-		GI->DestroySession();
-		GI->ReturnToMainMenu();
+		GS->Multicast_EndSession(GetPlayerEpicID());
+		//GI->DestroySession();
+		//GI->ReturnToMainMenu();
 	}
 }
 

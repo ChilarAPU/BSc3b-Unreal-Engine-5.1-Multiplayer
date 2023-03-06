@@ -13,6 +13,7 @@
 class UButton;
 class UTextBlock;
 class UImage;
+class UBorder;
 class ABSc3bCharacter;
 
 UCLASS()
@@ -67,9 +68,15 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UTextBlock* DamageText;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UBorder* GameOver;
+
 	////// UMG WIDGETS BOUND TO BLUEPRINT VALUES //////
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 	FString AmmoCount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
+	FString GameOverMessage;
 
 public:
 
@@ -142,6 +149,9 @@ public:
 	/* Gradually lower the opacity of the hitmarker through Timer delegate */
 	UFUNCTION()
 	void HideHitmarker();
+
+	UFUNCTION()
+	void ShowGameOverMessage(FString WinningPlayerID);
 
 	/* TimerHandler for the hitmarker. Could not pass it through as a reference parameter so it is now here */
 	UPROPERTY()

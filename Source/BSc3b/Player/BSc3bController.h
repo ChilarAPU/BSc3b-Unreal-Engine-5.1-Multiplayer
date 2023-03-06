@@ -146,6 +146,9 @@ public:
 	UPROPERTY()
 	TMap<TEnumAsByte<EAttachmentType>,TEnumAsByte<EAttachmentKey>> SavedAttachments;
 
+	UFUNCTION()
+	void ShowGameOverMessage(FString WinningPlayerID);
+
 protected:
 	virtual void OnNetCleanup(UNetConnection* Connection) override;
 	

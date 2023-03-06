@@ -198,6 +198,11 @@ void ABSc3bController::Client_ShowHitmarker_Implementation(FName HitBone)
 	}
 }
 
+void ABSc3bController::ShowGameOverMessage(FString WinningPlayerID)
+{
+	PlayerHUD->ShowGameOverMessage(WinningPlayerID);
+}
+
 void ABSc3bController::OnNetCleanup(UNetConnection* Connection)
 {
 	//Logout Player from the session inside EOS otherwise it will not know when a client has left

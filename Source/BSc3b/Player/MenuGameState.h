@@ -29,5 +29,12 @@ public:
 	UGlobalHUD* GetGlobalWidget();
 
 	virtual void BeginPlay() override;
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_EndSession(const FString& WinningPlayerID);
+	void Multicast_EndSession_Implementation(const FString& WinningPlayerID);
+
+	UFUNCTION()
+	void EndSession();
 	
 };
