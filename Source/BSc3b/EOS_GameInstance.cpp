@@ -21,7 +21,7 @@ void UEOS_GameInstance::LoginWithEOS(FString ID, FString Token, FString LoginTyp
 	AccountDetails.Type = LoginType;
 	IdentityPointerRef->OnLoginCompleteDelegates->AddUObject(this, &UEOS_GameInstance::LoginWithEOS_Return);
 	IdentityPointerRef->Login(0, AccountDetails);
-	
+	SendUserFeedback(TEXT("Logging in..."));
 }
 
 FString UEOS_GameInstance::GetPlayerUsername()
@@ -57,6 +57,7 @@ void UEOS_GameInstance::LoginWithEOS_Return(int32 LocalUserNum, bool bWasSuccess
 	if (bWasSuccess)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Login Success"));
+		SendUserFeedback(TEXT("Successfully Logged into Epic"));
 
 		//Automatically show friends overlay upon logging in
 		IOnlineSubsystem*  Subsystem = Online::GetSubsystem(this->GetWorld());
@@ -66,7 +67,7 @@ void UEOS_GameInstance::LoginWithEOS_Return(int32 LocalUserNum, bool bWasSuccess
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("Login Failed: %s"), *Error);
-		UserFeedback = TEXT("Login Failed, Please See Output Log for Further Details");
+		SendUserFeedback(TEXT("Login Failed, Please See Output Log for Further Details"));
 	}
 	IdentityPointerRef->ClearOnLoginCompleteDelegates(LocalUserNum, this);
 }
@@ -75,7 +76,7 @@ void UEOS_GameInstance::OnCreateSessionCompleted(FName SessionName, bool bWasSuc
 {
 	if (bWasSuccessful)
 	{
-		UserFeedback = TEXT("Loading into Server...");
+		SendUserFeedback(TEXT("Loading into Server..."), true);
 		GetWorld()->ServerTravel(FString("/Game/ThirdPerson/Maps/MainSessionMap?listen"));
 	}
 	IOnlineSessionPtr SessionPtrRef = GetSessionInterface();
@@ -124,7 +125,7 @@ void UEOS_GameInstance::OnFindSessionCompleted(bool bWasSuccess)
 		}
 	}
 	SessionPtrRef->ClearOnFindSessionsCompleteDelegates(this);
-	UserFeedback = TEXT("Loading Server List, Please Wait...");
+	SendUserFeedback(TEXT("Available Sessions Found"));
 	
 }
 
@@ -149,6 +150,8 @@ void UEOS_GameInstance::OnJoinSessionCompleted(FName SessionName, EOnJoinSession
 	SessionPtrRef->GetResolvedConnectString(SessionID, JoinAddress); //Get the address of the server
 	UE_LOG(LogTemp, Warning, TEXT("Join Address: %s"), *JoinAddress);  //Debug purposes
 	PlayerControllerRef->ClientTravel(JoinAddress, TRAVEL_Absolute);  //Client join server map
+
+	SendUserFeedback(TEXT("Request Accepted. Loading Map..."), true);
 	
 }
 
@@ -204,6 +207,8 @@ void UEOS_GameInstance::OnCreateNewSession(bool bWasSuccess)
 	SessionPtrRef->OnCreateSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnCreateSessionCompleted);
 	//Create session with the given name
 	SessionPtrRef->CreateSession(0, FName(SessionName), SessionCreationInfo);
+
+	SendUserFeedback(TEXT("Empty Server Found"));
 }
 
 IOnlineSessionPtr UEOS_GameInstance::GetSessionInterface()
@@ -236,6 +241,18 @@ IOnlineIdentityPtr UEOS_GameInstance::GetIdentityInterface()
 	return IdentityPointerRef;
 }
 
+void UEOS_GameInstance::SendUserFeedback(FString FeedbackToShow, bool bShouldNotDisappear)
+{
+	UserFeedback = FeedbackToShow;
+	
+	AMenuPawn* PlayerRef = Cast<AMenuPawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (!PlayerRef)
+	{
+		return;
+	}
+	PlayerRef->MainMenu->ShowUserFeedback(bShouldNotDisappear);
+}
+
 void UEOS_GameInstance::CreateEOSSession(bool bIsDedicated, bool bIsLanServer, int32 NumberOfPublicConnections)
 {
 	IOnlineSessionPtr SessionPtrRef = GetSessionInterface();
@@ -249,6 +266,8 @@ void UEOS_GameInstance::CreateEOSSession(bool bIsDedicated, bool bIsLanServer, i
 	
 	SessionPtrRef->FindSessions(0, SessionSearch.ToSharedRef());
 	SessionPtrRef->OnFindSessionsCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnCreateNewSession);
+
+	SendUserFeedback(TEXT("Locating Empty Server Slot..."));
 	
 }
 
@@ -274,6 +293,8 @@ void UEOS_GameInstance::FindSessionsAndDisplayBrowser()
 	//Upon finding all available sessions, go to OnFindSessionCompleted which will display all sessions in a browser
 	SessionPtrRef->OnFindSessionsCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnFindSessionCompleted);
 	SessionPtrRef->FindSessions(0, SessionSearch.ToSharedRef());
+
+	SendUserFeedback(TEXT("Finding Available Sessions..."));
 }
 
 void UEOS_GameInstance::DestroySession()
@@ -335,11 +356,13 @@ void UEOS_GameInstance::JoinSelectedSession(int LocationInBrowser)
 	//SessionPtrRef->JoinSession(0, ServerPassword, SessionSearch->SearchResults[LocationInBrowser]);
 	SessionPtrRef->JoinSession(0, FName(SessionName), SessionSearch->SearchResults[LocationInBrowser]);
 	SessionPtrRef->OnJoinSessionCompleteDelegates.AddUObject(this, &UEOS_GameInstance::OnJoinSessionCompleted);
-	
+
+	SendUserFeedback(TEXT("Attempting To Joining Selected Session..."));
 }
 
 void UEOS_GameInstance::ReturnToMainMenu()
 {
+	SendUserFeedback(TEXT("")); //Empty user feedback upon returning to the main menu
 	Super::ReturnToMainMenu();
 }
 

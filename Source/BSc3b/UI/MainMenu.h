@@ -27,6 +27,21 @@ class BSC3B_API UMainMenu : public UUserWidget
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UEditableText* ServerPassword;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UBorder* UserFeedback;
+
+	UPROPERTY()
+	FTimerHandle UserFeedbackHandle;
+
+	UFUNCTION()
+	void HideUserFeedback();
+
+	UPROPERTY(Transient, BlueprintReadWrite, meta = (AllowPrivateAccess, BindWidgetAnim))
+	UWidgetAnimation* UserFeedbackLoadAnimation;
+
+	UPROPERTY(Transient, BlueprintReadWrite, meta = (AllowPrivateAccess, BindWidgetAnim))
+	UWidgetAnimation* UserFeedbackHideAnimation;
+
 public:
 	UFUNCTION()
 	void ShowServerBrowser();
@@ -39,4 +54,8 @@ public:
 
 	UFUNCTION()
 	void ClearServerBrowser();
+
+	UFUNCTION()
+	void ShowUserFeedback(bool bShouldHide);
+	
 };

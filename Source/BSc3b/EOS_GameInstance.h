@@ -60,6 +60,13 @@ class BSC3B_API UEOS_GameInstance : public UGameInstance
 
 	/* Get Access to the identity interface inside of EOS. Allows access to Account Details/Settings*/
 	IOnlineIdentityPtr GetIdentityInterface();
+
+	/* Wrapper function for showcasing feedback back to the player on UI*/
+	UFUNCTION()
+	void SendUserFeedback(FString FeedbackToShow, bool bShouldNotDisappear = false);
+
+	UPROPERTY()
+	FTimerHandle UserFeedbackHandle;
 	
 public:
 

@@ -17,6 +17,7 @@ ABSc3bGameMode::ABSc3bGameMode()
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 	bSpawnPoint = false;
+	TargetNumberOfKills = 2;
 }
 
 bool ABSc3bGameMode::FlipSpawnPoint()
@@ -30,6 +31,11 @@ bool ABSc3bGameMode::FlipSpawnPoint()
 		bSpawnPoint = true;
 	}
 	return bSpawnPoint;
+}
+
+int ABSc3bGameMode::GetTargetNumberOfKills()
+{
+	return TargetNumberOfKills;
 }
 
 void ABSc3bGameMode::PostLogin(APlayerController* NewPlayer)

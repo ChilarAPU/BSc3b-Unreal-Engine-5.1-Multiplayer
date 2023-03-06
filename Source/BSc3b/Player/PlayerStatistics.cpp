@@ -3,6 +3,9 @@
 
 #include "PlayerStatistics.h"
 
+#include "BSc3b/BSc3bGameMode.h"
+#include "BSc3b/EOS_GameInstance.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 APlayerStatistics::APlayerStatistics()
@@ -22,7 +25,23 @@ void APlayerStatistics::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 void APlayerStatistics::AddKillToScore(int Amount)
 {
+	//We are always on the server at this point
+	ABSc3bGameMode* GameModeRef = Cast<ABSc3bGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	PlayerKills = PlayerKills + Amount;
+	if (!GameModeRef)
+	{
+		return;
+	}
+	UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (!GI)
+	{
+		return;
+	}
+	if (PlayerKills >= GameModeRef->GetTargetNumberOfKills())
+	{
+		GI->DestroySession();
+		GI->ReturnToMainMenu();
+	}
 }
 
 void APlayerStatistics::AddDeathToScore(int Amount)

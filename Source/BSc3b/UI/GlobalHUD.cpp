@@ -43,10 +43,10 @@ void UGlobalHUD::ReachedMaximumKillFeedSlots()
 }
 
 void UGlobalHUD::SetTimerWithDelegate(FTimerHandle& TimerHandle, TBaseDelegate<void> ObjectDelegate, float Time,
-	bool bLoop)
+	bool bLoop, UObject* WorldContextObject)
 {
-	GetWorld()->GetTimerManager().ClearTimer(TimerHandle); //if the inputted timer is currently running, then clear it
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, ObjectDelegate, Time, bLoop);
+	WorldContextObject->GetWorld()->GetTimerManager().ClearTimer(TimerHandle); //if the inputted timer is currently running, then clear it
+	WorldContextObject->GetWorld()->GetTimerManager().SetTimer(TimerHandle, ObjectDelegate, Time, bLoop);
 }
 
 void UGlobalHUD::RemoveSlotFromKillFeed(UKillFeedSlot* IncomingKillFeedSlot, UGridSlot* IncomingSlot)
@@ -73,7 +73,8 @@ void UGlobalHUD::HideChatBox()
 void UGlobalHUD::SetConnectMessage(FText IncomingMessage)
 {
 	MessageTextBox->SetText(IncomingMessage);
-	SetTimerWithDelegate(ConnectMessageHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::SetConnectMessageVisibility, false), 2.f, false);
+	SetTimerWithDelegate(ConnectMessageHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::SetConnectMessageVisibility, false),
+		2.f, false, GetWorld());
 }
 
 void UGlobalHUD::SetConnectMessageVisibility(bool bShouldBeVisible)
@@ -118,7 +119,8 @@ void UGlobalHUD::AddToKilLFeed(const FString& HitPlayerName, const FString& Shoo
 
 		//Timer to hide kill feed slot. We do not want this value to be overridable from subsequent calls
 		FTimerHandle KillSlotHandle;
-		SetTimerWithDelegate(KillSlotHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::RemoveSlotFromKillFeed, KillFeedWidget, NewFeedSlot), 8.f, false);
+		SetTimerWithDelegate(KillSlotHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::RemoveSlotFromKillFeed,
+			KillFeedWidget, NewFeedSlot), 8.f, false, GetWorld());
 	}
 }
 
@@ -148,7 +150,8 @@ void UGlobalHUD::SendMessageButtonOnPressed()
 		ClearChatBox();
 	} else //If we have decided not to send a message, make sure that the chat box becomes hidden on the client
 	{
-		SetTimerWithDelegate(ChatMessageHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::HideChatBox), 3.f, false);
+		SetTimerWithDelegate(ChatMessageHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::HideChatBox), 3.f,
+			false, GetWorld());
 	}
 }
 
@@ -170,7 +173,7 @@ void UGlobalHUD::SendMessageToBox(FCustomChatMessage Message)
 	}
 
 	//Hide all chat boxes once a message has been sent
-	SetTimerWithDelegate(ChatMessageHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::HideChatBox), 3.f, false);
+	SetTimerWithDelegate(ChatMessageHandle, FTimerDelegate::CreateUObject(this, &UGlobalHUD::HideChatBox), 3.f, false, GetWorld());
 	
 }
 

@@ -14,11 +14,17 @@ class ABSc3bGameMode : public AGameModeBase
 	UPROPERTY()
 	bool bSpawnPoint;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess))
+	int TargetNumberOfKills;
+
 public:
 	ABSc3bGameMode();
 
 	UFUNCTION()
 	bool FlipSpawnPoint();
+
+	UFUNCTION()
+	int GetTargetNumberOfKills();
 
 	/* */
 	virtual void PostLogin(APlayerController* NewPlayer) override;

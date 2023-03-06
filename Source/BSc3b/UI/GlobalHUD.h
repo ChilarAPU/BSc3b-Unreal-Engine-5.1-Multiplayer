@@ -117,8 +117,6 @@ class BSC3B_API UGlobalHUD : public UUserWidget
 
 	UPROPERTY()
 	FTimerHandle ChatMessageHandle;
-	
-	void SetTimerWithDelegate(FTimerHandle& TimerHandle, TBaseDelegate<void> ObjectDelegate, float Time, bool bLoop);
 
 	UFUNCTION()
 	void RemoveSlotFromKillFeed(UKillFeedSlot* IncomingKillFeedSlot, UGridSlot* IncomingSlot);
@@ -166,6 +164,9 @@ public:
 
 	UFUNCTION()
 	void ShowScoreboard(bool bVisible, AMenuGameState* GS);
+
+	static void SetTimerWithDelegate(FTimerHandle& TimerHandle, TBaseDelegate<void> ObjectDelegate, float Time,
+		bool bLoop, UObject* WorldContextObject);
 
 	/* Override Enter key while we are inside the multi-line text box otherwise it would
 	 * go to next line 
