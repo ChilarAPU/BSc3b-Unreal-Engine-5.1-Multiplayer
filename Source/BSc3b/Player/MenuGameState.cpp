@@ -30,7 +30,7 @@ void AMenuGameState::Multicast_EndSession_Implementation(const FString& WinningP
 	PC->ShowGameOverMessage(WinningPlayerID);
 	PC->SetCinematicMode(true, true, true); //Stop player movement
 	FTimerHandle GameOverHandle;
-	GetWorld()->GetTimerManager().SetTimer(GameOverHandle, FTimerDelegate::CreateUObject(this, &AMenuGameState::EndSession), 5.f, false);
+	GetWorld()->GetTimerManager().SetTimer(GameOverHandle, FTimerDelegate::CreateUObject(this, &AMenuGameState::EndSession), 10.f, false);
 }
 
 void AMenuGameState::EndSession()
