@@ -23,6 +23,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -535,6 +536,16 @@ void ABSc3bCharacter::Server_SetPlayerName_Implementation(const FString& PlayerN
 void ABSc3bCharacter::Server_ReceiveMessage_Implementation(FCustomChatMessage IncomingMessage)
 {
 	Multicast_ReceiveMessage(IncomingMessage);
+}
+
+void ABSc3bCharacter::SpawnMuzzleFlash()
+{
+	if (MuzzleFlash)
+	{
+		FString Socket = TEXT("MuzzleSocket");
+		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzleFlash, Weapon, FName(Socket), FVector::Zero(),
+			FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, false);
+	}
 }
 
 void ABSc3bCharacter::Multicast_ReceiveMessage_Implementation(FCustomChatMessage IncomingMessage)

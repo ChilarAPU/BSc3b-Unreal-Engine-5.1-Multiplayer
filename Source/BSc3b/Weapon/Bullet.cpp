@@ -7,6 +7,7 @@
 #include "../Player/BSc3bController.h"
 #include "BSc3b/Player/MenuGameState.h"
 #include "BSc3b/Player/PlayerStatistics.h"
+#include "BSc3b/UI/PlayerHUD.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -126,6 +127,10 @@ void ABullet::AdjustPlayerStateValues(ABSc3bCharacter* HitPlayer, ABSc3bCharacte
 	{
 		HitPlayerStatistics->AddDeathToScore(1);
 		OwnerPlayerStatistics->AddKillToScore(1);
+	}
+	if (OwnerOfBullet->IsPlayerControlled())
+	{
+		OwnerOfBullet->GetActivePlayerController()->Client_SetEliminationMessage(HitPlayer->GetPlayerOnlineName());
 	}
 }
 

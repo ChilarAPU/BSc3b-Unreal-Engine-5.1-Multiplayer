@@ -222,3 +222,21 @@ void UPlayerHUD::ShowGameOverMessage(FString WinningPlayerID)
 	GameOverMessage = Message;
 	GameOver->SetVisibility(ESlateVisibility::Visible);
 }
+
+void UPlayerHUD::SetAndDisplayKillText(FString OtherPlayersID)
+{
+	TArray<FStringFormatArg> args;
+	args.Add(TEXT("ELIMINATED "));
+	args.Add(OtherPlayersID);
+	FString FormattedS = FString::Format(TEXT("{0}{1}"), args);
+	EliminationText->SetText(FText::FromString(FormattedS));
+	EliminationText->SetVisibility(ESlateVisibility::Visible);
+	//Create the re-triggerable Timer
+	UGlobalHUD::SetTimerWithDelegate(EliminationHandler, FTimerDelegate::CreateUObject(this, &UPlayerHUD::HideEliminationText), 1.5f, false, GetWorld());
+}
+
+
+void UPlayerHUD::HideEliminationText()
+{
+	EliminationText->SetVisibility(ESlateVisibility::Hidden);
+}

@@ -33,12 +33,7 @@ void APlayerStatistics::AddKillToScore(int Amount)
 	{
 		return;
 	}
-	UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	AMenuGameState* GS = Cast<AMenuGameState>(UGameplayStatics::GetGameState(GetWorld()));
-	if (!GI)
-	{
-		return;
-	}
 	if (PlayerKills >= GameModeRef->GetTargetNumberOfKills())
 	{
 		GS->Multicast_EndSession(GetPlayerEpicID());

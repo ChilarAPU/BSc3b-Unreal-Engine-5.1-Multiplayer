@@ -133,6 +133,7 @@ class BSC3B_API UGlobalHUD : public UUserWidget
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess))
 	USoundBase* ChatTypingSound;
 
+
 public:
 	
 	UFUNCTION()

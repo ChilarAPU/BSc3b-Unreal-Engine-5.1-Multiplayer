@@ -78,6 +78,12 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 	FString GameOverMessage;
 
+	UPROPERTY(EditAnywhere, meta = (BindWidget), meta=(AllowPrivateAccess))
+	UTextBlock* EliminationText;
+
+	UFUNCTION()
+	void HideEliminationText();
+
 public:
 
 	////// UMG WIDGETS BOUND TO BLUEPRINT VALUES //////
@@ -152,6 +158,12 @@ public:
 
 	UFUNCTION()
 	void ShowGameOverMessage(FString WinningPlayerID);
+
+	UFUNCTION()
+	void SetAndDisplayKillText(FString OtherPlayersID);
+
+	UPROPERTY()
+	FTimerHandle EliminationHandler;
 
 	/* TimerHandler for the hitmarker. Could not pass it through as a reference parameter so it is now here */
 	UPROPERTY()

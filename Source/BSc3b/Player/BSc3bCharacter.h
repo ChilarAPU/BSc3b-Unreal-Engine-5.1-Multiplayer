@@ -24,6 +24,7 @@ class USoundBase;
 class USoundAttenuation;
 class UInputComponent;
 class UPlayerHUD;
+class UNiagaraSystem;
 
 UCLASS(config=Game)
 class ABSc3bCharacter : public ACharacter
@@ -98,6 +99,9 @@ class ABSc3bCharacter : public ACharacter
 	/* Easily adjust how long the laser should travel */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Laser, meta = (AllowPrivateAccess = "true"))
 	float LaserDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = FX, meta = (AllowPrivateAccess = "true"))
+	UNiagaraSystem* MuzzleFlash;
 
 	/* Set when movement key is pressed while sprinting other than forwards. This stops the player
 	 * from continuing to sprint in directions they shouldn't
@@ -327,6 +331,9 @@ public:
 	UFUNCTION(Server, Unreliable)
 	void Server_ReceiveMessage(FCustomChatMessage IncomingMessage);
 	void Server_ReceiveMessage_Implementation(FCustomChatMessage IncomingMessage);
+
+	UFUNCTION()
+	void SpawnMuzzleFlash();
 
 protected:
 

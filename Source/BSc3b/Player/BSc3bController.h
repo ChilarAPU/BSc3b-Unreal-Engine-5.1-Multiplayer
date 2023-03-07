@@ -149,6 +149,10 @@ public:
 	UFUNCTION()
 	void ShowGameOverMessage(FString WinningPlayerID);
 
+	UFUNCTION(Client, Unreliable)
+	void Client_SetEliminationMessage(const FString& OtherPlayersID);
+	void Client_SetEliminationMessage_Implementation(const FString& OtherPlayersID);
+
 protected:
 	virtual void OnNetCleanup(UNetConnection* Connection) override;
 	
