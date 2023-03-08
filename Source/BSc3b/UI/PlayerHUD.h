@@ -15,6 +15,8 @@ class UTextBlock;
 class UImage;
 class UBorder;
 class ABSc3bCharacter;
+class UMaterialInterface;
+class UMaterialInstanceDynamic;
 
 UCLASS()
 class BSC3B_API UPlayerHUD : public UUserWidget
@@ -70,6 +72,17 @@ class BSC3B_API UPlayerHUD : public UUserWidget
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
 	UBorder* GameOver;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess))
+	UImage* HitEffect;
+
+	/*UPROPERTY(EditDefaultsOnly)
+	UMaterialInterface* HitMaterial;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* HitMaterialInstance;
+	*/
+	
 
 	////// UMG WIDGETS BOUND TO BLUEPRINT VALUES //////
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
@@ -168,4 +181,8 @@ public:
 	/* TimerHandler for the hitmarker. Could not pass it through as a reference parameter so it is now here */
 	UPROPERTY()
 	FTimerHandle VisibilityHandler;
+
+	/*UFUNCTION()
+	void SetHitEffectValue(float IncomingHealth);
+	*/
 };

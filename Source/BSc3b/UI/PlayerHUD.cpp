@@ -13,6 +13,7 @@
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Kismet/KismetMathLibrary.h"
 
 void UPlayerHUD::NativeConstruct()
 {
@@ -45,6 +46,21 @@ void UPlayerHUD::NativeConstruct()
 
 	SlantedGripButton->OnClicked.AddDynamic(this, &UPlayerHUD::OnSlantedGripClicked);
 	MakarovSilencerButton->IsFocusable = false;
+
+	/*if (IsValid(HitMaterial))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("1"));
+		HitMaterialInstance = UMaterialInstanceDynamic::Create(HitMaterial, this);
+		HitMaterialInstance->SetScalarParameterValue("AmountToShow", 6.0f);
+		if (IsValid(HitMaterialInstance))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("2"));
+			HitEffect->SetBrushFromMaterial(HitMaterialInstance);
+		}
+		
+	}
+	*/
+	
 
 }
 
@@ -235,6 +251,13 @@ void UPlayerHUD::SetAndDisplayKillText(FString OtherPlayersID)
 	UGlobalHUD::SetTimerWithDelegate(EliminationHandler, FTimerDelegate::CreateUObject(this, &UPlayerHUD::HideEliminationText), 1.5f, false, GetWorld());
 }
 
+/*void UPlayerHUD::SetHitEffectValue(float IncomingHealth)
+{
+	float MaterialValue = IncomingHealth / 13;
+	float ClampedValue = UKismetMathLibrary::FClamp(MaterialValue, 2.5, 6);
+	HitMaterialInstance->SetScalarParameterValue("AmountToShow", ClampedValue);
+}
+*/
 
 void UPlayerHUD::HideEliminationText()
 {

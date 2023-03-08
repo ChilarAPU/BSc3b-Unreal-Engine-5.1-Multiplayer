@@ -135,18 +135,17 @@ void ABSc3bCharacter::BeginPlay()
 		PlayerController->SetIgnoreLookInput(false);
 		const FInputModeGameOnly Input;
 		PlayerController->SetInputMode(Input);
-		
 	}
 
 	// Set the replicated OwnName variable as the EpicID so other classes can access it
 	GameInstanceRef = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	if (HasAuthority())
 	{
-		OwnName = GameInstanceRef->GetPlayerEpicID();
+		OwnName = GameInstanceRef->GetPlayerEpicID(); //Currently unused
 		APlayerStatistics* PlayerStatistics = Cast<APlayerStatistics>(GetPlayerState());
 		if (PlayerStatistics)
 		{
-			PlayerStatistics->SetPlayerEpicID(GameInstanceRef->GetPlayerEpicID());
+			PlayerStatistics->SetPlayerEpicID(GameInstanceRef->GetPlayerEpicID()); //Epic ID that gets used
 		}
 		
 	} else
@@ -159,12 +158,22 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	PlayerController = Cast<ABSc3bController>(Controller);
+	if (!PlayerController)
+	{
+		return;
+	}
 	if (IsValid(Weapon))
 	{
-		//Spawn a line trace which our laser sight niagara system will follow
-		OrientLaserSight();
+		//Spawn a line trace which our laser sight niagara system will follow. Only run when aiming
+		if (bIsPlayerAiming)
+		{
+			OrientLaserSight();
+		}
+		
 		//Run our procedural weapon sway to move the weapon in the opposite direction the player is looking
-		PlayerController->WeaponSway(DeltaSeconds, LookAxisVector, Weapon);
+		PlayerController->WeaponSway(DeltaSeconds, LookAxisVector * PlayerController->GetConfigUserSettings()->GetPlayerSensitivity(), Weapon);
+		
 	}
 	
 	//Aim Offset replication code
@@ -179,21 +188,19 @@ void ABSc3bCharacter::Tick(float DeltaSeconds)
 		Server_SetPlayerPitchForOffset();
 	}
 	//Would like to move this into a function that runs once
-	PlayerController = Cast<ABSc3bController>(Controller);
-	if (!PlayerController)
+	if (!bIsChangingAttachments)
 	{
 		return;
 	}
-	//Again, would like to move this into a function that is only run when needed
 	if (IsValid(PlayerController->GetPlayerHUD()))
 	{
-		PlayerController->GetPlayerHUD()->SetAmmoCount(FString::SanitizeFloat(Ammo, 0));
 		//Call this function so we dont have to include the progress bar file
 		PlayerController->GetPlayerHUD()->AdjustStatPercentage(PlayerController->GetPlayerHUD()->DamageStatBar, Weapon->DamageStat);
 		PlayerController->GetPlayerHUD()->AdjustStatPercentage(PlayerController->GetPlayerHUD()->RangeStatBar, Weapon->RangeStat);
 		PlayerController->GetPlayerHUD()->AdjustStatPercentage(PlayerController->GetPlayerHUD()->MobilityStatBar, Weapon->MobilityStat);
 		PlayerController->GetPlayerHUD()->AdjustStatPercentage(PlayerController->GetPlayerHUD()->StabilityStatBar, Weapon->StabilityStat);
 	}
+	
 	DeltaTime = DeltaSeconds;
 }
 
@@ -206,17 +213,18 @@ void ABSc3bCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ABSc3bCharacter, bHitByBullet);
 	DOREPLIFETIME(ABSc3bCharacter, Ammo);
 	DOREPLIFETIME(ABSc3bCharacter, OwnName);
+	DOREPLIFETIME(ABSc3bCharacter, bIsDead);
+	DOREPLIFETIME(ABSc3bCharacter, bIsSprinting);
+	DOREPLIFETIME(ABSc3bCharacter, bReloading);
 	
-	//Replicated variables used in animations
+	/*Replicated variables used in animations. They skip the owner to allow for the client to set their own
+	 * values. If these were completely replicated then client would have a jittery experience*/
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerHorizontalVelocity, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerVerticalVelocity, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsPlayerAiming, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, MoveAxisVector, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, PlayerPitch, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABSc3bCharacter, bIsShooting, COND_SkipOwner);
-	DOREPLIFETIME(ABSc3bCharacter, bIsDead);
-	DOREPLIFETIME(ABSc3bCharacter, bIsSprinting);
-	DOREPLIFETIME(ABSc3bCharacter, bReloading);
 }
 
 void ABSc3bCharacter::OnRep_Health()
@@ -337,7 +345,6 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone, const FString& Hi
 		if (Bone == "head")
 		{
 			Health = 0;
-			UE_LOG(LogTemp, Warning, TEXT("HeadShot"));
 			GetCharacterMovement()->StopMovementImmediately();
 			Multicast_DestroyAttachments();
 		}
@@ -346,7 +353,7 @@ void ABSc3bCharacter::Server_Health_Implementation(FName Bone, const FString& Hi
 		{
 			bIsDead = true;
 			Client_Respawn();  //Spawn respawn button
-			//Add in a value to our killfeed to all clients
+			//Add in a value to our kill feed to all clients
 			UEOS_GameInstance* GI = Cast<UEOS_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 			if (GI)
 			{
@@ -406,6 +413,7 @@ void ABSc3bCharacter::Server_Respawn_Implementation()
 	Client_ResetInput();
 	//Get a Player start location for the new character
 	ABSc3bGameMode* GM = Cast<ABSc3bGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	//Get player start actor based on the incoming boolean.
 	const AActor* Spawn = nullptr;
 	if (GM->FlipSpawnPoint())
 	{
@@ -439,6 +447,10 @@ void ABSc3bCharacter::Client_CustomBeginPlay_Implementation()
 		FName Head = TEXT("head");
 		GetMesh()->HideBoneByName(Head, PBO_None);
 		PlayerController = Cast<ABSc3bController>(Controller);
+		if (PlayerController)
+		{
+			//PlayerController->GetPlayerHUD()->SetHitEffectValue(Health);
+		}
 	}
 }
 
@@ -494,6 +506,11 @@ void ABSc3bCharacter::Client_PlayHit_Implementation()
 	if (IsLocallyControlled())
 	{
 		UGameplayStatics::PlaySound2D(GetWorld(), PlayerController->GetPlayerHitSound());
+		//Set value of hit material parameter
+		if (PlayerController)
+		{
+			//PlayerController->GetPlayerHUD()->SetHitEffectValue(Health);
+		}
 	}
 }
 
@@ -599,7 +616,8 @@ void ABSc3bCharacter::Move(const FInputActionValue& Value)
 		 **/
 
 		//Are we moving forwards?
-		if (MovementVector.Y > 0)
+		bool bMovingForwards = MovementVector.Y > 0;
+		if (bMovingForwards)
 		{
 			return;
 		}
@@ -789,7 +807,7 @@ void ABSc3bCharacter::Sprint(const FInputActionValue& Value)
 	{
 		Speed = RunSpeed;
 	}
-
+	
 	//This is used to optimise related code in Move()
 	bStopSprinting = false;
 	
